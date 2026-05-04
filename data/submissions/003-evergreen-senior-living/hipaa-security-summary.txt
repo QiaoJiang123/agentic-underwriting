@@ -1,0 +1,20 @@
+HIPAA Security Summary
+
+Systems:
+- EHR platform
+- Electronic medication administration record system
+- Resident billing portal
+- HRIS and payroll
+- Wi-Fi connected medication carts and monitoring devices
+
+Controls:
+- MFA enabled for EHR admins, email, and remote access
+- SentinelOne EDR deployed on managed endpoints
+- Medical device VLAN segmentation project 70 percent complete
+- Daily encrypted backups
+- Monthly restore tests
+- Annual HIPAA training and phishing training
+
+Known gaps:
+- Some legacy medication carts cannot run endpoint agents
+- Vendor incident response obligations are not clearly summarized in current contract

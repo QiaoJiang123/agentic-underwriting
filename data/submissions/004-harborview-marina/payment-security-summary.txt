@@ -1,0 +1,18 @@
+Payment Security Summary
+
+Payment systems:
+- Fuel dock payment terminals
+- Office POS terminals
+- Online reservation payments
+- Recurring storage billing
+
+Controls:
+- Payment terminals are maintained by third-party processor
+- Admin MFA enabled for reservation platform
+- Office endpoints have managed EDR
+- Customer Wi-Fi is believed to be separate, but network diagram was not provided
+- No cardholder data is intentionally stored locally
+
+Potential gaps:
+- PCI attestation not included in submission
+- Offline card procedures not documented

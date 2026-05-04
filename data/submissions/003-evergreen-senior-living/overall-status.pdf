@@ -1,0 +1,63 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>
+endobj
+4 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+5 0 obj
+<< /Length 1281 >>
+stream
+BT
+/F1 18 Tf
+72 740 Td
+(Overall Status) Tj
+/F1 10 Tf
+0 -28 Td
+(Evergreen Senior Living) Tj 0 -15 Td
+() Tj 0 -15 Td
+(Submission ID: 003-evergreen-senior-living) Tj 0 -15 Td
+(Line of Business: Cyber liability) Tj 0 -15 Td
+(Status: Referral Needed) Tj 0 -15 Td
+(File Created At: 2026-04-23T08:41:00-04:00) Tj 0 -15 Td
+(Received At: 2026-04-23T12:15:00-04:00) Tj 0 -15 Td
+(Updated At: 2026-04-27T16:50:00-04:00) Tj 0 -15 Td
+() Tj 0 -15 Td
+(Security Controls) Tj 0 -15 Td
+(- Mfa: Enabled for EHR admins, remote access, and email) Tj 0 -15 Td
+(- Edr: SentinelOne on endpoints; medical device segmentation in progress) Tj 0 -15 Td
+(- Backup: Daily encrypted backups, monthly restore test) Tj 0 -15 Td
+(- Patching: Critical patches within 10 days for managed systems) Tj 0 -15 Td
+(- Security Training: Annual HIPAA and phishing training) Tj 0 -15 Td
+() Tj 0 -15 Td
+(Risk Flags) Tj 0 -15 Td
+(- PHI exposure) Tj 0 -15 Td
+(- Medical device segmentation in progress) Tj 0 -15 Td
+(- Regulatory defense exposure) Tj 0 -15 Td
+() Tj 0 -15 Td
+(Open Questions) Tj 0 -15 Td
+(- Request network segmentation plan for connected medical devices.) Tj 0 -15 Td
+(- Confirm incident response vendor retainer.) Tj 0 -15 Td
+(- Clarify whether eMAR vendor provides indemnity for platform outage.) Tj 0 -15 Td
+ET
+endstream
+endobj
+xref
+0 6
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000241 00000 n 
+0000000311 00000 n 
+trailer
+<< /Size 6 /Root 1 0 R >>
+startxref
+1644
+%%EOF

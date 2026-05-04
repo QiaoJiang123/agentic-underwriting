@@ -1,0 +1,65 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>
+endobj
+4 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+5 0 obj
+<< /Length 1337 >>
+stream
+BT
+/F1 18 Tf
+72 740 Td
+(Overall Status) Tj
+/F1 10 Tf
+0 -28 Td
+(PixelWave Software) Tj 0 -15 Td
+() Tj 0 -15 Td
+(Submission ID: 005-pixelwave-software) Tj 0 -15 Td
+(Line of Business: Cyber liability) Tj 0 -15 Td
+(Status: In Review) Tj 0 -15 Td
+(File Created At: 2026-04-25T13:27:00-04:00) Tj 0 -15 Td
+(Received At: 2026-04-25T15:03:00-04:00) Tj 0 -15 Td
+(Updated At: 2026-04-28T17:35:00-04:00) Tj 0 -15 Td
+() Tj 0 -15 Td
+(Security Controls) Tj 0 -15 Td
+(- Mfa: Required for employees and administrative users) Tj 0 -15 Td
+(- Edr: EDR deployed on employee endpoints; AWS workloads monitored through cloud security) Tj 0 -15 Td
+(tooling) Tj 0 -15 Td
+(- Backup: Encrypted backups with quarterly restore testing) Tj 0 -15 Td
+(- Patching: Critical cloud and application patches within 7 days) Tj 0 -15 Td
+(- Security Training: Quarterly security training and monthly phishing simulations) Tj 0 -15 Td
+() Tj 0 -15 Td
+(Risk Flags) Tj 0 -15 Td
+(- High record count) Tj 0 -15 Td
+(- SOC 2 Type II pending) Tj 0 -15 Td
+(- Third-party integrations) Tj 0 -15 Td
+(- Technology E&O exposure) Tj 0 -15 Td
+() Tj 0 -15 Td
+(Open Questions) Tj 0 -15 Td
+(- Request latest penetration test executive summary.) Tj 0 -15 Td
+(- Confirm SOC 2 Type II expected completion date.) Tj 0 -15 Td
+(- Review largest customer contract and indemnity language.) Tj 0 -15 Td
+ET
+endstream
+endobj
+xref
+0 6
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000241 00000 n 
+0000000311 00000 n 
+trailer
+<< /Size 6 /Root 1 0 R >>
+startxref
+1700
+%%EOF

@@ -1,0 +1,18 @@
+{
+  "submission_id": "001-acme-foods",
+  "updated_at": "2026-05-02T13:52:44.530Z",
+  "guides": [
+    {
+      "id": "guide-cyber-baseline",
+      "text": "Evaluate MFA coverage, backup resilience, EDI dependency, and business interruption exposure before recommending next steps.",
+      "created_at": "2026-05-02T00:00:00-04:00",
+      "updated_at": "2026-05-02T13:52:44.530Z"
+    },
+    {
+      "id": "guide-underwriting-boundary",
+      "text": "Do not make final coverage, pricing, or accept/decline decisions. Identify referral triggers and missing information for the underwriter.",
+      "created_at": "2026-05-02T00:00:00-04:00",
+      "updated_at": "2026-05-02T13:52:44.530Z"
+    }
+  ]
+}

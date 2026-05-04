@@ -1,0 +1,64 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>
+endobj
+4 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+5 0 obj
+<< /Length 1271 >>
+stream
+BT
+/F1 18 Tf
+72 740 Td
+(Overall Status) Tj
+/F1 10 Tf
+0 -28 Td
+(Acme Foods Distribution) Tj 0 -15 Td
+() Tj 0 -15 Td
+(Submission ID: 001-acme-foods) Tj 0 -15 Td
+(Line of Business: Cyber liability) Tj 0 -15 Td
+(Status: New) Tj 0 -15 Td
+(File Created At: 2026-04-21T09:18:00-04:00) Tj 0 -15 Td
+(Received At: 2026-04-21T10:42:00-04:00) Tj 0 -15 Td
+(Updated At: 2026-04-25T14:05:00-04:00) Tj 0 -15 Td
+() Tj 0 -15 Td
+(Security Controls) Tj 0 -15 Td
+(- Mfa: Partial; enabled for email and VPN, not enabled for warehouse handheld device admin) Tj 0 -15 Td
+(portal) Tj 0 -15 Td
+(- Edr: CrowdStrike deployed on servers and corporate laptops) Tj 0 -15 Td
+(- Backup: Daily backups, quarterly restore testing) Tj 0 -15 Td
+(- Patching: Critical patches within 15 days) Tj 0 -15 Td
+(- Security Training: Annual training plus simulated phishing twice per year) Tj 0 -15 Td
+() Tj 0 -15 Td
+(Risk Flags) Tj 0 -15 Td
+(- Partial MFA) Tj 0 -15 Td
+(- Operational technology dependency) Tj 0 -15 Td
+(- Customer portal exposure) Tj 0 -15 Td
+() Tj 0 -15 Td
+(Open Questions) Tj 0 -15 Td
+(- Confirm MFA for warehouse handheld admin portal.) Tj 0 -15 Td
+(- Request latest vulnerability scan summary.) Tj 0 -15 Td
+(- Clarify business interruption dependency on third-party EDI provider.) Tj 0 -15 Td
+ET
+endstream
+endobj
+xref
+0 6
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000241 00000 n 
+0000000311 00000 n 
+trailer
+<< /Size 6 /Root 1 0 R >>
+startxref
+1634
+%%EOF

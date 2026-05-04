@@ -1,0 +1,12 @@
+Contract Review Notes
+
+Largest customer contract:
+- Customer represents approximately 18 percent of annual recurring revenue
+- Limitation of liability capped at 12 months of fees
+- Indemnity includes confidentiality breach and IP infringement
+- Security addendum requires notification within 72 hours of confirmed incident
+
+Potential underwriting concerns:
+- Several enterprise customers require higher indemnity than standard form
+- SOC 2 Type II is pending, not yet complete
+- API integration failure could create technology E&O allegations

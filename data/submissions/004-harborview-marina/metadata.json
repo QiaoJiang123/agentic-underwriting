@@ -1,0 +1,118 @@
+{
+  "id": "004-harborview-marina",
+  "title": "Harborview Marina & Storage",
+  "line_of_business": "Cyber liability",
+  "file_created_at": "2026-04-24T15:09:00-04:00",
+  "received_at": "2026-04-24T16:22:00-04:00",
+  "updated_at": "2026-04-28T10:12:00-04:00",
+  "status": "New",
+  "applicant": {
+    "insured_name": "Harborview Marina & Storage LLC",
+    "industry": "Marina operations and boat storage",
+    "location": "Charleston, SC",
+    "annual_revenue": 7600000,
+    "employee_count": 38,
+    "records_count": 31000,
+    "technology_profile": "Slip reservation platform, point-of-sale, fuel dock payment terminals, customer Wi-Fi, access control system"
+  },
+  "coverage": {
+    "lines_requested": [
+      "Cyber liability",
+      "PCI fines and assessments",
+      "Dependent business interruption"
+    ],
+    "requested_effective_date": "2026-06-15",
+    "requested_limits": {
+      "cyber_liability": "$1,000,000",
+      "pci_fines_and_assessments": "$250,000",
+      "dependent_business_interruption": "$500,000"
+    },
+    "retention_requested": "$10,000"
+  },
+  "documents": [
+    {
+      "file_name": "broker-email.txt",
+      "file_type": "email",
+      "category": "broker_correspondence",
+      "file_created_at": "2026-04-24T15:09:00-04:00",
+      "received_at": "2026-04-24T16:22:00-04:00",
+      "description": "Submission email"
+    },
+    {
+      "file_name": "payment-security-summary.txt",
+      "file_type": "security_summary",
+      "category": "payment_security",
+      "file_created_at": "2026-04-24T14:51:00-04:00",
+      "received_at": "2026-04-24T16:22:00-04:00",
+      "description": "Payment systems and PCI summary"
+    },
+    {
+      "file_name": "vendor-dependency-notes.txt",
+      "file_type": "notes",
+      "category": "vendor_dependency",
+      "file_created_at": "2026-04-24T14:48:00-04:00",
+      "received_at": "2026-04-24T16:22:00-04:00",
+      "description": "Critical third-party vendor notes"
+    },
+    {
+      "file_name": "company-description.pdf",
+      "file_type": "pdf",
+      "category": "company_description",
+      "file_created_at": "2026-04-28T10:12:00-04:00",
+      "received_at": "2026-04-24T16:22:00-04:00",
+      "description": "Company description and cyber exposure overview"
+    },
+    {
+      "file_name": "overall-status.pdf",
+      "file_type": "pdf",
+      "category": "overall_status",
+      "file_created_at": "2026-04-28T10:12:00-04:00",
+      "received_at": "2026-04-24T16:22:00-04:00",
+      "description": "Overall cyber underwriting status summary"
+    }
+  ],
+  "security_controls": {
+    "mfa": "Enabled for email and reservation platform admins",
+    "edr": "Managed EDR on office endpoints only",
+    "backup": "Reservation data backed up by SaaS provider",
+    "patching": "POS terminals maintained by payment vendor",
+    "security_training": "Annual training for office staff"
+  },
+  "risk_flags": [
+    "PCI exposure",
+    "Customer Wi-Fi segmentation",
+    "Payment vendor dependency"
+  ],
+  "open_questions": [
+    "Confirm customer Wi-Fi is segmented from business network.",
+    "Request PCI attestation or payment processor compliance summary.",
+    "Clarify offline payment and slip reservation procedures."
+  ],
+  "timeline": [
+    {
+      "date": "2026-04-24T14:48:00-04:00",
+      "event": "Vendor notes prepared",
+      "description": "Critical platform and payment vendor dependency notes added."
+    },
+    {
+      "date": "2026-04-24T14:51:00-04:00",
+      "event": "Payment summary prepared",
+      "description": "Payment security and PCI summary added."
+    },
+    {
+      "date": "2026-04-24T16:22:00-04:00",
+      "event": "Submission received",
+      "description": "Marina cyber submission received from broker."
+    },
+    {
+      "date": "2026-04-27T09:45:00-04:00",
+      "event": "PCI follow-up requested",
+      "description": "PCI attestation and customer Wi-Fi segmentation requested."
+    },
+    {
+      "date": "2026-04-28T10:12:00-04:00",
+      "event": "Status updated",
+      "description": "Overall cyber status PDF generated."
+    }
+  ]
+}

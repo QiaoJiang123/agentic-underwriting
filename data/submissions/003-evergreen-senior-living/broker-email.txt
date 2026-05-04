@@ -1,0 +1,8 @@
+From: Marcus Green <marcus.green@broker.example>
+To: Cyber Underwriting Desk
+Date: 2026-04-23 12:15 PM ET
+Subject: Evergreen Senior Living - healthcare cyber submission
+
+Evergreen operates an assisted living and memory care facility with EHR and eMAR systems. The insured is requesting cyber, privacy breach response, and regulatory defense coverage due to PHI exposure and reliance on medication administration systems.
+
+The account has stronger controls than last year but medical device network segmentation is still in progress.

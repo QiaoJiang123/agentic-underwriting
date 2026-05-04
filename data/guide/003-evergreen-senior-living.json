@@ -1,0 +1,18 @@
+{
+  "submission_id": "003-evergreen-senior-living",
+  "updated_at": "2026-05-02T00:00:00-04:00",
+  "guides": [
+    {
+      "id": "guide-phi-healthcare",
+      "text": "Prioritize PHI exposure, HIPAA-related controls, EHR and eMAR availability, medical device segmentation, and regulatory defense considerations.",
+      "created_at": "2026-05-02T00:00:00-04:00",
+      "updated_at": "2026-05-02T00:00:00-04:00"
+    },
+    {
+      "id": "guide-referral",
+      "text": "Flag incomplete medical device segmentation or unclear PHI safeguards as referral items requiring human review.",
+      "created_at": "2026-05-02T00:00:00-04:00",
+      "updated_at": "2026-05-02T00:00:00-04:00"
+    }
+  ]
+}

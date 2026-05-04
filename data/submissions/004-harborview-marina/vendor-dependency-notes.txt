@@ -1,0 +1,10 @@
+Vendor Dependency Notes
+
+Critical vendors:
+- DockMaster reservation and billing platform
+- Payment processor for POS and fuel dock
+- Managed IT provider
+- Access control system vendor
+
+Operational impact:
+Reservation platform outage longer than 24 hours would affect transient slip bookings, storage invoicing, and launch scheduling. Fuel dock can operate manually for limited periods, but offline procedures are not formally documented.

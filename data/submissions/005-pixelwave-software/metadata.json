@@ -1,0 +1,119 @@
+{
+  "id": "005-pixelwave-software",
+  "title": "PixelWave Software",
+  "line_of_business": "Cyber liability",
+  "file_created_at": "2026-04-25T13:27:00-04:00",
+  "received_at": "2026-04-25T15:03:00-04:00",
+  "updated_at": "2026-04-28T17:35:00-04:00",
+  "status": "In Review",
+  "applicant": {
+    "insured_name": "PixelWave Software Inc.",
+    "industry": "SaaS analytics platform",
+    "location": "Austin, TX",
+    "annual_revenue": 9400000,
+    "employee_count": 64,
+    "records_count": 1250000,
+    "technology_profile": "Multi-tenant SaaS platform, AWS, customer analytics data, CRM and POS integrations"
+  },
+  "coverage": {
+    "lines_requested": [
+      "Cyber liability",
+      "Technology E&O",
+      "Media liability"
+    ],
+    "requested_effective_date": "2026-06-30",
+    "requested_limits": {
+      "cyber_liability": "$5,000,000",
+      "technology_eo": "$3,000,000",
+      "media_liability": "$1,000,000"
+    },
+    "retention_requested": "$50,000"
+  },
+  "documents": [
+    {
+      "file_name": "broker-email.txt",
+      "file_type": "email",
+      "category": "broker_correspondence",
+      "file_created_at": "2026-04-25T13:27:00-04:00",
+      "received_at": "2026-04-25T15:03:00-04:00",
+      "description": "Broker overview and requested terms"
+    },
+    {
+      "file_name": "security-controls.txt",
+      "file_type": "questionnaire",
+      "category": "security_controls",
+      "file_created_at": "2026-04-25T13:08:00-04:00",
+      "received_at": "2026-04-25T15:03:00-04:00",
+      "description": "Security control questionnaire"
+    },
+    {
+      "file_name": "contract-review-notes.txt",
+      "file_type": "notes",
+      "category": "contract_review",
+      "file_created_at": "2026-04-25T12:58:00-04:00",
+      "received_at": "2026-04-25T15:03:00-04:00",
+      "description": "Customer contract and indemnity notes"
+    },
+    {
+      "file_name": "company-description.pdf",
+      "file_type": "pdf",
+      "category": "company_description",
+      "file_created_at": "2026-04-28T17:35:00-04:00",
+      "received_at": "2026-04-25T15:03:00-04:00",
+      "description": "Company description and cyber exposure overview"
+    },
+    {
+      "file_name": "overall-status.pdf",
+      "file_type": "pdf",
+      "category": "overall_status",
+      "file_created_at": "2026-04-28T17:35:00-04:00",
+      "received_at": "2026-04-25T15:03:00-04:00",
+      "description": "Overall cyber underwriting status summary"
+    }
+  ],
+  "security_controls": {
+    "mfa": "Required for employees and administrative users",
+    "edr": "EDR deployed on employee endpoints; AWS workloads monitored through cloud security tooling",
+    "backup": "Encrypted backups with quarterly restore testing",
+    "patching": "Critical cloud and application patches within 7 days",
+    "security_training": "Quarterly security training and monthly phishing simulations"
+  },
+  "risk_flags": [
+    "High record count",
+    "SOC 2 Type II pending",
+    "Third-party integrations",
+    "Technology E&O exposure"
+  ],
+  "open_questions": [
+    "Request latest penetration test executive summary.",
+    "Confirm SOC 2 Type II expected completion date.",
+    "Review largest customer contract and indemnity language."
+  ],
+  "timeline": [
+    {
+      "date": "2026-04-25T12:58:00-04:00",
+      "event": "Contract notes prepared",
+      "description": "Customer contract and indemnity notes added."
+    },
+    {
+      "date": "2026-04-25T13:08:00-04:00",
+      "event": "Security controls prepared",
+      "description": "Security control questionnaire added."
+    },
+    {
+      "date": "2026-04-25T15:03:00-04:00",
+      "event": "Submission received",
+      "description": "Cyber and technology E&O submission received."
+    },
+    {
+      "date": "2026-04-27T14:20:00-04:00",
+      "event": "SOC 2 gap noted",
+      "description": "SOC 2 Type II report still pending."
+    },
+    {
+      "date": "2026-04-28T17:35:00-04:00",
+      "event": "Status updated",
+      "description": "Technology E&O and high record count risk reviewed."
+    }
+  ]
+}

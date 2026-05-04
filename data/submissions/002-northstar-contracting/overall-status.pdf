@@ -1,0 +1,64 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>
+endobj
+4 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+5 0 obj
+<< /Length 1289 >>
+stream
+BT
+/F1 18 Tf
+72 740 Td
+(Overall Status) Tj
+/F1 10 Tf
+0 -28 Td
+(Northstar Contracting Group) Tj 0 -15 Td
+() Tj 0 -15 Td
+(Submission ID: 002-northstar-contracting) Tj 0 -15 Td
+(Line of Business: Cyber liability) Tj 0 -15 Td
+(Status: In Review) Tj 0 -15 Td
+(File Created At: 2026-04-22T11:32:00-04:00) Tj 0 -15 Td
+(Received At: 2026-04-22T13:06:00-04:00) Tj 0 -15 Td
+(Updated At: 2026-04-26T09:20:00-04:00) Tj 0 -15 Td
+() Tj 0 -15 Td
+(Security Controls) Tj 0 -15 Td
+(- Mfa: Enabled for Microsoft 365; not enforced for project management SaaS subcontractor) Tj 0 -15 Td
+(accounts) Tj 0 -15 Td
+(- Edr: Microsoft Defender for Business) Tj 0 -15 Td
+(- Backup: Cloud accounting and project files backed up daily) Tj 0 -15 Td
+(- Patching: Managed service provider patches endpoints monthly) Tj 0 -15 Td
+(- Security Training: Informal onboarding training only) Tj 0 -15 Td
+() Tj 0 -15 Td
+(Risk Flags) Tj 0 -15 Td
+(- Invoice manipulation exposure) Tj 0 -15 Td
+(- Subcontractor portal access) Tj 0 -15 Td
+(- Limited security training) Tj 0 -15 Td
+() Tj 0 -15 Td
+(Open Questions) Tj 0 -15 Td
+(- Confirm MFA enforcement for subcontractor portal.) Tj 0 -15 Td
+(- Request written callback procedure for vendor bank changes.) Tj 0 -15 Td
+(- Clarify endpoint inventory and unmanaged devices.) Tj 0 -15 Td
+ET
+endstream
+endobj
+xref
+0 6
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000241 00000 n 
+0000000311 00000 n 
+trailer
+<< /Size 6 /Root 1 0 R >>
+startxref
+1652
+%%EOF

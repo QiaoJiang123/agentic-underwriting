@@ -1,0 +1,118 @@
+{
+  "id": "003-evergreen-senior-living",
+  "title": "Evergreen Senior Living",
+  "line_of_business": "Cyber liability",
+  "file_created_at": "2026-04-23T08:41:00-04:00",
+  "received_at": "2026-04-23T12:15:00-04:00",
+  "updated_at": "2026-04-27T16:50:00-04:00",
+  "status": "Referral Needed",
+  "applicant": {
+    "insured_name": "Evergreen Senior Living Partners LP",
+    "industry": "Assisted living and memory care",
+    "location": "Raleigh, NC",
+    "annual_revenue": 12900000,
+    "employee_count": 214,
+    "records_count": 11800,
+    "technology_profile": "Electronic health records, eMAR, resident billing, HRIS, Wi-Fi connected medical devices"
+  },
+  "coverage": {
+    "lines_requested": [
+      "Cyber liability",
+      "Privacy breach response",
+      "Regulatory defense"
+    ],
+    "requested_effective_date": "2026-07-01",
+    "requested_limits": {
+      "cyber_liability": "$5,000,000",
+      "privacy_breach_response": "$2,000,000",
+      "regulatory_defense": "$1,000,000"
+    },
+    "retention_requested": "$50,000"
+  },
+  "documents": [
+    {
+      "file_name": "broker-email.txt",
+      "file_type": "email",
+      "category": "broker_correspondence",
+      "file_created_at": "2026-04-23T08:41:00-04:00",
+      "received_at": "2026-04-23T12:15:00-04:00",
+      "description": "Broker overview"
+    },
+    {
+      "file_name": "hipaa-security-summary.txt",
+      "file_type": "security_summary",
+      "category": "privacy_security",
+      "file_created_at": "2026-04-23T08:33:00-04:00",
+      "received_at": "2026-04-23T12:15:00-04:00",
+      "description": "HIPAA security and privacy summary"
+    },
+    {
+      "file_name": "incident-history.txt",
+      "file_type": "loss_run",
+      "category": "loss_history",
+      "file_created_at": "2026-04-23T08:25:00-04:00",
+      "received_at": "2026-04-23T12:15:00-04:00",
+      "description": "Privacy and cyber incident history"
+    },
+    {
+      "file_name": "company-description.pdf",
+      "file_type": "pdf",
+      "category": "company_description",
+      "file_created_at": "2026-04-27T16:50:00-04:00",
+      "received_at": "2026-04-23T12:15:00-04:00",
+      "description": "Company description and cyber exposure overview"
+    },
+    {
+      "file_name": "overall-status.pdf",
+      "file_type": "pdf",
+      "category": "overall_status",
+      "file_created_at": "2026-04-27T16:50:00-04:00",
+      "received_at": "2026-04-23T12:15:00-04:00",
+      "description": "Overall cyber underwriting status summary"
+    }
+  ],
+  "security_controls": {
+    "mfa": "Enabled for EHR admins, remote access, and email",
+    "edr": "SentinelOne on endpoints; medical device segmentation in progress",
+    "backup": "Daily encrypted backups, monthly restore test",
+    "patching": "Critical patches within 10 days for managed systems",
+    "security_training": "Annual HIPAA and phishing training"
+  },
+  "risk_flags": [
+    "PHI exposure",
+    "Medical device segmentation in progress",
+    "Regulatory defense exposure"
+  ],
+  "open_questions": [
+    "Request network segmentation plan for connected medical devices.",
+    "Confirm incident response vendor retainer.",
+    "Clarify whether eMAR vendor provides indemnity for platform outage."
+  ],
+  "timeline": [
+    {
+      "date": "2026-04-23T08:25:00-04:00",
+      "event": "Incident history prepared",
+      "description": "Privacy incident history added to submission."
+    },
+    {
+      "date": "2026-04-23T08:33:00-04:00",
+      "event": "HIPAA summary prepared",
+      "description": "Security and privacy summary added to file."
+    },
+    {
+      "date": "2026-04-23T12:15:00-04:00",
+      "event": "Submission received",
+      "description": "Healthcare cyber submission received from broker."
+    },
+    {
+      "date": "2026-04-26T13:10:00-04:00",
+      "event": "Segmentation gap identified",
+      "description": "Medical device segmentation project noted as incomplete."
+    },
+    {
+      "date": "2026-04-27T16:50:00-04:00",
+      "event": "Referral triggered",
+      "description": "PHI and regulatory defense exposure sent for referral review."
+    }
+  ]
+}

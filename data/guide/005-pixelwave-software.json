@@ -1,0 +1,18 @@
+{
+  "submission_id": "005-pixelwave-software",
+  "updated_at": "2026-05-02T00:00:00-04:00",
+  "guides": [
+    {
+      "id": "guide-saas-tech-eo",
+      "text": "Assess SaaS cyber exposure together with technology E&O signals, API integration risk, SOC 2 status, contractual obligations, and record volume.",
+      "created_at": "2026-05-02T00:00:00-04:00",
+      "updated_at": "2026-05-02T00:00:00-04:00"
+    },
+    {
+      "id": "guide-contracts",
+      "text": "Call out broad indemnity, uptime commitments, or unclear customer notification obligations as items for underwriter or legal review.",
+      "created_at": "2026-05-02T00:00:00-04:00",
+      "updated_at": "2026-05-02T00:00:00-04:00"
+    }
+  ]
+}

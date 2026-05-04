@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Search Submissions</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body class="search-body">
+    <main class="search-shell">
+      <section class="search-panel" aria-label="Submission search">
+        <header class="search-header">
+          <div class="brand-mark">AU</div>
+          <div>
+            <p class="eyebrow">Agentic Underwriting</p>
+            <h1>Search a Submission</h1>
+          </div>
+        </header>
+
+        <form class="search-form" id="searchForm">
+          <label class="sr-only" for="submissionSearch">Search submissions</label>
+          <input
+            id="submissionSearch"
+            type="search"
+            autocomplete="off"
+            placeholder="Search by title or ID..."
+          />
+          <section class="search-results search-dropdown" id="searchResults" aria-live="polite"></section>
+        </form>
+
+        <section class="search-results examples-results" id="exampleResults" aria-label="Submission examples">
+          <p class="empty-state">Loading examples...</p>
+        </section>
+      </section>
+    </main>
+
+    <script src="/search.js"></script>
+  </body>
+</html>

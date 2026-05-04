@@ -1,0 +1,13 @@
+From: Serena Kim <serena.kim@broker.example>
+To: Cyber Underwriting Desk
+Date: 2026-04-25 3:03 PM ET
+Subject: PixelWave Software - cyber and tech E&O submission
+
+PixelWave is a B2B SaaS analytics platform serving retail and hospitality clients. They host customer behavioral analytics data and integrate with CRM, point-of-sale, and marketing platforms.
+
+Requested:
+- $5M cyber liability
+- $3M technology E&O
+- $1M media liability
+
+SOC 2 Type II is in progress but not yet issued. The insured provided a security controls summary and contract notes.

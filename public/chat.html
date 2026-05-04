@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Agentic Underwriting Workspace</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main class="workspace">
+      <aside class="left-panel" aria-label="Submissions and chat history">
+        <a class="panel-search-link" href="/">Search a Submission</a>
+
+        <header class="brand-header">
+          <div class="brand-mark">AU</div>
+          <div>
+            <p class="eyebrow">Agentic Underwriting</p>
+            <h1>Workbench</h1>
+          </div>
+        </header>
+
+        <section class="sidebar-section">
+          <div class="section-heading">
+            <h2>Chat History</h2>
+            <button class="icon-button" id="newChatButton" type="button" aria-label="New chat">+</button>
+          </div>
+          <div class="history-list" id="historyList">
+            <p class="empty-state">No chat history.</p>
+          </div>
+        </section>
+
+        <section class="sidebar-section documents-section">
+          <div class="section-heading">
+            <h2>Documents</h2>
+          </div>
+          <div class="selection-actions">
+            <button class="selection-action" id="selectAllFilesButton" type="button">Select All</button>
+            <button class="selection-action" id="unselectAllFilesButton" type="button">Unselect All</button>
+          </div>
+          <label class="auto-selection-option">
+            <input id="autoSelectFiles" type="checkbox" />
+            <span>Auto</span>
+            <small>MCP placeholder</small>
+          </label>
+          <div class="document-list panel-document-list" id="documentList">
+            <p class="empty-state">Select a submission to view files.</p>
+          </div>
+        </section>
+      </aside>
+
+      <section class="right-panel" aria-label="Underwriting chat workspace">
+        <header class="workspace-header">
+          <div>
+            <p class="eyebrow">Live Workspace</p>
+            <h2 id="workspaceTitle">Underwriting Chat</h2>
+          </div>
+          <div class="header-actions">
+            <div class="model-card">
+              <span class="status-dot" aria-hidden="true"></span>
+              <span id="modelStatus">Connecting</span>
+            </div>
+            <button class="ghost-button" id="clearButton" type="button">Clear</button>
+          </div>
+        </header>
+
+        <div class="work-surface">
+          <section class="chat-column" aria-label="Chat">
+            <section class="chat-key-info" aria-label="Key information">
+              <div class="key-info-grid" id="keyInfoList">
+                <div class="key-info-item">
+                  <span>Insured</span>
+                  <strong>TBD</strong>
+                </div>
+              </div>
+            </section>
+
+            <section class="messages" id="messages" aria-live="polite">
+              <article class="message assistant">
+                <div class="avatar">AI</div>
+                <div class="bubble">
+                  <p>
+                    Choose a submission from the left or paste details below. I can help
+                    summarize cyber controls, surface missing information, and draft next steps.
+                  </p>
+                </div>
+              </article>
+            </section>
+
+            <form class="composer" id="chatForm">
+              <label class="sr-only" for="messageInput">Message</label>
+              <textarea
+                id="messageInput"
+                name="message"
+                rows="3"
+                placeholder="Ask a question or paste submission details..."
+                required
+              ></textarea>
+              <div class="composer-actions">
+                <div class="prompt-row" aria-label="Example prompts">
+                  <button class="prompt-chip" type="button">Summarize</button>
+                  <button class="prompt-chip" type="button">Missing Info</button>
+                  <button class="prompt-chip" type="button">Risk Flags</button>
+                </div>
+                <button class="send-button" id="sendButton" type="submit">Send</button>
+              </div>
+            </form>
+          </section>
+
+          <aside class="insight-panel" aria-label="Submission workspace placeholders">
+            <div class="insight-tabs" aria-label="Workspace sections">
+              <button class="tab-button active" type="button" data-panel-tab="details">Details</button>
+              <button class="tab-button" type="button" data-panel-tab="timeline">Timeline</button>
+              <button class="tab-button" type="button" data-panel-tab="note">Note</button>
+              <button class="tab-button" type="button" data-panel-tab="guide">Guide</button>
+            </div>
+
+            <section class="panel-view active" data-panel-view="details">
+              <section class="insight-card primary-card">
+                <div class="card-heading">
+                  <h3>Submission Summary</h3>
+                  <span class="placeholder-tag">Placeholder</span>
+                </div>
+                <p id="summaryPlaceholder">
+                  Select a submission to reserve this area for AI-generated account summary,
+                  appetite fit, and recommended next action.
+                </p>
+              </section>
+
+              <article class="insight-card alert-card">
+                <h3>Alerts</h3>
+                <p>High severity cyber alerts, missing documents, and referral triggers will appear here.</p>
+              </article>
+            </section>
+
+            <section class="panel-view" data-panel-view="timeline">
+              <article class="insight-card">
+                <h3>Timeline</h3>
+                <div class="timeline-list" id="timelineList">
+                  <p>Select a submission to view timeline.</p>
+                </div>
+              </article>
+            </section>
+
+            <section class="panel-view" data-panel-view="note">
+              <article class="insight-card">
+                <h3>Notes</h3>
+                <p>Reserve space for underwriter notes, broker calls, and internal comments.</p>
+              </article>
+            </section>
+
+            <section class="panel-view" data-panel-view="guide">
+              <article class="insight-card guidance-card">
+                <h3>Guidance</h3>
+                <form class="guide-form" id="guideForm">
+                  <label class="sr-only" for="guideInput">Add guidance</label>
+                  <textarea
+                    id="guideInput"
+                    rows="3"
+                    placeholder="Add appetite guidance, referral rules, or response style instructions..."
+                  ></textarea>
+                  <button class="selection-action" type="submit">Add Guide</button>
+                </form>
+                <div class="guide-list" id="guideList"></div>
+              </article>
+            </section>
+          </aside>
+        </div>
+      </section>
+    </main>
+
+    <div class="document-modal" id="documentModal" aria-hidden="true">
+      <div class="document-modal-backdrop" data-close-document></div>
+      <section class="document-modal-panel" role="dialog" aria-modal="true" aria-labelledby="documentModalTitle">
+        <header class="document-modal-header">
+          <div>
+            <p class="eyebrow">Document Preview</p>
+            <h2 id="documentModalTitle">Document</h2>
+          </div>
+          <button class="ghost-button" id="documentCloseButton" type="button">Close</button>
+        </header>
+        <div class="document-modal-content" id="documentModalContent"></div>
+      </section>
+    </div>
+
+    <script src="/app.js"></script>
+  </body>
+</html>

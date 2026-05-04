@@ -1,0 +1,24 @@
+Cyber Application Summary
+
+Insured: Acme Foods Distribution LLC
+Industry: Food distribution and cold storage
+Revenue: $28.4M
+Employees: 146
+Records: Approximately 82,000 customer and vendor records
+
+Systems:
+- Microsoft 365
+- Cloud-hosted warehouse management system
+- EDI ordering platform
+- Customer portal for order tracking
+- Fleet telematics platform
+
+Controls:
+- MFA: Email and VPN enabled; warehouse handheld admin portal pending confirmation
+- EDR: CrowdStrike on servers and laptops
+- Backups: Daily with quarterly restore tests
+- Patch cadence: Critical patches within 15 days
+- Security awareness: Annual training and phishing simulations twice per year
+
+Notes:
+The insured depends on two third-party logistics and EDI providers. A 24-hour outage would materially affect shipping and customer order processing.

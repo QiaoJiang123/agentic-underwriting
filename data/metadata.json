@@ -1,0 +1,56 @@
+{
+  "generated_at": "2026-04-29T18:20:00-04:00",
+  "description": "Search index for cyber underwriting dummy submissions.",
+  "submissions": [
+    {
+      "id": "001-acme-foods",
+      "title": "Acme Foods Distribution",
+      "insured_name": "Acme Foods Distribution LLC",
+      "industry": "Food distribution and cold storage",
+      "status": "New",
+      "received_at": "2026-04-21T10:42:00-04:00",
+      "folder": "data/submissions/001-acme-foods",
+      "keywords": ["food distribution", "cold storage", "partial mfa", "business interruption", "edi"]
+    },
+    {
+      "id": "002-northstar-contracting",
+      "title": "Northstar Contracting Group",
+      "insured_name": "Northstar Contracting Group Inc.",
+      "industry": "Commercial roofing and construction",
+      "status": "In Review",
+      "received_at": "2026-04-22T13:06:00-04:00",
+      "folder": "data/submissions/002-northstar-contracting",
+      "keywords": ["construction", "invoice manipulation", "funds transfer fraud", "subcontractor portal"]
+    },
+    {
+      "id": "003-evergreen-senior-living",
+      "title": "Evergreen Senior Living",
+      "insured_name": "Evergreen Senior Living Partners LP",
+      "industry": "Assisted living and memory care",
+      "status": "Referral Needed",
+      "received_at": "2026-04-23T12:15:00-04:00",
+      "folder": "data/submissions/003-evergreen-senior-living",
+      "keywords": ["healthcare", "phi", "hipaa", "medical devices", "regulatory defense"]
+    },
+    {
+      "id": "004-harborview-marina",
+      "title": "Harborview Marina & Storage",
+      "insured_name": "Harborview Marina & Storage LLC",
+      "industry": "Marina operations and boat storage",
+      "status": "New",
+      "received_at": "2026-04-24T16:22:00-04:00",
+      "folder": "data/submissions/004-harborview-marina",
+      "keywords": ["marina", "pci", "payment terminals", "customer wifi", "reservation platform"]
+    },
+    {
+      "id": "005-pixelwave-software",
+      "title": "PixelWave Software",
+      "insured_name": "PixelWave Software Inc.",
+      "industry": "SaaS analytics platform",
+      "status": "In Review",
+      "received_at": "2026-04-25T15:03:00-04:00",
+      "folder": "data/submissions/005-pixelwave-software",
+      "keywords": ["saas", "technology e&o", "soc 2", "api integrations", "high record count"]
+    }
+  ]
+}

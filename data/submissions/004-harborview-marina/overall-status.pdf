@@ -1,0 +1,63 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>
+endobj
+4 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+5 0 obj
+<< /Length 1217 >>
+stream
+BT
+/F1 18 Tf
+72 740 Td
+(Overall Status) Tj
+/F1 10 Tf
+0 -28 Td
+(Harborview Marina & Storage) Tj 0 -15 Td
+() Tj 0 -15 Td
+(Submission ID: 004-harborview-marina) Tj 0 -15 Td
+(Line of Business: Cyber liability) Tj 0 -15 Td
+(Status: New) Tj 0 -15 Td
+(File Created At: 2026-04-24T15:09:00-04:00) Tj 0 -15 Td
+(Received At: 2026-04-24T16:22:00-04:00) Tj 0 -15 Td
+(Updated At: 2026-04-28T10:12:00-04:00) Tj 0 -15 Td
+() Tj 0 -15 Td
+(Security Controls) Tj 0 -15 Td
+(- Mfa: Enabled for email and reservation platform admins) Tj 0 -15 Td
+(- Edr: Managed EDR on office endpoints only) Tj 0 -15 Td
+(- Backup: Reservation data backed up by SaaS provider) Tj 0 -15 Td
+(- Patching: POS terminals maintained by payment vendor) Tj 0 -15 Td
+(- Security Training: Annual training for office staff) Tj 0 -15 Td
+() Tj 0 -15 Td
+(Risk Flags) Tj 0 -15 Td
+(- PCI exposure) Tj 0 -15 Td
+(- Customer Wi-Fi segmentation) Tj 0 -15 Td
+(- Payment vendor dependency) Tj 0 -15 Td
+() Tj 0 -15 Td
+(Open Questions) Tj 0 -15 Td
+(- Confirm customer Wi-Fi is segmented from business network.) Tj 0 -15 Td
+(- Request PCI attestation or payment processor compliance summary.) Tj 0 -15 Td
+(- Clarify offline payment and slip reservation procedures.) Tj 0 -15 Td
+ET
+endstream
+endobj
+xref
+0 6
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000241 00000 n 
+0000000311 00000 n 
+trailer
+<< /Size 6 /Root 1 0 R >>
+startxref
+1580
+%%EOF

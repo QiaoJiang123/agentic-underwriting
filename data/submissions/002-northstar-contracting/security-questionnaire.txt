@@ -1,0 +1,19 @@
+Security Questionnaire
+
+Insured: Northstar Contracting Group Inc.
+
+Core systems:
+- Microsoft 365
+- QuickBooks Online
+- BuilderTrend project management SaaS
+- ADP payroll
+- Subcontractor document portal
+
+Controls:
+- MFA: Enabled for Microsoft 365 admins and employees
+- MFA gap: Not enforced for subcontractor portal users
+- EDR: Microsoft Defender for Business
+- Backups: Daily cloud backups for accounting and project files
+- Patch management: MSP monthly patch cycle
+- Wire verification: Verbal callback required but not documented in formal policy
+- Security awareness: New-hire overview only, no recurring phishing tests

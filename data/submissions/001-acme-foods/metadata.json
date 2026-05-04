@@ -1,0 +1,118 @@
+{
+  "id": "001-acme-foods",
+  "title": "Acme Foods Distribution",
+  "line_of_business": "Cyber liability",
+  "file_created_at": "2026-04-21T09:18:00-04:00",
+  "received_at": "2026-04-21T10:42:00-04:00",
+  "updated_at": "2026-04-25T14:05:00-04:00",
+  "status": "New",
+  "applicant": {
+    "insured_name": "Acme Foods Distribution LLC",
+    "industry": "Food distribution and cold storage",
+    "location": "Newark, NJ",
+    "annual_revenue": 28400000,
+    "employee_count": 146,
+    "records_count": 82000,
+    "technology_profile": "Warehouse management system, EDI ordering, fleet telematics, customer portal, Microsoft 365"
+  },
+  "coverage": {
+    "lines_requested": [
+      "Cyber liability",
+      "Technology services E&O",
+      "Business interruption"
+    ],
+    "requested_effective_date": "2026-05-15",
+    "requested_limits": {
+      "cyber_liability": "$3,000,000",
+      "technology_services_eo": "$1,000,000",
+      "business_interruption": "$2,000,000"
+    },
+    "retention_requested": "$25,000"
+  },
+  "documents": [
+    {
+      "file_name": "broker-email.txt",
+      "file_type": "email",
+      "category": "broker_correspondence",
+      "file_created_at": "2026-04-21T09:18:00-04:00",
+      "received_at": "2026-04-21T10:42:00-04:00",
+      "description": "Broker overview and requested cyber terms"
+    },
+    {
+      "file_name": "cyber-application.txt",
+      "file_type": "application",
+      "category": "application",
+      "file_created_at": "2026-04-20T16:11:00-04:00",
+      "received_at": "2026-04-21T10:42:00-04:00",
+      "description": "Cyber application responses"
+    },
+    {
+      "file_name": "loss-runs.txt",
+      "file_type": "loss_run",
+      "category": "loss_history",
+      "file_created_at": "2026-04-21T08:54:00-04:00",
+      "received_at": "2026-04-21T10:42:00-04:00",
+      "description": "Five-year cyber loss history"
+    },
+    {
+      "file_name": "company-description.pdf",
+      "file_type": "pdf",
+      "category": "company_description",
+      "file_created_at": "2026-04-25T14:05:00-04:00",
+      "received_at": "2026-04-21T10:42:00-04:00",
+      "description": "Company description and cyber exposure overview"
+    },
+    {
+      "file_name": "overall-status.pdf",
+      "file_type": "pdf",
+      "category": "overall_status",
+      "file_created_at": "2026-04-25T14:05:00-04:00",
+      "received_at": "2026-04-21T10:42:00-04:00",
+      "description": "Overall cyber underwriting status summary"
+    }
+  ],
+  "security_controls": {
+    "mfa": "Partial; enabled for email and VPN, not enabled for warehouse handheld device admin portal",
+    "edr": "CrowdStrike deployed on servers and corporate laptops",
+    "backup": "Daily backups, quarterly restore testing",
+    "patching": "Critical patches within 15 days",
+    "security_training": "Annual training plus simulated phishing twice per year"
+  },
+  "risk_flags": [
+    "Partial MFA",
+    "Operational technology dependency",
+    "Customer portal exposure"
+  ],
+  "open_questions": [
+    "Confirm MFA for warehouse handheld admin portal.",
+    "Request latest vulnerability scan summary.",
+    "Clarify business interruption dependency on third-party EDI provider."
+  ],
+  "timeline": [
+    {
+      "date": "2026-04-20T16:11:00-04:00",
+      "event": "Cyber application completed",
+      "description": "Application responses prepared by broker."
+    },
+    {
+      "date": "2026-04-21T08:54:00-04:00",
+      "event": "Loss runs generated",
+      "description": "Five-year cyber loss history attached."
+    },
+    {
+      "date": "2026-04-21T10:42:00-04:00",
+      "event": "Submission received",
+      "description": "Cyber renewal package received from broker."
+    },
+    {
+      "date": "2026-04-23T11:30:00-04:00",
+      "event": "MFA gap identified",
+      "description": "Warehouse handheld admin portal MFA pending confirmation."
+    },
+    {
+      "date": "2026-04-25T14:05:00-04:00",
+      "event": "Status updated",
+      "description": "Overall status and company description PDFs generated."
+    }
+  ]
+}

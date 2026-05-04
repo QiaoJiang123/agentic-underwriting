@@ -1,0 +1,14 @@
+From: Jordan Lee <jordan.lee@broker.example>
+To: Cyber Underwriting Desk
+Date: 2026-04-21 10:42 AM ET
+Subject: Acme Foods Distribution - cyber renewal submission
+
+Please review Acme Foods Distribution for a 5/15 effective cyber renewal. The insured distributes refrigerated food products to restaurants and grocery stores and relies heavily on EDI ordering, warehouse management software, and refrigerated fleet telematics.
+
+Requested terms:
+- $3M cyber liability
+- $1M technology services E&O
+- $2M dependent business interruption
+- $25K retention target
+
+The insured reports no ransomware events. There was one small business email compromise investigation in 2023. MFA is enabled for email and VPN, but we are confirming whether all warehouse admin tools are covered.

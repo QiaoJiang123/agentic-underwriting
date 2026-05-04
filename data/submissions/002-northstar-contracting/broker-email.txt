@@ -1,0 +1,13 @@
+From: Priya Shah <priya.shah@broker.example>
+To: Cyber Underwriting Desk
+Date: 2026-04-22 1:06 PM ET
+Subject: Northstar Contracting Group - new cyber submission
+
+Northstar Contracting is requesting cyber coverage focused on social engineering, funds transfer fraud, and invoice manipulation exposure. They pay a high volume of subcontractor invoices and use a project management portal for job files, change orders, and subcontractor documentation.
+
+Requested:
+- $2M cyber liability
+- $500K funds transfer fraud
+- $250K invoice manipulation
+
+The account has not purchased standalone cyber before.

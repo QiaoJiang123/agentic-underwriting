@@ -1,0 +1,18 @@
+{
+  "submission_id": "002-northstar-contracting",
+  "updated_at": "2026-05-02T00:00:00-04:00",
+  "guides": [
+    {
+      "id": "guide-funds-transfer",
+      "text": "Focus on invoice manipulation, funds transfer fraud controls, subcontractor portal access, and call-back verification evidence.",
+      "created_at": "2026-05-02T00:00:00-04:00",
+      "updated_at": "2026-05-02T00:00:00-04:00"
+    },
+    {
+      "id": "guide-underwriting-boundary",
+      "text": "Treat prior near-miss events as underwriting context, not claims determinations. Ask for missing evidence before drawing strong conclusions.",
+      "created_at": "2026-05-02T00:00:00-04:00",
+      "updated_at": "2026-05-02T00:00:00-04:00"
+    }
+  ]
+}

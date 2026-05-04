@@ -1,0 +1,8 @@
+From: Alicia Romero <alicia.romero@broker.example>
+To: Cyber Underwriting Desk
+Date: 2026-04-24 4:22 PM ET
+Subject: Harborview Marina cyber submission
+
+Harborview Marina is requesting cyber coverage with emphasis on PCI, payment terminal compromise, reservation platform outage, and customer data exposure. They process slip reservations, fuel payments, storage fees, and repair invoices through multiple connected systems.
+
+They have not had a cyber loss, but the broker flagged customer Wi-Fi and point-of-sale segmentation as items to review.

@@ -1,0 +1,8 @@
+Cyber Loss Runs
+
+Period: 2021-2026
+
+2023-08-19 | Business email compromise | Closed | Paid: $18,500
+Employee mailbox compromise led to fraudulent vendor payment attempt. Funds were recovered except investigation and legal costs.
+
+No ransomware, data breach, privacy class action, or dependent business interruption losses reported.
