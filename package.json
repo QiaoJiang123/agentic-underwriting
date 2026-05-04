@@ -4,13 +4,7 @@
   "private": true,
   "description": "Local chatbot wrapper for an agentic underwriting platform.",
   "scripts": {
-    "dev": "node server.js",
-    "start": "node server.js"
-  },
-  "dependencies": {
-    "@langchain/langgraph": "^0.2.0"
-  },
-  "engines": {
-    "node": ">=18"
+    "dev": "python3 -m backend.main",
+    "start": "python3 -m backend.main"
   }
 }
