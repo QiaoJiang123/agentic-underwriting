@@ -4,7 +4,7 @@
   "line_of_business": "Cyber liability",
   "file_created_at": "2026-04-21T09:18:00-04:00",
   "received_at": "2026-04-21T10:42:00-04:00",
-  "updated_at": "2026-04-25T14:05:00-04:00",
+  "updated_at": "2026-05-12T09:00:00-04:00",
   "status": "New",
   "applicant": {
     "insured_name": "Acme Foods Distribution LLC",
@@ -285,6 +285,11 @@
       "date": "2026-04-25T14:05:00-04:00",
       "event": "Status updated",
       "description": "Overall status and company description PDFs generated."
+    },
+    {
+      "date": "2026-05-12T09:00:00-04:00",
+      "event": "Standardized cyber underwriting document set added",
+      "description": "Cyber application, ransomware supplement, prior policy, loss runs, financials, security controls, MFA/EDR/backups, incident response plan, vendor assessment, and compliance documents added to the submission file."
     }
   ],
   "document_taxonomy": {

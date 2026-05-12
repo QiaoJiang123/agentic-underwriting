@@ -23,6 +23,7 @@ const tasksDueDot = document.querySelector("#tasksDueDot");
 const followUpDueDot = document.querySelector("#followUpDueDot");
 const keyInfoList = document.querySelector("#keyInfoList");
 const timelineList = document.querySelector("#timelineList");
+const analyticsPanel = document.querySelector("#analyticsPanel");
 const stageChecklist = document.querySelector("#stageChecklist");
 const documentList = document.querySelector("#documentList");
 const selectAllFilesButton = document.querySelector("#selectAllFilesButton");
@@ -51,6 +52,13 @@ let editingGuideIndex = null;
 let noteItems = [];
 let editingNoteIndex = null;
 let followUpItems = [];
+let analyticsModels = null;
+let analyticsFeatureMetadata = null;
+let currentAnalytics = null;
+let currentAnalyticsFeatureLookup = null;
+let activeWhatIfModel = "quote";
+let whatIfValues = {};
+let whatIfRawValues = {};
 const initialSubmissionId = new URLSearchParams(window.location.search).get("submission");
 
 init();
@@ -157,20 +165,28 @@ async function selectSubmission(submission, button) {
     noteItems = [];
     editingNoteIndex = null;
     followUpItems = [];
+    currentAnalytics = null;
+    currentAnalyticsFeatureLookup = null;
+    activeWhatIfModel = "quote";
+    whatIfValues = {};
+    whatIfRawValues = {};
 
     workspaceTitle.textContent = submission.title;
     summaryPlaceholder.textContent = buildSummaryPlaceholder(selectedSubmission.record);
     keyInfoList.innerHTML = buildKeyInfoItems(selectedSubmission)
       .map(
         (item) => `
-          <div class="key-info-item">
-            <span>${escapeHtml(item.label)}</span>
-            <strong>${escapeHtml(item.value)}</strong>
+          <div class="key-info-item" title="${escapeHtml(`${item.label}: ${item.value}`)}">
+            <span title="${escapeHtml(item.label)}">${escapeHtml(item.label)}</span>
+            <strong title="${escapeHtml(item.value)}">${escapeHtml(item.value)}</strong>
           </div>
         `
       )
       .join("");
     timelineList.innerHTML = buildTimelineItems(selectedSubmission.record);
+    analyticsPanel.innerHTML = '<p class="empty-state">Loading analytics models...</p>';
+    await loadAnalyticsModels();
+    analyticsPanel.innerHTML = buildAnalyticsPanel(selectedSubmission.record);
     stageChecklist.innerHTML = buildStageChecklist(selectedSubmission.record);
     documentList.innerHTML = buildDocumentLinks(selectedSubmission.record);
     renderGuideInstructions("Loading guide...");
@@ -425,6 +441,67 @@ panelTabButtons.forEach((button) => {
     });
   });
 });
+
+if (analyticsPanel) {
+  analyticsPanel.addEventListener("click", (event) => {
+    const whatIfModelButton = event.target.closest("[data-what-if-model]");
+    if (whatIfModelButton) {
+      activeWhatIfModel = whatIfModelButton.dataset.whatIfModel === "bind" ? "bind" : "quote";
+      analyticsPanel.querySelectorAll("[data-what-if-model]").forEach((button) => {
+        button.classList.toggle("active", button === whatIfModelButton);
+      });
+      updateWhatIfResult();
+      return;
+    }
+
+    const optionButton = event.target.closest("[data-what-if-option]");
+    if (optionButton) {
+      const key = optionButton.dataset.whatIfFeatureKey;
+      whatIfValues[key] = Number(optionButton.dataset.whatIfValue);
+      analyticsPanel.querySelectorAll(`[data-what-if-option][data-what-if-feature-key="${key}"]`).forEach((button) => {
+        button.classList.toggle("active", button === optionButton);
+      });
+      updateWhatIfFeatureDisplay(key);
+      updateWhatIfResult();
+      return;
+    }
+
+    const button = event.target.closest("[data-analytics-subtab]");
+    if (!button) {
+      return;
+    }
+
+    const tabName = button.dataset.analyticsSubtab;
+    analyticsPanel.querySelectorAll("[data-analytics-subtab]").forEach((tabButton) => {
+      tabButton.classList.toggle("active", tabButton === button);
+    });
+    analyticsPanel.querySelectorAll("[data-analytics-view]").forEach((view) => {
+      view.classList.toggle("active", view.dataset.analyticsView === tabName);
+    });
+  });
+
+  analyticsPanel.addEventListener("input", (event) => {
+    const field = event.target.closest("[data-what-if-feature]");
+    if (!field) {
+      return;
+    }
+
+    updateWhatIfFeatureValueFromField(field);
+    updateWhatIfFeatureDisplay(field.dataset.whatIfFeature);
+    updateWhatIfResult();
+  });
+
+  analyticsPanel.addEventListener("change", (event) => {
+    const field = event.target.closest("[data-what-if-feature]");
+    if (!field) {
+      return;
+    }
+
+    updateWhatIfFeatureValueFromField(field);
+    updateWhatIfFeatureDisplay(field.dataset.whatIfFeature);
+    updateWhatIfResult();
+  });
+}
 
 if (guideForm) {
   guideForm.addEventListener("submit", async (event) => {
@@ -1294,6 +1371,749 @@ function buildTimelineItems(record) {
       `
     )
     .join("");
+}
+
+function buildAnalyticsPanel(record) {
+  currentAnalyticsFeatureLookup = buildAnalyticsFeatureLookup(record);
+  ensureWhatIfValues(currentAnalyticsFeatureLookup);
+  currentAnalytics = buildLogisticAnalytics(record, currentAnalyticsFeatureLookup);
+
+  return `
+    <div class="analytics-subtabs" aria-label="Analytics model views">
+      <button class="analytics-subtab active" type="button" data-analytics-subtab="quote">Quote</button>
+      <button class="analytics-subtab" type="button" data-analytics-subtab="bind">Bind</button>
+      <button class="analytics-subtab" type="button" data-analytics-subtab="what-if">What If</button>
+    </div>
+
+    <div class="analytics-view active" data-analytics-view="quote">
+      ${renderModelView("Quote Probability", currentAnalytics.quote, "Likelihood the account receives quotable terms")}
+    </div>
+
+    <div class="analytics-view" data-analytics-view="bind">
+      ${renderModelView("Bind Probability", currentAnalytics.bind, "Likelihood quoted terms bind")}
+    </div>
+
+    <div class="analytics-view" data-analytics-view="what-if">
+      ${renderWhatIfView()}
+    </div>
+  `;
+}
+
+function buildLogisticAnalytics(record, existingFeatureLookup) {
+  const featureLookup = existingFeatureLookup || buildAnalyticsFeatureLookup(record);
+  const quoteModel = analyticsModels && analyticsModels.quote ? analyticsModels.quote : getFallbackQuoteModel();
+  const bindModel = analyticsModels && analyticsModels.bind ? analyticsModels.bind : getFallbackBindModel();
+
+  return {
+    quote: scoreStoredModel(quoteModel, featureLookup),
+    bind: scoreStoredModel(bindModel, featureLookup)
+  };
+}
+
+async function loadAnalyticsModels() {
+  if (analyticsModels) {
+    return analyticsModels;
+  }
+
+  const [quoteResponse, bindResponse, metadataResponse] = await Promise.all([
+    fetch("/api/models/quote_prob"),
+    fetch("/api/models/bind_prob"),
+    fetch("/api/models/feature_metadata")
+  ]);
+  const [quoteData, bindData, metadataData] = await Promise.all([
+    quoteResponse.json(),
+    bindResponse.json(),
+    metadataResponse.json()
+  ]);
+
+  if (!quoteResponse.ok) {
+    throw new Error(quoteData.error || "Unable to load quote model.");
+  }
+
+  if (!bindResponse.ok) {
+    throw new Error(bindData.error || "Unable to load bind model.");
+  }
+
+  if (!metadataResponse.ok) {
+    throw new Error(metadataData.error || "Unable to load feature metadata.");
+  }
+
+  analyticsModels = {
+    quote: quoteData.model,
+    bind: bindData.model
+  };
+  analyticsFeatureMetadata = metadataData.model;
+  return analyticsModels;
+}
+
+function scoreStoredModel(model, featureLookup) {
+  const averageProbability = clamp(Number(model.average_probability || 0.5), 0.01, 0.99);
+  const baseLogit = logit(averageProbability);
+  const featureSteps = [];
+
+  (model.features || []).forEach((modelFeature) => {
+    const feature = featureLookup[modelFeature.key] || {
+      value: Number(modelFeature.baseline_value || 0.5),
+      displayValue: "TBD",
+      label: modelFeature.label || modelFeature.key
+    };
+    const baselineValue = Number(modelFeature.baseline_value ?? 0.5);
+    const coefficient = Number(modelFeature.coefficient || 0);
+    const logitContribution = coefficient * (Number(feature.value || 0) - baselineValue);
+
+    featureSteps.push({
+      key: modelFeature.key,
+      label: modelFeature.label || feature.label || modelFeature.key,
+      displayValue: feature.displayValue,
+      value: feature.value,
+      logitContribution
+    });
+  });
+
+  const finalLogit = baseLogit + featureSteps.reduce(
+    (total, step) => total + step.logitContribution,
+    0
+  );
+
+  return {
+    modelName: model.model_name,
+    modelType: model.model_type || "logistic_regression",
+    averageProbability,
+    baseLogit,
+    probability: sigmoid(finalLogit),
+    logit: finalLogit,
+    steps: featureSteps
+  };
+}
+
+function buildAnalyticsFeatureLookup(record) {
+  const applicant = record.applicant || {};
+  const coverage = record.coverage || {};
+  const controls = record.security_controls || {};
+  const riskFlags = Array.isArray(record.risk_flags) ? record.risk_flags : [];
+  const openQuestions = Array.isArray(record.open_questions) ? record.open_questions : [];
+  const revenue = typeof applicant.annual_revenue === "number" ? applicant.annual_revenue : 0;
+  const recordsCount = typeof applicant.records_count === "number" ? applicant.records_count : 0;
+  const requestedLimits = Object.values(coverage.requested_limits || {})
+    .map(parseMoney)
+    .filter((value) => value > 0);
+  const maxLimit = requestedLimits.length ? Math.max(...requestedLimits) : 0;
+  const mfaText = String(controls.mfa || "").toLowerCase();
+  const edrText = String(controls.edr || "").toLowerCase();
+  const backupText = String(controls.backup || "").toLowerCase();
+  const patchingText = String(controls.patching || "").toLowerCase();
+  const trainingText = String(controls.security_training || "").toLowerCase();
+  const techText = String(applicant.technology_profile || "").toLowerCase();
+
+  const featureInputs = [
+    {
+      key: "revenue_scale",
+      label: "Revenue Scale",
+      value: normalize(revenue, 5_000_000, 500_000_000),
+      displayValue: formatCurrency(revenue),
+      rawValue: revenue
+    },
+    {
+      key: "records_exposure",
+      label: "Records Exposure",
+      value: normalize(recordsCount, 10_000, 1_000_000),
+      displayValue: recordsCount ? recordsCount.toLocaleString() : "TBD",
+      rawValue: recordsCount
+    },
+    {
+      key: "mfa_maturity",
+      label: "MFA Maturity",
+      value: mfaText.includes("partial") ? 0.45 : mfaText ? 0.82 : 0.2,
+      displayValue: controls.mfa || "TBD"
+    },
+    {
+      key: "edr_coverage",
+      label: "EDR Coverage",
+      value: edrText.includes("crowdstrike") || edrText.includes("deployed") ? 0.84 : edrText ? 0.58 : 0.25,
+      displayValue: controls.edr || "TBD"
+    },
+    {
+      key: "backup_resilience",
+      label: "Backup Resilience",
+      value: backupText.includes("restore") ? 0.78 : backupText.includes("daily") ? 0.64 : 0.3,
+      displayValue: controls.backup || "TBD"
+    },
+    {
+      key: "patch_discipline",
+      label: "Patch Discipline",
+      value: patchingText.includes("15") ? 0.76 : patchingText.includes("30") ? 0.58 : patchingText ? 0.48 : 0.3,
+      displayValue: controls.patching || "TBD"
+    },
+    {
+      key: "security_training",
+      label: "Security Training",
+      value: trainingText.includes("phishing") ? 0.72 : trainingText ? 0.56 : 0.28,
+      displayValue: controls.security_training || "TBD"
+    },
+    {
+      key: "prior_claims",
+      label: "Prior Claims Signal",
+      value: riskFlags.some((flag) => /claim|loss|ransom/i.test(flag)) ? 0.72 : 0.28,
+      displayValue: riskFlags.some((flag) => /claim|loss|ransom/i.test(flag)) ? "Elevated" : "Low / clean"
+    },
+    {
+      key: "vendor_dependency",
+      label: "Vendor Dependency",
+      value: techText.includes("edi") || techText.includes("portal") || openQuestions.some((question) => /third-party|vendor|provider/i.test(question)) ? 0.7 : 0.35,
+      displayValue: techText.includes("edi") || techText.includes("portal") ? "Material third-party dependency" : "Limited dependency"
+    },
+    {
+      key: "limit_fit",
+      label: "Requested Limit Fit",
+      value: maxLimit && revenue ? clamp(1 - Math.abs(maxLimit / revenue - 0.1) * 2, 0.18, 0.86) : 0.5,
+      displayValue: maxLimit ? `${formatCurrency(maxLimit)} max requested` : "TBD",
+      rawValue: maxLimit
+    }
+  ];
+
+  return featureInputs.reduce((lookup, feature) => {
+    lookup[feature.key] = feature;
+    return lookup;
+  }, {});
+}
+
+function ensureWhatIfValues(featureLookup) {
+  Object.values(featureLookup || {}).forEach((feature) => {
+    if (typeof whatIfValues[feature.key] !== "number") {
+      whatIfValues[feature.key] = Number(feature.value || 0);
+    }
+    if (isNumericWhatIfFeature(feature.key) && typeof whatIfRawValues[feature.key] !== "number") {
+      whatIfRawValues[feature.key] = Number(feature.rawValue || 0);
+    }
+  });
+}
+
+function renderWhatIfView() {
+  const configs = getWhatIfFeatureConfigs();
+
+  return `
+    <section class="what-if-workspace">
+      <div class="what-if-sticky">
+        <div class="what-if-switch" aria-label="What If model">
+          <button class="analytics-subtab ${activeWhatIfModel === "quote" ? "active" : ""}" type="button" data-what-if-model="quote">Quote</button>
+          <button class="analytics-subtab ${activeWhatIfModel === "bind" ? "active" : ""}" type="button" data-what-if-model="bind">Bind</button>
+        </div>
+        <div class="what-if-summary" id="whatIfSummary">
+          ${renderWhatIfSummary()}
+        </div>
+      </div>
+      <div class="what-if-waterfall" id="whatIfWaterfall">
+        ${renderWhatIfWaterfall()}
+      </div>
+      <div class="what-if-controls">
+        ${Object.values(configs)
+          .map((config) => renderWhatIfControl(config))
+          .join("")}
+      </div>
+    </section>
+  `;
+}
+
+function getWhatIfScenario() {
+  if (!currentAnalytics || !currentAnalyticsFeatureLookup) {
+    return null;
+  }
+
+  const model = getWhatIfModel(activeWhatIfModel);
+  const currentModel = activeWhatIfModel === "bind" ? currentAnalytics.bind : currentAnalytics.quote;
+  const scenarioModel = scoreStoredModel(model, buildWhatIfFeatureLookup());
+  const delta = scenarioModel.probability - currentModel.probability;
+  const label = activeWhatIfModel === "bind" ? "Bind Scenario" : "Quote Scenario";
+
+  return { currentModel, scenarioModel, delta, label };
+}
+
+function renderWhatIfSummary() {
+  const scenario = getWhatIfScenario();
+  if (!scenario) {
+    return '<p class="empty-state">Select a submission to run What If scenarios.</p>';
+  }
+
+  return `
+    ${renderScoreCard(scenario.label, scenario.scenarioModel, "Recalculated from the scenario values below")}
+    <div class="scenario-delta ${scenario.delta >= 0 ? "positive" : "negative"}">
+      Scenario change vs current: ${formatPercentContribution(scenario.delta)}
+    </div>
+  `;
+}
+
+function renderWhatIfWaterfall() {
+  const scenario = getWhatIfScenario();
+  if (!scenario) {
+    return "";
+  }
+
+  return `
+    <div class="model-section compact-model-section">
+      <h4>${escapeHtml(scenario.scenarioModel.modelName || "Scenario Model")}</h4>
+      ${renderProbabilityWaterfall(scenario.scenarioModel)}
+    </div>
+  `;
+}
+
+function updateWhatIfResult() {
+  const summary = analyticsPanel && analyticsPanel.querySelector("#whatIfSummary");
+  const waterfall = analyticsPanel && analyticsPanel.querySelector("#whatIfWaterfall");
+  if (summary) {
+    summary.innerHTML = renderWhatIfSummary();
+  }
+  if (waterfall) {
+    waterfall.innerHTML = renderWhatIfWaterfall();
+  }
+}
+
+function updateWhatIfFeatureDisplay(key) {
+  const display = analyticsPanel && analyticsPanel.querySelector(`[data-what-if-display="${key}"]`);
+  if (display) {
+    display.textContent = formatWhatIfFeatureValue(key, whatIfValues[key]);
+  }
+}
+
+function buildWhatIfFeatureLookup() {
+  return Object.values(currentAnalyticsFeatureLookup || {}).reduce((lookup, feature) => {
+    let value = typeof whatIfValues[feature.key] === "number" ? whatIfValues[feature.key] : feature.value;
+    let displayValue = formatWhatIfFeatureValue(feature.key, value);
+
+    if (isNumericWhatIfFeature(feature.key)) {
+      const rawValue = typeof whatIfRawValues[feature.key] === "number" ? whatIfRawValues[feature.key] : feature.rawValue;
+      value = rawToModelValue(feature.key, rawValue);
+      displayValue = formatRawWhatIfValue(feature.key, rawValue);
+    }
+
+    lookup[feature.key] = {
+      ...feature,
+      value,
+      displayValue
+    };
+    return lookup;
+  }, {});
+}
+
+function getWhatIfModel(modelName) {
+  if (modelName === "bind") {
+    return analyticsModels && analyticsModels.bind ? analyticsModels.bind : getFallbackBindModel();
+  }
+
+  return analyticsModels && analyticsModels.quote ? analyticsModels.quote : getFallbackQuoteModel();
+}
+
+function renderWhatIfControl(config) {
+  const current = currentAnalyticsFeatureLookup && currentAnalyticsFeatureLookup[config.key]
+    ? currentAnalyticsFeatureLookup[config.key]
+    : { value: 0, displayValue: "TBD" };
+  const value = typeof whatIfValues[config.key] === "number" ? whatIfValues[config.key] : current.value;
+
+  if (config.type === "binary") {
+    return `
+      <div class="what-if-control">
+        <div class="what-if-control-heading">
+          <strong>${escapeHtml(config.label)}</strong>
+          <small>Current: ${escapeHtml(current.displayValue)}</small>
+        </div>
+        <div class="binary-option-row">
+          ${config.options
+            .map((option) => `
+              <button
+                class="binary-option ${nearlyEqual(value, option.value) ? "active" : ""}"
+                type="button"
+                data-what-if-option
+                data-what-if-feature-key="${escapeHtml(config.key)}"
+                data-what-if-value="${option.value}"
+              >
+                ${escapeHtml(option.label)}
+              </button>
+            `)
+            .join("")}
+        </div>
+        <span class="what-if-value" data-what-if-display="${escapeHtml(config.key)}">${escapeHtml(formatWhatIfFeatureValue(config.key, value))}</span>
+      </div>
+    `;
+  }
+
+  if (config.type === "select") {
+    return `
+      <label class="what-if-control">
+        <div class="what-if-control-heading">
+          <strong>${escapeHtml(config.label)}</strong>
+          <small>Current: ${escapeHtml(current.displayValue)}</small>
+        </div>
+        <select data-what-if-feature="${escapeHtml(config.key)}">
+          ${config.options
+            .map((option) => `
+              <option value="${option.value}" ${nearlyEqual(value, option.value) ? "selected" : ""}>${escapeHtml(option.label)}</option>
+            `)
+            .join("")}
+        </select>
+        <span class="what-if-value" data-what-if-display="${escapeHtml(config.key)}">${escapeHtml(formatWhatIfFeatureValue(config.key, value))}</span>
+      </label>
+    `;
+  }
+
+  return `
+    <label class="what-if-control">
+      <div class="what-if-control-heading">
+        <strong>${escapeHtml(config.label)}</strong>
+        <small>Current: ${escapeHtml(current.displayValue)}</small>
+      </div>
+      <input
+        type="range"
+        min="${config.min}"
+        max="${config.max}"
+        step="${config.step}"
+        value="${value}"
+        data-what-if-feature="${escapeHtml(config.key)}"
+      />
+      <span class="what-if-value" data-what-if-display="${escapeHtml(config.key)}">${escapeHtml(formatWhatIfFeatureValue(config.key, value))}</span>
+    </label>
+  `;
+}
+
+function getWhatIfFeatureConfigs() {
+  return {
+    revenue_scale: {
+      key: "revenue_scale",
+      label: "Revenue Scale",
+      type: "range",
+      min: 0,
+      max: 1,
+      step: 0.01
+    },
+    records_exposure: {
+      key: "records_exposure",
+      label: "Records Exposure",
+      type: "range",
+      min: 0,
+      max: 1,
+      step: 0.01
+    },
+    mfa_maturity: {
+      key: "mfa_maturity",
+      label: "MFA Maturity",
+      type: "select",
+      options: [
+        { label: "No MFA", value: 0.2 },
+        { label: "Partial MFA", value: 0.45 },
+        { label: "Full MFA", value: 0.82 }
+      ]
+    },
+    edr_coverage: {
+      key: "edr_coverage",
+      label: "EDR Coverage",
+      type: "select",
+      options: [
+        { label: "No EDR", value: 0.25 },
+        { label: "Partial EDR", value: 0.58 },
+        { label: "Broad EDR", value: 0.84 }
+      ]
+    },
+    backup_resilience: {
+      key: "backup_resilience",
+      label: "Backup Resilience",
+      type: "select",
+      options: [
+        { label: "Weak", value: 0.3 },
+        { label: "Daily Backup", value: 0.64 },
+        { label: "Restore Tested", value: 0.78 }
+      ]
+    },
+    patch_discipline: {
+      key: "patch_discipline",
+      label: "Patch Discipline",
+      type: "select",
+      options: [
+        { label: "Slow", value: 0.3 },
+        { label: "30 Days", value: 0.58 },
+        { label: "15 Days", value: 0.76 }
+      ]
+    },
+    security_training: {
+      key: "security_training",
+      label: "Security Training",
+      type: "select",
+      options: [
+        { label: "None", value: 0.28 },
+        { label: "Annual", value: 0.56 },
+        { label: "Phishing Sim", value: 0.72 }
+      ]
+    },
+    prior_claims: {
+      key: "prior_claims",
+      label: "Prior Claims Signal",
+      type: "binary",
+      options: [
+        { label: "No", value: 0.28 },
+        { label: "Yes", value: 0.72 }
+      ]
+    },
+    vendor_dependency: {
+      key: "vendor_dependency",
+      label: "Vendor Dependency",
+      type: "binary",
+      options: [
+        { label: "Limited", value: 0.35 },
+        { label: "Material", value: 0.7 }
+      ]
+    },
+    limit_fit: {
+      key: "limit_fit",
+      label: "Requested Limit Fit",
+      type: "range",
+      min: 0,
+      max: 1,
+      step: 0.01
+    }
+  };
+}
+
+function formatWhatIfFeatureValue(key, value) {
+  const numericValue = Number(value || 0);
+  const config = getWhatIfFeatureConfigs()[key];
+  if (config && Array.isArray(config.options)) {
+    const option = config.options.find((item) => nearlyEqual(item.value, numericValue));
+    if (option) {
+      return option.label;
+    }
+  }
+
+  return `${Math.round(numericValue * 100)}%`;
+}
+
+function renderModelView(label, model, description) {
+  return `
+    ${renderScoreCard(label, model, description)}
+    <div class="model-section">
+      <h4>${escapeHtml(model.modelName || "Logistic Regression")}</h4>
+      <div class="model-caption">
+        Starts at average probability, applies each feature's marginal contribution, and ends at current probability.
+      </div>
+      ${renderProbabilityWaterfall(model)}
+      ${renderModelInterpretationSummary(model)}
+    </div>
+  `;
+}
+
+function renderScoreCard(label, model, description) {
+  const percent = Math.round(model.probability * 100);
+  const averagePercent = Math.round(model.averageProbability * 100);
+  return `
+    <div class="score-card">
+      <span>${escapeHtml(label)}</span>
+      <strong>${percent}%</strong>
+      <div class="score-meter" aria-hidden="true">
+        <i style="width: ${percent}%"></i>
+      </div>
+      <small>${escapeHtml(description)}</small>
+      <em>Average ${averagePercent}% -> Current ${percent}%</em>
+    </div>
+  `;
+}
+
+function renderProbabilityWaterfall(model) {
+  const sortedSteps = getDisplayProbabilitySteps(model);
+  const maxContribution = Math.max(
+    ...sortedSteps.map((step) => Math.abs(step.probabilityContribution)),
+    Math.abs(model.probability - model.averageProbability),
+    0.01
+  );
+
+  return `
+    <div class="probability-waterfall">
+      ${renderProbabilityAnchor("Average Probability", model.averageProbability)}
+      ${sortedSteps
+        .map((step) => {
+          const contribution = step.probabilityContribution;
+          const width = Math.max(Math.abs(contribution) / maxContribution * 48, 3);
+          const direction = contribution >= 0 ? "positive" : "negative";
+          const intensity = Math.abs(contribution) / maxContribution;
+          return `
+            <div class="waterfall-row marginal-row">
+              <span title="${escapeHtml(step.displayValue)}">${escapeHtml(step.label)}</span>
+              <div class="waterfall-track" title="Current value: ${escapeHtml(step.displayValue)}">
+                <i class="${direction}" style="width: ${width}%; ${direction === "positive" ? "left: 50%" : `right: 50%`}; background: ${getContributionColor(direction, intensity)}"></i>
+              </div>
+              <strong>${formatPercentContribution(contribution)}</strong>
+            </div>
+          `;
+        })
+        .join("")}
+      ${renderProbabilityAnchor("Current Probability", model.probability)}
+    </div>
+  `;
+}
+
+function getDisplayProbabilitySteps(model) {
+  const sortedRawSteps = [...model.steps].sort(
+    (left, right) => right.logitContribution - left.logitContribution
+  );
+  return buildOrderedProbabilitySteps(
+    sortedRawSteps,
+    model.baseLogit || logit(model.averageProbability)
+  );
+}
+
+function renderModelInterpretationSummary(model) {
+  const steps = getDisplayProbabilitySteps(model);
+  const positiveDrivers = [...steps]
+    .filter((step) => step.probabilityContribution > 0)
+    .sort((left, right) => right.probabilityContribution - left.probabilityContribution)
+    .slice(0, 3);
+  const negativeDrivers = [...steps]
+    .filter((step) => step.probabilityContribution < 0)
+    .sort((left, right) => left.probabilityContribution - right.probabilityContribution)
+    .slice(0, 3);
+  const direction = model.probability >= model.averageProbability ? "above" : "below";
+
+  return `
+    <section class="interpretation-summary">
+      <h4>Model Interpretation</h4>
+      <p>
+        This account is ${formatPercent(model.probability)} versus a model average of ${formatPercent(model.averageProbability)},
+        placing it ${direction} the average by ${formatPercent(Math.abs(model.probability - model.averageProbability))}.
+      </p>
+      <p>
+        Largest positive drivers: ${formatDriverList(positiveDrivers)}.
+        Largest negative drivers: ${formatDriverList(negativeDrivers)}.
+      </p>
+    </section>
+  `;
+}
+
+function formatDriverList(steps) {
+  if (!steps.length) {
+    return "none";
+  }
+
+  return steps
+    .map((step) => `${step.label} (${formatPercentContribution(step.probabilityContribution)})`)
+    .join(", ");
+}
+
+function buildOrderedProbabilitySteps(steps, startingLogit) {
+  let runningLogit = startingLogit;
+
+  return steps.map((step) => {
+    const beforeProbability = sigmoid(runningLogit);
+    runningLogit += step.logitContribution;
+    const afterProbability = sigmoid(runningLogit);
+
+    return {
+      ...step,
+      probabilityContribution: afterProbability - beforeProbability,
+      probabilityAfter: afterProbability
+    };
+  });
+}
+
+function renderProbabilityAnchor(label, probability) {
+  const percent = Math.round(probability * 100);
+  return `
+    <div class="waterfall-row anchor-row">
+      <span>${escapeHtml(label)}</span>
+      <div class="anchor-track">
+        <i style="width: ${percent}%"></i>
+      </div>
+      <strong>${percent}%</strong>
+    </div>
+  `;
+}
+
+function sigmoid(value) {
+  return 1 / (1 + Math.exp(-value));
+}
+
+function logit(probability) {
+  const bounded = clamp(probability, 0.01, 0.99);
+  return Math.log(bounded / (1 - bounded));
+}
+
+function normalize(value, min, max) {
+  if (!Number.isFinite(value) || max <= min) {
+    return 0.5;
+  }
+
+  return clamp((value - min) / (max - min), 0, 1);
+}
+
+function clamp(value, min, max) {
+  return Math.min(Math.max(value, min), max);
+}
+
+function nearlyEqual(left, right) {
+  return Math.abs(Number(left) - Number(right)) < 0.005;
+}
+
+function parseMoney(value) {
+  const number = Number(String(value || "").replace(/[^0-9.]/g, ""));
+  return Number.isFinite(number) ? number : 0;
+}
+
+function formatSignedNumber(value) {
+  const number = Number(value || 0);
+  const sign = number >= 0 ? "+" : "";
+  return `${sign}${number.toFixed(2)}`;
+}
+
+function formatPercentContribution(value) {
+  const number = Number(value || 0) * 100;
+  const sign = number >= 0 ? "+" : "";
+  return `${sign}${number.toFixed(1)}%`;
+}
+
+function formatPercent(value) {
+  return `${Math.round(Number(value || 0) * 100)}%`;
+}
+
+function getContributionColor(direction, intensity) {
+  const boundedIntensity = clamp(Number(intensity || 0), 0, 1);
+  const lightness = Math.round(72 - boundedIntensity * 34);
+  const saturation = Math.round(62 + boundedIntensity * 28);
+  const hue = direction === "positive" ? 221 : 345;
+  return `hsl(${hue} ${saturation}% ${lightness}%)`;
+}
+
+function getFallbackQuoteModel() {
+  return {
+    model_name: "quote_prob",
+    model_type: "logistic_regression",
+    average_probability: 0.58,
+    features: [
+      { key: "revenue_scale", label: "Revenue Scale", coefficient: 0.36, baseline_value: 0.5 },
+      { key: "records_exposure", label: "Records Exposure", coefficient: -0.28, baseline_value: 0.5 },
+      { key: "mfa_maturity", label: "MFA Maturity", coefficient: 0.55, baseline_value: 0.5 },
+      { key: "edr_coverage", label: "EDR Coverage", coefficient: 0.42, baseline_value: 0.5 },
+      { key: "backup_resilience", label: "Backup Resilience", coefficient: 0.38, baseline_value: 0.5 },
+      { key: "patch_discipline", label: "Patch Discipline", coefficient: 0.34, baseline_value: 0.5 },
+      { key: "security_training", label: "Security Training", coefficient: 0.18, baseline_value: 0.5 },
+      { key: "prior_claims", label: "Prior Claims Signal", coefficient: -0.45, baseline_value: 0.5 },
+      { key: "vendor_dependency", label: "Vendor Dependency", coefficient: -0.25, baseline_value: 0.5 },
+      { key: "limit_fit", label: "Requested Limit Fit", coefficient: 0.32, baseline_value: 0.5 }
+    ]
+  };
+}
+
+function getFallbackBindModel() {
+  return {
+    model_name: "bind_prob",
+    model_type: "logistic_regression",
+    average_probability: 0.47,
+    features: [
+      { key: "revenue_scale", label: "Revenue Scale", coefficient: 0.25, baseline_value: 0.5 },
+      { key: "records_exposure", label: "Records Exposure", coefficient: -0.36, baseline_value: 0.5 },
+      { key: "mfa_maturity", label: "MFA Maturity", coefficient: 0.72, baseline_value: 0.5 },
+      { key: "edr_coverage", label: "EDR Coverage", coefficient: 0.48, baseline_value: 0.5 },
+      { key: "backup_resilience", label: "Backup Resilience", coefficient: 0.46, baseline_value: 0.5 },
+      { key: "patch_discipline", label: "Patch Discipline", coefficient: 0.32, baseline_value: 0.5 },
+      { key: "security_training", label: "Security Training", coefficient: 0.22, baseline_value: 0.5 },
+      { key: "prior_claims", label: "Prior Claims Signal", coefficient: -0.52, baseline_value: 0.5 },
+      { key: "vendor_dependency", label: "Vendor Dependency", coefficient: -0.3, baseline_value: 0.5 },
+      { key: "limit_fit", label: "Requested Limit Fit", coefficient: 0.44, baseline_value: 0.5 }
+    ]
+  };
 }
 
 function buildStageChecklist(record) {

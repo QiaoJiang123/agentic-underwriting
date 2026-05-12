@@ -104,7 +104,7 @@
               <button class="tab-button active" id="detailsTabButton" type="button" data-panel-tab="details">
                 Details
               </button>
-              <button class="tab-button" type="button" data-panel-tab="timeline">Timeline</button>
+              <button class="tab-button" type="button" data-panel-tab="analytics">Analytics</button>
               <button class="tab-button" type="button" data-panel-tab="tasks">
                 Tasks <span class="due-dot" id="tasksDueDot" aria-hidden="true"></span>
               </button>
@@ -122,13 +122,23 @@
                   appetite fit, and recommended next action.
                 </p>
               </section>
-            </section>
 
-            <section class="panel-view" data-panel-view="timeline">
               <article class="insight-card">
                 <h3>Timeline</h3>
                 <div class="timeline-list" id="timelineList">
                   <p>Select a submission to view timeline.</p>
+                </div>
+              </article>
+            </section>
+
+            <section class="panel-view" data-panel-view="analytics">
+              <article class="insight-card analytics-card">
+                <div class="card-heading">
+                  <h3>Analytics</h3>
+                  <span class="placeholder-tag">Demo model</span>
+                </div>
+                <div class="analytics-panel" id="analyticsPanel">
+                  <p>Select a submission to view quote and bind analytics.</p>
                 </div>
               </article>
             </section>
@@ -149,7 +159,7 @@
                 </div>
                 <form class="follow-up-form" id="followUpForm">
                   <label class="sr-only" for="followUpTitle">Task</label>
-                  <input id="followUpTitle" type="text" placeholder="Add an underwriting task..." />
+                  <textarea id="followUpTitle" rows="3" placeholder="Add an underwriting task..."></textarea>
                   <label class="sr-only" for="followUpDate">Due date</label>
                   <input id="followUpDate" type="date" />
                   <button class="selection-action" type="submit">Add</button>

@@ -10,6 +10,7 @@ GUIDE_DIR = ROOT / "data" / "guide"
 NOTE_DIR = ROOT / "data" / "note"
 FOLLOW_UP_DIR = ROOT / "data" / "follow_up"
 SEARCH_METADATA_PATH = ROOT / "data" / "metadata.json"
+MODEL_DIR = ROOT / "model"
 
 PORT = int(os.environ.get("PORT", "3000"))
 

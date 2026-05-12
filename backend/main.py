@@ -17,6 +17,7 @@ from backend.services.follow_up_service import get_follow_up_record, save_follow
 from backend.services.guide_service import get_guide_record, save_guide_record
 from backend.services.note_service import get_note_record, save_note_record
 from backend.services.openai_service import call_openai_responses
+from backend.services.model_service import get_model
 from backend.services.submission_service import (
     get_search_metadata,
     get_submission_detail,
@@ -64,6 +65,10 @@ class UnderwritingRequestHandler(BaseHTTPRequestHandler):
 
             if method == "GET" and path == "/api/search-metadata":
                 return self.send_json(200, get_search_metadata())
+
+            if method == "GET" and path.startswith("/api/models/"):
+                model_name = unquote(path.removeprefix("/api/models/"))
+                return self.send_json(200, {"model": get_model(model_name)})
 
             if path.startswith("/api/submissions/"):
                 return self.handle_submission_route(method, path)

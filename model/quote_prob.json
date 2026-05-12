@@ -1,0 +1,70 @@
+{
+  "model_name": "quote_prob",
+  "model_type": "logistic_regression",
+  "target": "quote_probability",
+  "version": "0.1.0-demo",
+  "average_probability": 0.58,
+  "description": "Demo cyber underwriting quote probability model. Coefficients are illustrative placeholders until a trained model is added.",
+  "features": [
+    {
+      "key": "revenue_scale",
+      "label": "Revenue Scale",
+      "coefficient": 0.36,
+      "baseline_value": 0.5
+    },
+    {
+      "key": "records_exposure",
+      "label": "Records Exposure",
+      "coefficient": -0.28,
+      "baseline_value": 0.5
+    },
+    {
+      "key": "mfa_maturity",
+      "label": "MFA Maturity",
+      "coefficient": 0.55,
+      "baseline_value": 0.5
+    },
+    {
+      "key": "edr_coverage",
+      "label": "EDR Coverage",
+      "coefficient": 0.42,
+      "baseline_value": 0.5
+    },
+    {
+      "key": "backup_resilience",
+      "label": "Backup Resilience",
+      "coefficient": 0.38,
+      "baseline_value": 0.5
+    },
+    {
+      "key": "patch_discipline",
+      "label": "Patch Discipline",
+      "coefficient": 0.34,
+      "baseline_value": 0.5
+    },
+    {
+      "key": "security_training",
+      "label": "Security Training",
+      "coefficient": 0.18,
+      "baseline_value": 0.5
+    },
+    {
+      "key": "prior_claims",
+      "label": "Prior Claims Signal",
+      "coefficient": -0.45,
+      "baseline_value": 0.5
+    },
+    {
+      "key": "vendor_dependency",
+      "label": "Vendor Dependency",
+      "coefficient": -0.25,
+      "baseline_value": 0.5
+    },
+    {
+      "key": "limit_fit",
+      "label": "Requested Limit Fit",
+      "coefficient": 0.32,
+      "baseline_value": 0.5
+    }
+  ]
+}

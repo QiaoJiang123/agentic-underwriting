@@ -1,0 +1,114 @@
+{
+  "version": "0.1.0-demo",
+  "description": "Feature definitions and What If control metadata for demo cyber quote and bind probability models.",
+  "features": {
+    "revenue_scale": {
+      "label": "Revenue Scale",
+      "definition": "Normalized annual revenue. Larger insureds can be more attractive to quote but may carry broader operational exposure.",
+      "control_type": "numeric",
+      "raw_min": 7600000,
+      "raw_max": 28400000,
+      "raw_format": "currency",
+      "normalization": {
+        "type": "min_max",
+        "min": 5000000,
+        "max": 500000000
+      }
+    },
+    "records_exposure": {
+      "label": "Records Exposure",
+      "definition": "Normalized count of customer, employee, patient, vendor, or other sensitive records exposed to cyber loss.",
+      "control_type": "numeric",
+      "raw_min": 11800,
+      "raw_max": 1250000,
+      "raw_format": "integer",
+      "normalization": {
+        "type": "min_max",
+        "min": 10000,
+        "max": 1000000
+      }
+    },
+    "mfa_maturity": {
+      "label": "MFA Maturity",
+      "definition": "Strength and coverage of multi-factor authentication across email, VPN, privileged access, and critical applications.",
+      "control_type": "select",
+      "options": [
+        { "label": "No MFA", "value": 0.2 },
+        { "label": "Partial MFA", "value": 0.45 },
+        { "label": "Full MFA", "value": 0.82 }
+      ]
+    },
+    "edr_coverage": {
+      "label": "EDR Coverage",
+      "definition": "Coverage of endpoint detection and response across servers, laptops, and other managed endpoints.",
+      "control_type": "select",
+      "options": [
+        { "label": "No EDR", "value": 0.25 },
+        { "label": "Partial EDR", "value": 0.58 },
+        { "label": "Broad EDR", "value": 0.84 }
+      ]
+    },
+    "backup_resilience": {
+      "label": "Backup Resilience",
+      "definition": "Backup frequency, segmentation, and evidence of restore testing.",
+      "control_type": "select",
+      "options": [
+        { "label": "Weak", "value": 0.3 },
+        { "label": "Daily Backup", "value": 0.64 },
+        { "label": "Restore Tested", "value": 0.78 }
+      ]
+    },
+    "patch_discipline": {
+      "label": "Patch Discipline",
+      "definition": "Speed and consistency of applying critical security patches.",
+      "control_type": "select",
+      "options": [
+        { "label": "Slow", "value": 0.3 },
+        { "label": "30 Days", "value": 0.58 },
+        { "label": "15 Days", "value": 0.76 }
+      ]
+    },
+    "security_training": {
+      "label": "Security Training",
+      "definition": "Security awareness cadence and phishing simulation maturity.",
+      "control_type": "select",
+      "options": [
+        { "label": "None", "value": 0.28 },
+        { "label": "Annual", "value": 0.56 },
+        { "label": "Phishing Sim", "value": 0.72 }
+      ]
+    },
+    "prior_claims": {
+      "label": "Prior Claims Signal",
+      "definition": "Whether prior cyber claims, ransomware events, or loss-history concerns create an elevated claims signal.",
+      "control_type": "binary",
+      "options": [
+        { "label": "No", "value": 0.28 },
+        { "label": "Yes", "value": 0.72 }
+      ]
+    },
+    "vendor_dependency": {
+      "label": "Vendor Dependency",
+      "definition": "Degree of operational reliance on third-party platforms, EDI providers, payment vendors, cloud providers, or other critical vendors.",
+      "control_type": "binary",
+      "options": [
+        { "label": "Limited", "value": 0.35 },
+        { "label": "Material", "value": 0.7 }
+      ]
+    },
+    "limit_fit": {
+      "label": "Requested Limit Fit",
+      "definition": "How closely the requested maximum cyber limit fits the insured's revenue scale.",
+      "control_type": "numeric",
+      "raw_min": 1000000,
+      "raw_max": 5000000,
+      "raw_format": "currency",
+      "normalization": {
+        "type": "limit_fit",
+        "target_ratio": 0.1,
+        "min": 0.18,
+        "max": 0.86
+      }
+    }
+  }
+}
