@@ -1,0 +1,13 @@
+Loss Runs / Claims History
+
+Insured: Northstar Contracting Group Inc.
+Submission ID: 002-northstar-contracting
+
+Loss and claims history:
+Cyber Claims Summary
+
+No insured cyber losses reported.
+
+Near miss:
+2025-03-04 | Vendor bank change fraud attempt | No loss
+A subcontractor email account was compromised and sent updated ACH instructions. Accounting staff identified the inconsistency and called a known contact before payment.

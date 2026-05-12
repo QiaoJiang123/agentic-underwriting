@@ -1,0 +1,11 @@
+IT/Security Controls Questionnaire
+
+Insured: Northstar Contracting Group Inc.
+Submission ID: 002-northstar-contracting
+
+Security controls:
+- mfa: Enabled for Microsoft 365; not enforced for project management SaaS subcontractor accounts
+- edr: Microsoft Defender for Business
+- backup: Cloud accounting and project files backed up daily
+- patching: Managed service provider patches endpoints monthly
+- security_training: Informal onboarding training only

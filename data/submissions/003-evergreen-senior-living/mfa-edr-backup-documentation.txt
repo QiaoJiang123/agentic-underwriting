@@ -1,0 +1,9 @@
+MFA/EDR/Backup Documentation
+
+Insured: Evergreen Senior Living Partners LP
+Submission ID: 003-evergreen-senior-living
+
+Control evidence:
+- MFA: Enabled for EHR admins, remote access, and email
+- EDR: SentinelOne on endpoints; medical device segmentation in progress
+- Backups: Daily encrypted backups, monthly restore test

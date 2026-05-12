@@ -1,0 +1,11 @@
+Ransomware Supplemental Application
+
+Insured: Evergreen Senior Living Partners LP
+Submission ID: 003-evergreen-senior-living
+
+Ransomware controls:
+- MFA: Enabled for EHR admins, remote access, and email
+- EDR: SentinelOne on endpoints; medical device segmentation in progress
+- Backups: Daily encrypted backups, monthly restore test
+- Patching: Critical patches within 10 days for managed systems
+- Incident response: Incident response plan provided separately.

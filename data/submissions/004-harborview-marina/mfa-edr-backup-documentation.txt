@@ -1,0 +1,9 @@
+MFA/EDR/Backup Documentation
+
+Insured: Harborview Marina & Storage LLC
+Submission ID: 004-harborview-marina
+
+Control evidence:
+- MFA: Enabled for email and reservation platform admins
+- EDR: Managed EDR on office endpoints only
+- Backups: Reservation data backed up by SaaS provider

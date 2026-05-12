@@ -1,0 +1,7 @@
+Compliance Documents
+
+Insured: Evergreen Senior Living Partners LP
+Submission ID: 003-evergreen-senior-living
+
+Compliance documents:
+HIPAA security documentation is relevant due to PHI exposure. SOC 2 is not applicable. PCI exposure is limited to resident payment processing.

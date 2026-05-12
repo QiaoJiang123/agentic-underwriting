@@ -39,5 +39,35 @@ frontend code.
 - `backend/services/submission_service.py` handles submission metadata,
   documents, and simple generated-PDF text extraction.
 - `backend/services/guide_service.py` reads and writes `data/guide/*.json`.
+- `backend/services/note_service.py` reads and writes `data/note/*.json`.
+  Notes are underwriter-supplied ground-truth context sent with each model
+  request, but they are not saved into chat history or appended to the visible
+  user prompt.
 - `backend/services/chat_history_service.py` reads and writes chat history.
 - `backend/services/openai_service.py` calls the OpenAI Responses API.
+- `backend/services/document_tools.py` contains the reusable document metadata,
+  selection, and reading tools used by the MCP server and the Auto selector.
+
+## MCP Tools
+
+Install dependencies into the local virtual environment:
+
+```bash
+python3 -m venv .venv
+.venv/bin/pip install -r requirements.txt
+```
+
+Run the FastMCP server:
+
+```bash
+npm run mcp
+```
+
+Available tools:
+
+- `extract_metadata(submission_id)`: returns submission and file metadata without file text.
+- `select_documents(submission_id, prompt, max_documents=6)`: selects relevant files from metadata.
+- `read_selected_documents(submission_id, file_names)`: returns metadata and extracted text for chosen files.
+
+In the web app, checking `Auto` calls the same document-selection logic before
+each chat request and updates the selected file checkboxes.

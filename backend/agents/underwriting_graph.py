@@ -6,6 +6,7 @@ class UnderwritingState(TypedDict, total=False):
     model: str
     api_key: str
     guide_instructions: list[str]
+    underwriter_notes: list[str]
     reply: str
     response_id: str | None
 
@@ -15,6 +16,7 @@ def run_underwriting_graph(
     model: str,
     api_key: str,
     guide_instructions: list[str],
+    underwriter_notes: list[str],
     call_openai: Callable[..., dict[str, Any]],
 ):
     try:
@@ -23,6 +25,7 @@ def run_underwriting_graph(
             model,
             api_key,
             guide_instructions,
+            underwriter_notes,
             call_openai,
         )
     except ModuleNotFoundError:
@@ -32,12 +35,13 @@ def run_underwriting_graph(
                 "model": model,
                 "api_key": api_key,
                 "guide_instructions": guide_instructions,
+                "underwriter_notes": underwriter_notes,
             },
             call_openai,
         )
 
 
-def run_langgraph(messages, model, api_key, guide_instructions, call_openai):
+def run_langgraph(messages, model, api_key, guide_instructions, underwriter_notes, call_openai):
     from langgraph.graph import END, START, StateGraph
 
     def underwriting_model_node(state: UnderwritingState):
@@ -55,6 +59,7 @@ def run_langgraph(messages, model, api_key, guide_instructions, call_openai):
             "model": model,
             "api_key": api_key,
             "guide_instructions": guide_instructions,
+            "underwriter_notes": underwriter_notes,
         }
     )
 
@@ -65,10 +70,10 @@ def call_underwriting_model(state, call_openai):
         model=state["model"],
         messages=state["messages"],
         guide_instructions=state.get("guide_instructions", []),
+        underwriter_notes=state.get("underwriter_notes", []),
     )
     return {
         **state,
         "reply": response.get("reply", ""),
         "response_id": response.get("id"),
     }
-

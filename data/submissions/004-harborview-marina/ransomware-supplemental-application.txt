@@ -1,0 +1,11 @@
+Ransomware Supplemental Application
+
+Insured: Harborview Marina & Storage LLC
+Submission ID: 004-harborview-marina
+
+Ransomware controls:
+- MFA: Enabled for email and reservation platform admins
+- EDR: Managed EDR on office endpoints only
+- Backups: Reservation data backed up by SaaS provider
+- Patching: POS terminals maintained by payment vendor
+- Incident response: Incident response plan provided separately.

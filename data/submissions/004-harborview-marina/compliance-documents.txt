@@ -1,0 +1,7 @@
+Compliance Documents
+
+Insured: Harborview Marina & Storage LLC
+Submission ID: 004-harborview-marina
+
+Compliance documents:
+PCI documentation is relevant due to payment terminals, fuel dock transactions, and reservation payments. SOC 2 and HIPAA are not applicable.

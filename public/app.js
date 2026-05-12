@@ -7,13 +7,23 @@ const newChatButton = document.querySelector("#newChatButton");
 const historyList = document.querySelector("#historyList");
 const modelStatus = document.querySelector("#modelStatus");
 const modelCard = document.querySelector(".model-card");
-const promptButtons = document.querySelectorAll(".prompt-chip");
+const guideToggleButton = document.querySelector("#guideToggleButton");
+const guidePopover = document.querySelector("#guidePopover");
+const guideCloseButton = document.querySelector("#guideCloseButton");
 const submissionList = document.querySelector("#submissionList");
 const submissionCount = document.querySelector("#submissionCount");
 const workspaceTitle = document.querySelector("#workspaceTitle");
 const summaryPlaceholder = document.querySelector("#summaryPlaceholder");
+const followUpForm = document.querySelector("#followUpForm");
+const followUpTitle = document.querySelector("#followUpTitle");
+const followUpDate = document.querySelector("#followUpDate");
+const followUpCalendar = document.querySelector("#followUpCalendar");
+const followUpList = document.querySelector("#followUpList");
+const tasksDueDot = document.querySelector("#tasksDueDot");
+const followUpDueDot = document.querySelector("#followUpDueDot");
 const keyInfoList = document.querySelector("#keyInfoList");
 const timelineList = document.querySelector("#timelineList");
+const stageChecklist = document.querySelector("#stageChecklist");
 const documentList = document.querySelector("#documentList");
 const selectAllFilesButton = document.querySelector("#selectAllFilesButton");
 const unselectAllFilesButton = document.querySelector("#unselectAllFilesButton");
@@ -27,23 +37,21 @@ const panelViews = document.querySelectorAll("[data-panel-view]");
 const guideForm = document.querySelector("#guideForm");
 const guideInput = document.querySelector("#guideInput");
 const guideList = document.querySelector("#guideList");
+const noteForm = document.querySelector("#noteForm");
+const noteInput = document.querySelector("#noteInput");
+const noteList = document.querySelector("#noteList");
 
 const messages = [];
 let selectedSubmission = null;
 let selectedFiles = new Set();
 let currentChatHistoryId = null;
+let autoSelectEnabled = false;
 let guideItems = [];
 let editingGuideIndex = null;
+let noteItems = [];
+let editingNoteIndex = null;
+let followUpItems = [];
 const initialSubmissionId = new URLSearchParams(window.location.search).get("submission");
-
-const promptText = {
-  Summarize:
-    "Summarize the selected cyber submission for an underwriter. Include business profile, requested cyber coverage, security controls, key cyber risks, missing information, and recommended next steps.",
-  "Missing Info":
-    "Review the selected cyber submission and list the missing information needed before underwriting can proceed.",
-  "Risk Flags":
-    "Identify the key cyber underwriting risks, rank them by severity, and suggest follow-up questions."
-};
 
 init();
 
@@ -143,8 +151,12 @@ async function selectSubmission(submission, button) {
       content: formatSubmissionForPrompt(data.submission)
     };
     currentChatHistoryId = null;
+    autoSelectEnabled = false;
     guideItems = [];
     editingGuideIndex = null;
+    noteItems = [];
+    editingNoteIndex = null;
+    followUpItems = [];
 
     workspaceTitle.textContent = submission.title;
     summaryPlaceholder.textContent = buildSummaryPlaceholder(selectedSubmission.record);
@@ -159,11 +171,17 @@ async function selectSubmission(submission, button) {
       )
       .join("");
     timelineList.innerHTML = buildTimelineItems(selectedSubmission.record);
+    stageChecklist.innerHTML = buildStageChecklist(selectedSubmission.record);
     documentList.innerHTML = buildDocumentLinks(selectedSubmission.record);
     renderGuideInstructions("Loading guide...");
+    renderNoteContext("Loading notes...");
+    renderFollowUps("Loading tasks...");
     await loadGuideInstructions(submission.id);
+    await loadNotes(submission.id);
+    await loadFollowUps(submission.id);
     selectedFiles = new Set((selectedSubmission.record.documents || []).map((document) => document.file_name));
     syncFileSelectionControls();
+    updateSelectionMode("all");
     loadChatHistory(submission.id);
 
     input.value = "";
@@ -197,6 +215,7 @@ async function loadChatHistory(submissionId) {
             class="history-item ${index === 0 ? "active" : ""}"
             type="button"
             data-history-id="${escapeHtml(item.id)}"
+            title="${escapeHtml(formatDateTime(item.updated_at))} · ${item.message_count} messages"
           >
             <span>${escapeHtml(item.title)}</span>
             <small>${escapeHtml(formatDateTime(item.updated_at))} · ${item.message_count} messages</small>
@@ -278,6 +297,9 @@ form.addEventListener("submit", async (event) => {
 
   try {
     const visibleChatHistory = messages;
+    if (autoSelectEnabled) {
+      await autoSelectDocumentsForPrompt(content);
+    }
     const temporaryModelMessages = buildTemporaryModelMessagesWithSelectedFiles(visibleChatHistory);
     const response = await fetch("/api/chat", {
       method: "POST",
@@ -286,7 +308,8 @@ form.addEventListener("submit", async (event) => {
       },
       body: JSON.stringify({
         messages: temporaryModelMessages,
-        guides: getActiveGuideInstructions()
+        guides: getActiveGuideInstructions(),
+        underwriter_notes: getActiveUnderwriterNotes()
       })
     });
 
@@ -311,14 +334,21 @@ form.addEventListener("submit", async (event) => {
 clearButton.addEventListener("click", resetChat);
 newChatButton.addEventListener("click", resetChat);
 
-promptButtons.forEach((button) => {
-  button.addEventListener("click", () => {
-    const label = button.textContent.trim();
-    const addition = promptText[label] || label;
-    input.value = input.value ? `${input.value.trim()}\n\n${addition}` : addition;
-    input.focus();
+if (guideToggleButton && guidePopover) {
+  guideToggleButton.addEventListener("click", () => {
+    const isOpen = guidePopover.classList.toggle("open");
+    guidePopover.setAttribute("aria-hidden", isOpen ? "false" : "true");
+    guideToggleButton.classList.toggle("active", isOpen);
+
+    if (isOpen) {
+      guideInput.focus();
+    }
   });
-});
+}
+
+if (guideCloseButton && guidePopover) {
+  guideCloseButton.addEventListener("click", closeGuidePopover);
+}
 
 input.addEventListener("keydown", (event) => {
   if (event.key === "Enter" && !event.shiftKey) {
@@ -351,20 +381,35 @@ documentList.addEventListener("change", (event) => {
   } else {
     selectedFiles.delete(checkbox.value);
   }
+  autoSelectEnabled = false;
+  updateSelectionMode("manual");
 });
 
 selectAllFilesButton.addEventListener("click", () => {
+  autoSelectEnabled = false;
   selectedFiles = new Set(getCurrentDocumentNames());
   syncFileSelectionControls();
+  updateSelectionMode("all");
 });
 
 unselectAllFilesButton.addEventListener("click", () => {
+  autoSelectEnabled = false;
   selectedFiles.clear();
   syncFileSelectionControls();
+  updateSelectionMode("none");
 });
 
-autoSelectFiles.addEventListener("change", () => {
-  autoSelectFiles.dataset.mode = autoSelectFiles.checked ? "auto" : "manual";
+autoSelectFiles.addEventListener("click", async () => {
+  autoSelectEnabled = !autoSelectEnabled;
+  updateSelectionMode(autoSelectEnabled ? "auto" : "manual");
+
+  if (autoSelectEnabled && input.value.trim()) {
+    try {
+      await autoSelectDocumentsForPrompt(input.value.trim());
+    } catch (error) {
+      console.warn(error);
+    }
+  }
 });
 
 panelTabButtons.forEach((button) => {
@@ -462,6 +507,147 @@ if (guideList) {
   });
 }
 
+if (noteForm) {
+  noteForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+
+    if (!selectedSubmission) {
+      renderNoteContext("Select a submission before adding notes.");
+      return;
+    }
+
+    const value = noteInput.value.trim();
+    if (!value) {
+      return;
+    }
+
+    const now = new Date().toISOString();
+    noteItems.push({
+      id: `note-${Date.now()}`,
+      text: value,
+      created_at: now,
+      updated_at: now
+    });
+    editingNoteIndex = null;
+    noteInput.value = "";
+    renderNoteContext();
+    await saveNotes();
+  });
+}
+
+if (noteList) {
+  noteList.addEventListener("click", async (event) => {
+    const button = event.target.closest("[data-note-action]");
+    if (!button) {
+      return;
+    }
+
+    const index = Number(button.dataset.noteIndex);
+    if (!Number.isInteger(index)) {
+      return;
+    }
+
+    if (button.dataset.noteAction === "delete") {
+      noteItems.splice(index, 1);
+      editingNoteIndex = null;
+      renderNoteContext();
+      await saveNotes();
+      return;
+    }
+
+    if (button.dataset.noteAction === "edit") {
+      editingNoteIndex = index;
+      renderNoteContext();
+      return;
+    }
+
+    if (button.dataset.noteAction === "cancel") {
+      editingNoteIndex = null;
+      renderNoteContext();
+      return;
+    }
+
+    if (button.dataset.noteAction === "save") {
+      const textarea = noteList.querySelector(`[data-note-text="${index}"]`);
+      const value = textarea ? textarea.value.trim() : "";
+
+      if (!value) {
+        noteItems.splice(index, 1);
+      } else {
+        noteItems[index] = {
+          ...noteItems[index],
+          text: value,
+          updated_at: new Date().toISOString()
+        };
+      }
+
+      editingNoteIndex = null;
+      renderNoteContext();
+      await saveNotes();
+    }
+  });
+}
+
+if (followUpForm) {
+  followUpForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+
+    if (!selectedSubmission) {
+      renderFollowUps("Select a submission before adding tasks.");
+      return;
+    }
+
+    const title = followUpTitle.value.trim();
+    const dueDate = followUpDate.value;
+    if (!title || !dueDate) {
+      return;
+    }
+
+    const now = new Date().toISOString();
+    followUpItems.push({
+      id: `follow-up-${Date.now()}`,
+      title,
+      due_date: dueDate,
+      status: "open",
+      created_at: now,
+      updated_at: now
+    });
+    followUpTitle.value = "";
+    followUpDate.value = "";
+    renderFollowUps();
+    await saveFollowUps();
+  });
+}
+
+if (followUpList) {
+  followUpList.addEventListener("click", async (event) => {
+    const button = event.target.closest("[data-follow-up-action]");
+    if (!button) {
+      return;
+    }
+
+    const index = Number(button.dataset.followUpIndex);
+    if (!Number.isInteger(index)) {
+      return;
+    }
+
+    if (button.dataset.followUpAction === "delete") {
+      followUpItems.splice(index, 1);
+    }
+
+    if (button.dataset.followUpAction === "toggle") {
+      followUpItems[index] = {
+        ...followUpItems[index],
+        status: followUpItems[index].status === "done" ? "open" : "done",
+        updated_at: new Date().toISOString()
+      };
+    }
+
+    renderFollowUps();
+    await saveFollowUps();
+  });
+}
+
 documentCloseButton.addEventListener("click", closeDocumentPreview);
 documentModal.addEventListener("click", (event) => {
   if (event.target.matches("[data-close-document]")) {
@@ -472,6 +658,10 @@ documentModal.addEventListener("click", (event) => {
 document.addEventListener("keydown", (event) => {
   if (event.key === "Escape" && documentModal.classList.contains("open")) {
     closeDocumentPreview();
+  }
+
+  if (event.key === "Escape" && guidePopover && guidePopover.classList.contains("open")) {
+    closeGuidePopover();
   }
 });
 
@@ -518,9 +708,55 @@ function buildTemporaryModelMessagesWithSelectedFiles(visibleMessages) {
   return modelMessages;
 }
 
+async function autoSelectDocumentsForPrompt(prompt) {
+  if (!selectedSubmission) {
+    return;
+  }
+
+  const response = await fetch(
+    `/api/submissions/${encodeURIComponent(selectedSubmission.id)}/auto-select-documents`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        prompt,
+        max_documents: 6
+      })
+    }
+  );
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.error || "Unable to auto-select documents.");
+  }
+
+  const selected = data.document_selection && Array.isArray(data.document_selection.selected_files)
+    ? data.document_selection.selected_files
+    : [];
+
+  selectedFiles = new Set(selected);
+  syncFileSelectionControls();
+  updateSelectionMode("auto");
+}
+
+function updateSelectionMode(mode) {
+  selectAllFilesButton.classList.toggle("active", mode === "all");
+  unselectAllFilesButton.classList.toggle("active", mode === "none");
+  autoSelectFiles.classList.toggle("active", mode === "auto");
+  autoSelectFiles.setAttribute("aria-pressed", mode === "auto" ? "true" : "false");
+}
+
 function getActiveGuideInstructions() {
   return guideItems
     .map((guide) => String(guide.text || "").trim())
+    .filter(Boolean);
+}
+
+function getActiveUnderwriterNotes() {
+  return noteItems
+    .map((note) => String(note.text || "").trim())
     .filter(Boolean);
 }
 
@@ -642,6 +878,290 @@ function renderGuideItem(guide, index) {
   `;
 }
 
+async function loadNotes(submissionId) {
+  try {
+    const response = await fetch(`/api/submissions/${encodeURIComponent(submissionId)}/notes`);
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || "Unable to load notes.");
+    }
+
+    noteItems = normalizeContextItems(data.note && data.note.notes, "note");
+    renderNoteContext();
+  } catch (error) {
+    console.warn(error);
+    noteItems = [];
+    renderNoteContext("Unable to load notes.");
+  }
+}
+
+async function saveNotes() {
+  if (!selectedSubmission) {
+    return;
+  }
+
+  try {
+    const response = await fetch(`/api/submissions/${encodeURIComponent(selectedSubmission.id)}/notes`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ notes: noteItems })
+    });
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || "Unable to save notes.");
+    }
+
+    noteItems = normalizeContextItems(data.note && data.note.notes, "note");
+    renderNoteContext();
+  } catch (error) {
+    console.warn(error);
+    renderNoteContext(error.message || "Unable to save notes.");
+  }
+}
+
+function normalizeContextItems(items, prefix) {
+  if (!Array.isArray(items)) {
+    return [];
+  }
+
+  return items
+    .map((item, index) => {
+      if (typeof item === "string") {
+        return {
+          id: `${prefix}-${Date.now()}-${index}`,
+          text: item,
+          created_at: null,
+          updated_at: null
+        };
+      }
+
+      return {
+        id: String(item.id || `${prefix}-${Date.now()}-${index}`),
+        text: String(item.text || ""),
+        created_at: item.created_at || null,
+        updated_at: item.updated_at || null
+      };
+    })
+    .filter((item) => item.text.trim());
+}
+
+function renderNoteContext(statusMessage) {
+  if (!noteList) {
+    return;
+  }
+
+  if (statusMessage) {
+    noteList.innerHTML = `<p class="empty-state">${escapeHtml(statusMessage)}</p>`;
+    return;
+  }
+
+  if (!noteItems.length) {
+    noteList.innerHTML = '<p class="empty-state">No underwriter notes yet.</p>';
+    return;
+  }
+
+  noteList.innerHTML = noteItems
+    .map((note, index) => renderNoteItem(note, index))
+    .join("");
+}
+
+function renderNoteItem(note, index) {
+  if (editingNoteIndex === index) {
+    return `
+      <div class="context-item editing">
+        <span class="context-label">Note ${index + 1}</span>
+        <textarea data-note-text="${index}" aria-label="Underwriter note">${escapeHtml(note.text)}</textarea>
+        <div class="context-item-actions">
+          <button class="selection-action" type="button" data-note-action="save" data-note-index="${index}">Save</button>
+          <button class="selection-action muted-action" type="button" data-note-action="cancel" data-note-index="${index}">Cancel</button>
+          <button class="icon-button small-icon-button" type="button" data-note-action="delete" data-note-index="${index}" aria-label="Delete note">&times;</button>
+        </div>
+      </div>
+    `;
+  }
+
+  return `
+    <div class="context-item">
+      <span class="context-label">Note ${index + 1}</span>
+      <p>${escapeHtml(note.text)}</p>
+      <div class="context-item-actions">
+        <button class="selection-action" type="button" data-note-action="edit" data-note-index="${index}">Edit</button>
+        <button class="icon-button small-icon-button" type="button" data-note-action="delete" data-note-index="${index}" aria-label="Delete note">&times;</button>
+      </div>
+    </div>
+  `;
+}
+
+async function loadFollowUps(submissionId) {
+  try {
+    const response = await fetch(`/api/submissions/${encodeURIComponent(submissionId)}/follow-ups`);
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || "Unable to load tasks.");
+    }
+
+    followUpItems = normalizeFollowUps(data.follow_up && data.follow_up.follow_ups);
+    renderFollowUps();
+  } catch (error) {
+    console.warn(error);
+    followUpItems = [];
+    renderFollowUps("Unable to load tasks.");
+  }
+}
+
+async function saveFollowUps() {
+  if (!selectedSubmission) {
+    return;
+  }
+
+  try {
+    const response = await fetch(`/api/submissions/${encodeURIComponent(selectedSubmission.id)}/follow-ups`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ follow_ups: followUpItems })
+    });
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || "Unable to save tasks.");
+    }
+
+    followUpItems = normalizeFollowUps(data.follow_up && data.follow_up.follow_ups);
+    renderFollowUps();
+  } catch (error) {
+    console.warn(error);
+    renderFollowUps(error.message || "Unable to save tasks.");
+  }
+}
+
+function normalizeFollowUps(items) {
+  if (!Array.isArray(items)) {
+    return [];
+  }
+
+  return items
+    .map((item, index) => ({
+      id: String(item.id || `follow-up-${Date.now()}-${index}`),
+      title: String(item.title || ""),
+      due_date: String(item.due_date || ""),
+      status: item.status === "done" ? "done" : "open",
+      created_at: item.created_at || null,
+      updated_at: item.updated_at || null
+    }))
+    .filter((item) => item.title.trim() && /^\d{4}-\d{2}-\d{2}$/.test(item.due_date));
+}
+
+function renderFollowUps(statusMessage) {
+  updateFollowUpDots();
+  renderFollowUpCalendar();
+
+  if (!followUpList) {
+    return;
+  }
+
+  if (statusMessage) {
+    followUpList.innerHTML = `<p>${escapeHtml(statusMessage)}</p>`;
+    return;
+  }
+
+  if (!followUpItems.length) {
+    followUpList.innerHTML = "<p>No scheduled tasks.</p>";
+    return;
+  }
+
+  followUpList.innerHTML = followUpItems
+    .map((item, index) => {
+      const dueState = getFollowUpDueState(item);
+      return `
+        <div class="follow-up-item ${item.status === "done" ? "done" : ""} ${dueState}">
+          <div>
+            <strong>${escapeHtml(item.title)}</strong>
+            <small>${escapeHtml(formatDateOnly(item.due_date))}</small>
+          </div>
+          <div class="follow-up-actions">
+            <button class="selection-action" type="button" data-follow-up-action="toggle" data-follow-up-index="${index}">
+              ${item.status === "done" ? "Reopen" : "Done"}
+            </button>
+            <button class="icon-button small-icon-button" type="button" data-follow-up-action="delete" data-follow-up-index="${index}" aria-label="Delete follow-up">&times;</button>
+          </div>
+        </div>
+      `;
+    })
+    .join("");
+}
+
+function renderFollowUpCalendar() {
+  if (!followUpCalendar) {
+    return;
+  }
+
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = today.getMonth();
+  const firstDay = new Date(year, month, 1);
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const offset = firstDay.getDay();
+  const itemsByDate = new Map();
+
+  followUpItems.forEach((item) => {
+    if (!itemsByDate.has(item.due_date)) {
+      itemsByDate.set(item.due_date, []);
+    }
+    itemsByDate.get(item.due_date).push(item);
+  });
+
+  const cells = [];
+  for (let index = 0; index < offset; index += 1) {
+    cells.push('<span class="calendar-day empty"></span>');
+  }
+
+  for (let day = 1; day <= daysInMonth; day += 1) {
+    const date = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+    const dayItems = itemsByDate.get(date) || [];
+    const hasDueAlert = dayItems.some((item) => getFollowUpDueState(item) === "due-alert");
+    const hasItem = dayItems.length > 0;
+    cells.push(`
+      <span class="calendar-day ${hasItem ? "has-follow-up" : ""} ${hasDueAlert ? "due-alert" : ""}">
+        ${day}
+      </span>
+    `);
+  }
+
+  followUpCalendar.innerHTML = `
+    <div class="calendar-heading">${today.toLocaleString([], { month: "long", year: "numeric" })}</div>
+    <div class="calendar-weekdays">
+      <span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span>
+    </div>
+    <div class="calendar-grid">${cells.join("")}</div>
+  `;
+}
+
+function updateFollowUpDots() {
+  const hasDueAlert = followUpItems.some((item) => getFollowUpDueState(item) === "due-alert");
+  [tasksDueDot, followUpDueDot].forEach((dot) => {
+    if (dot) {
+      dot.classList.toggle("visible", hasDueAlert);
+    }
+  });
+}
+
+function getFollowUpDueState(item) {
+  if (!item || item.status === "done") {
+    return "";
+  }
+
+  const today = new Date();
+  const todayKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+  return item.due_date <= todayKey ? "due-alert" : "";
+}
+
 function buildSelectedFileContext() {
   const documents = selectedSubmission && selectedSubmission.record
     ? selectedSubmission.record.documents || []
@@ -655,6 +1175,8 @@ function buildSelectedFileContext() {
         `--- ${document.file_name} ---`,
         `Type: ${document.file_type}`,
         `Category: ${document.category}`,
+        `Document Types: ${formatMetadataList(document.document_types)}`,
+        `Major Categories: ${formatMetadataList(document.major_categories)}`,
         `Created: ${document.file_created_at}`,
         `Received: ${document.received_at}`,
         `Description: ${document.description}`,
@@ -774,6 +1296,61 @@ function buildTimelineItems(record) {
     .join("");
 }
 
+function buildStageChecklist(record) {
+  const currentStage = getCurrentStageKey(record);
+  const stages = [
+    ["intake", "Intake"],
+    ["document_collection", "Document Collection"],
+    ["data_extraction", "Data Extraction"],
+    ["initial_review", "Initial Review"],
+    ["risk_assessment", "Risk Assessment"],
+    ["clarification", "Clarification"],
+    ["referral_approval", "Referral / Approval"],
+    ["terms_conditions", "Terms & Conditions"],
+    ["quote", "Quote"],
+    ["bind_close", "Bind / Close"]
+  ];
+  const currentIndex = stages.findIndex(([key]) => key === currentStage);
+
+  return stages
+    .map(([key, label], index) => {
+      const isComplete = currentIndex > index;
+      const isCurrent = currentIndex === index;
+      return `
+        <label class="stage-item ${isCurrent ? "current" : ""}">
+          <input type="checkbox" disabled ${isComplete ? "checked" : ""} />
+          <span>
+            <strong>${escapeHtml(label)}</strong>
+            <small>${isCurrent ? "Current stage" : isComplete ? "Completed" : "Pending"}</small>
+          </span>
+        </label>
+      `;
+    })
+    .join("");
+}
+
+function getCurrentStageKey(record) {
+  const status = String(record && record.status ? record.status : "").toLowerCase();
+
+  if (status.includes("referral")) {
+    return "referral_approval";
+  }
+
+  if (status.includes("quote")) {
+    return "quote";
+  }
+
+  if (status.includes("bind")) {
+    return "bind_close";
+  }
+
+  if (status.includes("review")) {
+    return "risk_assessment";
+  }
+
+  return "initial_review";
+}
+
 function buildSummaryPlaceholder(record) {
   if (!record) {
     return "Reserved for an AI-generated account summary, appetite fit, and recommended next action.";
@@ -797,7 +1374,8 @@ function buildDocumentLinks(record) {
   return documents
     .map((document) => {
       const type = document.file_type || "file";
-      const label = document.description || document.category || type;
+      const categories = formatMetadataList(document.major_categories || document.category);
+      const label = categories || document.description || type;
       const target = document.url || "#";
 
       return `
@@ -844,7 +1422,7 @@ async function openDocumentPreview(documentInfo) {
   documentModal.classList.add("open");
   documentModal.setAttribute("aria-hidden", "false");
 
-  if (documentInfo.type === "pdf") {
+  if (isPdfDocument(documentInfo)) {
     documentModalContent.innerHTML = `
       <iframe
         class="pdf-viewer"
@@ -869,10 +1447,23 @@ async function openDocumentPreview(documentInfo) {
   }
 }
 
+function isPdfDocument(documentInfo) {
+  const name = String(documentInfo.name || "").toLowerCase();
+  const url = String(documentInfo.url || "").toLowerCase();
+  const type = String(documentInfo.type || "").toLowerCase();
+  return type === "pdf" || name.endsWith(".pdf") || url.includes(".pdf");
+}
+
 function closeDocumentPreview() {
   documentModal.classList.remove("open");
   documentModal.setAttribute("aria-hidden", "true");
   documentModalContent.innerHTML = "";
+}
+
+function closeGuidePopover() {
+  guidePopover.classList.remove("open");
+  guidePopover.setAttribute("aria-hidden", "true");
+  guideToggleButton.classList.remove("active");
 }
 
 function formatSubmissionForPrompt(record) {
@@ -916,6 +1507,8 @@ function formatSubmissionForPrompt(record) {
       `--- ${document.file_name} ---`,
       `Type: ${document.file_type}`,
       `Category: ${document.category}`,
+      `Document Types: ${formatMetadataList(document.document_types)}`,
+      `Major Categories: ${formatMetadataList(document.major_categories)}`,
       `File Created At: ${document.file_created_at}`,
       `Received At: ${document.received_at}`,
       `Description: ${document.description}`,
@@ -930,6 +1523,14 @@ function formatSubmissionForPrompt(record) {
   ].join("\n");
 }
 
+function formatMetadataList(value) {
+  if (Array.isArray(value)) {
+    return value.filter(Boolean).join(", ");
+  }
+
+  return value || "";
+}
+
 function formatDateTime(value) {
   if (!value) {
     return "TBD";
@@ -941,6 +1542,23 @@ function formatDateTime(value) {
     year: "numeric",
     hour: "numeric",
     minute: "2-digit"
+  });
+}
+
+function formatDateOnly(value) {
+  if (!value) {
+    return "TBD";
+  }
+
+  const [year, month, day] = String(value).split("-").map(Number);
+  if (!year || !month || !day) {
+    return value;
+  }
+
+  return new Date(year, month - 1, day).toLocaleDateString([], {
+    month: "short",
+    day: "numeric",
+    year: "numeric"
   });
 }
 

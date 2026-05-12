@@ -31,44 +31,231 @@
   },
   "documents": [
     {
+      "file_name": "cyber-application.txt",
+      "file_type": "cyber_application",
+      "category": "submission",
+      "document_types": [
+        "cyber_application",
+        "submission_form"
+      ],
+      "major_categories": [
+        "submission",
+        "cyber_security"
+      ],
+      "file_created_at": "2026-04-26T09:20:00-04:00",
+      "received_at": "2026-04-22T13:06:00-04:00",
+      "description": "Cyber application and submission form responses"
+    },
+    {
+      "file_name": "ransomware-supplemental-application.txt",
+      "file_type": "ransomware_supplemental_application",
+      "category": "submission",
+      "document_types": [
+        "ransomware_supplemental_application"
+      ],
+      "major_categories": [
+        "submission",
+        "cyber_security"
+      ],
+      "file_created_at": "2026-04-26T09:20:00-04:00",
+      "received_at": "2026-04-22T13:06:00-04:00",
+      "description": "Ransomware supplemental application"
+    },
+    {
+      "file_name": "prior-cyber-insurance-policy.txt",
+      "file_type": "prior_cyber_insurance_policy",
+      "category": "coverage_terms",
+      "document_types": [
+        "prior_cyber_insurance_policy",
+        "policy_form"
+      ],
+      "major_categories": [
+        "coverage_terms"
+      ],
+      "file_created_at": "2026-04-26T09:20:00-04:00",
+      "received_at": "2026-04-22T13:06:00-04:00",
+      "description": "Prior cyber insurance policy and expiring coverage terms"
+    },
+    {
+      "file_name": "loss-runs-claims-history.txt",
+      "file_type": "loss_runs",
+      "category": "loss_history",
+      "document_types": [
+        "loss_runs",
+        "claims_history"
+      ],
+      "major_categories": [
+        "loss_history"
+      ],
+      "file_created_at": "2026-04-26T09:20:00-04:00",
+      "received_at": "2026-04-22T13:06:00-04:00",
+      "description": "Loss runs and cyber claims history"
+    },
+    {
+      "file_name": "financial-information-revenue-breakdown.txt",
+      "file_type": "financial_information",
+      "category": "financial",
+      "document_types": [
+        "financial_information",
+        "revenue_breakdown"
+      ],
+      "major_categories": [
+        "financial",
+        "company_profile"
+      ],
+      "file_created_at": "2026-04-26T09:20:00-04:00",
+      "received_at": "2026-04-22T13:06:00-04:00",
+      "description": "Financial information and revenue breakdown"
+    },
+    {
+      "file_name": "it-security-controls-questionnaire.txt",
+      "file_type": "it_security_controls_questionnaire",
+      "category": "cyber_security",
+      "document_types": [
+        "it_security_controls_questionnaire",
+        "security_questionnaire"
+      ],
+      "major_categories": [
+        "cyber_security"
+      ],
+      "file_created_at": "2026-04-26T09:20:00-04:00",
+      "received_at": "2026-04-22T13:06:00-04:00",
+      "description": "IT and security controls questionnaire"
+    },
+    {
+      "file_name": "mfa-edr-backup-documentation.txt",
+      "file_type": "mfa_documentation",
+      "category": "cyber_security",
+      "document_types": [
+        "mfa_documentation",
+        "edr_documentation",
+        "backup_documentation"
+      ],
+      "major_categories": [
+        "cyber_security"
+      ],
+      "file_created_at": "2026-04-26T09:20:00-04:00",
+      "received_at": "2026-04-22T13:06:00-04:00",
+      "description": "MFA, EDR, and backup control documentation"
+    },
+    {
+      "file_name": "incident-response-plan.txt",
+      "file_type": "incident_response_plan",
+      "category": "cyber_security",
+      "document_types": [
+        "incident_response_plan"
+      ],
+      "major_categories": [
+        "cyber_security"
+      ],
+      "file_created_at": "2026-04-26T09:20:00-04:00",
+      "received_at": "2026-04-22T13:06:00-04:00",
+      "description": "Incident response plan and escalation workflow"
+    },
+    {
+      "file_name": "vendor-security-assessment.txt",
+      "file_type": "vendor_security_assessment",
+      "category": "vendor_risk",
+      "document_types": [
+        "vendor_security_assessment",
+        "third_party_risk_assessment"
+      ],
+      "major_categories": [
+        "vendor_risk",
+        "cyber_security"
+      ],
+      "file_created_at": "2026-04-26T09:20:00-04:00",
+      "received_at": "2026-04-22T13:06:00-04:00",
+      "description": "Vendor and third-party security assessment"
+    },
+    {
+      "file_name": "compliance-documents.txt",
+      "file_type": "compliance_documentation",
+      "category": "compliance",
+      "document_types": [
+        "compliance_documentation"
+      ],
+      "major_categories": [
+        "compliance",
+        "cyber_security"
+      ],
+      "file_created_at": "2026-04-26T09:20:00-04:00",
+      "received_at": "2026-04-22T13:06:00-04:00",
+      "description": "Relevant compliance documentation such as SOC 2, HIPAA, PCI, or equivalent evidence"
+    },
+    {
       "file_name": "broker-email.txt",
-      "file_type": "email",
-      "category": "broker_correspondence",
+      "file_type": "broker_email",
+      "category": "communication",
       "file_created_at": "2026-04-22T11:32:00-04:00",
       "received_at": "2026-04-22T13:06:00-04:00",
-      "description": "Broker submission email"
+      "description": "Broker submission email",
+      "document_types": [
+        "broker_email",
+        "email_communication"
+      ],
+      "major_categories": [
+        "communication",
+        "submission"
+      ]
     },
     {
       "file_name": "security-questionnaire.txt",
-      "file_type": "questionnaire",
-      "category": "security_controls",
+      "file_type": "it_security_controls_questionnaire",
+      "category": "cyber_security",
       "file_created_at": "2026-04-22T10:47:00-04:00",
       "received_at": "2026-04-22T13:06:00-04:00",
-      "description": "Cyber control questionnaire"
+      "description": "Cyber control questionnaire",
+      "document_types": [
+        "it_security_controls_questionnaire",
+        "security_questionnaire"
+      ],
+      "major_categories": [
+        "cyber_security"
+      ]
     },
     {
       "file_name": "claims-summary.txt",
-      "file_type": "loss_run",
+      "file_type": "claims_summary",
       "category": "loss_history",
       "file_created_at": "2026-04-22T10:04:00-04:00",
       "received_at": "2026-04-22T13:06:00-04:00",
-      "description": "Cyber claims summary"
+      "description": "Cyber claims summary",
+      "document_types": [
+        "claims_summary",
+        "claims_history"
+      ],
+      "major_categories": [
+        "loss_history"
+      ]
     },
     {
       "file_name": "company-description.pdf",
-      "file_type": "pdf",
-      "category": "company_description",
+      "file_type": "company_information",
+      "category": "company_profile",
       "file_created_at": "2026-04-26T09:20:00-04:00",
       "received_at": "2026-04-22T13:06:00-04:00",
-      "description": "Company description and cyber exposure overview"
+      "description": "Company description and cyber exposure overview",
+      "document_types": [
+        "company_information"
+      ],
+      "major_categories": [
+        "company_profile"
+      ]
     },
     {
       "file_name": "overall-status.pdf",
-      "file_type": "pdf",
-      "category": "overall_status",
+      "file_type": "underwriting_status_summary",
+      "category": "underwriting_review",
       "file_created_at": "2026-04-26T09:20:00-04:00",
       "received_at": "2026-04-22T13:06:00-04:00",
-      "description": "Overall cyber underwriting status summary"
+      "description": "Overall cyber underwriting status summary",
+      "document_types": [
+        "underwriting_status_summary"
+      ],
+      "major_categories": [
+        "underwriting_review"
+      ]
     }
   ],
   "security_controls": {
@@ -114,5 +301,20 @@
       "event": "Status updated",
       "description": "Account moved to in-review status."
     }
-  ]
+  ],
+  "document_taxonomy": {
+    "major_categories": {
+      "submission": "Submission",
+      "company_profile": "Company Profile",
+      "cyber_security": "Cyber Security",
+      "loss_history": "Loss History",
+      "financial": "Financial",
+      "coverage_terms": "Coverage Terms",
+      "vendor_risk": "Vendor Risk",
+      "compliance": "Compliance",
+      "communication": "Communication",
+      "underwriting_review": "Underwriting Review"
+    },
+    "note": "document_types and major_categories are arrays because one document can support multiple underwriting uses."
+  }
 }

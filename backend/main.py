@@ -12,7 +12,10 @@ from backend.services.chat_history_service import (
     list_chat_history,
     save_chat_history,
 )
+from backend.services.document_tools import select_documents_for_prompt, select_documents_with_llm
+from backend.services.follow_up_service import get_follow_up_record, save_follow_up_record
 from backend.services.guide_service import get_guide_record, save_guide_record
+from backend.services.note_service import get_note_record, save_note_record
 from backend.services.openai_service import call_openai_responses
 from backend.services.submission_service import (
     get_search_metadata,
@@ -104,6 +107,47 @@ class UnderwritingRequestHandler(BaseHTTPRequestHandler):
                 body = self.read_json()
                 return self.send_json(200, {"guide": save_guide_record(submission_id, body.get("guides", []))})
 
+        if remainder.endswith("/notes"):
+            submission_id = unquote(remainder.removesuffix("/notes"))
+            if method == "GET":
+                return self.send_json(200, {"note": get_note_record(submission_id)})
+            if method == "PUT":
+                body = self.read_json()
+                return self.send_json(200, {"note": save_note_record(submission_id, body.get("notes", []))})
+
+        if remainder.endswith("/follow-ups"):
+            submission_id = unquote(remainder.removesuffix("/follow-ups"))
+            if method == "GET":
+                return self.send_json(200, {"follow_up": get_follow_up_record(submission_id)})
+            if method == "PUT":
+                body = self.read_json()
+                return self.send_json(
+                    200,
+                    {"follow_up": save_follow_up_record(submission_id, body.get("follow_ups", []))},
+                )
+
+        if remainder.endswith("/auto-select-documents") and method == "POST":
+            submission_id = unquote(remainder.removesuffix("/auto-select-documents"))
+            body = self.read_json()
+            if body.get("use_llm") is False:
+                document_selection = select_documents_for_prompt(
+                    submission_id=submission_id,
+                    prompt=str(body.get("prompt", "")),
+                    max_documents=int(body.get("max_documents", 6) or 6),
+                )
+            else:
+                document_selection = select_documents_with_llm(
+                    submission_id=submission_id,
+                    prompt=str(body.get("prompt", "")),
+                    api_key=OPENAI_API_KEY,
+                    model=OPENAI_MODEL,
+                    max_documents=int(body.get("max_documents", 6) or 6),
+                )
+            return self.send_json(
+                200,
+                {"document_selection": document_selection},
+            )
+
         if method == "GET":
             submission_id = unquote(remainder)
             return self.send_json(200, get_submission_detail(submission_id))
@@ -126,6 +170,11 @@ class UnderwritingRequestHandler(BaseHTTPRequestHandler):
             for guide in body.get("guides", [])
             if str(guide or "").strip()
         ]
+        underwriter_notes = [
+            str(note).strip()
+            for note in body.get("underwriter_notes", [])
+            if str(note or "").strip()
+        ]
 
         if not messages:
             return self.send_json(400, {"error": "No messages were provided."})
@@ -145,6 +194,7 @@ class UnderwritingRequestHandler(BaseHTTPRequestHandler):
                 model=OPENAI_MODEL,
                 api_key=OPENAI_API_KEY,
                 guide_instructions=guide_instructions,
+                underwriter_notes=underwriter_notes,
                 call_openai=call_openai_responses,
             )
         except Exception as error:
@@ -253,4 +303,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

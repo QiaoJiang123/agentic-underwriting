@@ -1,0 +1,10 @@
+Financial Information / Revenue Breakdown
+
+Insured: Acme Foods Distribution LLC
+Submission ID: 001-acme-foods
+
+Financial information:
+- Annual revenue: 28400000
+- Employee count: 146
+- Record count: 82000
+- Revenue breakdown: Domestic operations are the primary revenue source unless otherwise noted in the submission.

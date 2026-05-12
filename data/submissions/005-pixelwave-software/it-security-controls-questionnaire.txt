@@ -1,0 +1,11 @@
+IT/Security Controls Questionnaire
+
+Insured: PixelWave Software Inc.
+Submission ID: 005-pixelwave-software
+
+Security controls:
+- mfa: Required for employees and administrative users
+- edr: EDR deployed on employee endpoints; AWS workloads monitored through cloud security tooling
+- backup: Encrypted backups with quarterly restore testing
+- patching: Critical cloud and application patches within 7 days
+- security_training: Quarterly security training and monthly phishing simulations

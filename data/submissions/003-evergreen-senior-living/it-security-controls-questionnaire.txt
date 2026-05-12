@@ -1,0 +1,11 @@
+IT/Security Controls Questionnaire
+
+Insured: Evergreen Senior Living Partners LP
+Submission ID: 003-evergreen-senior-living
+
+Security controls:
+- mfa: Enabled for EHR admins, remote access, and email
+- edr: SentinelOne on endpoints; medical device segmentation in progress
+- backup: Daily encrypted backups, monthly restore test
+- patching: Critical patches within 10 days for managed systems
+- security_training: Annual HIPAA and phishing training

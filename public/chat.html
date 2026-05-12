@@ -4,6 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Agentic Underwriting Workspace</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="stylesheet" href="/styles.css" />
   </head>
   <body>
@@ -36,12 +37,8 @@
           <div class="selection-actions">
             <button class="selection-action" id="selectAllFilesButton" type="button">Select All</button>
             <button class="selection-action" id="unselectAllFilesButton" type="button">Unselect All</button>
+            <button class="selection-action" id="autoSelectFiles" type="button" aria-pressed="false">Auto</button>
           </div>
-          <label class="auto-selection-option">
-            <input id="autoSelectFiles" type="checkbox" />
-            <span>Auto</span>
-            <small>MCP placeholder</small>
-          </label>
           <div class="document-list panel-document-list" id="documentList">
             <p class="empty-state">Select a submission to view files.</p>
           </div>
@@ -59,6 +56,7 @@
               <span class="status-dot" aria-hidden="true"></span>
               <span id="modelStatus">Connecting</span>
             </div>
+            <button class="ghost-button compact-guide-button" id="guideToggleButton" type="button">Guide</button>
             <button class="ghost-button" id="clearButton" type="button">Clear</button>
           </div>
         </header>
@@ -96,11 +94,6 @@
                 required
               ></textarea>
               <div class="composer-actions">
-                <div class="prompt-row" aria-label="Example prompts">
-                  <button class="prompt-chip" type="button">Summarize</button>
-                  <button class="prompt-chip" type="button">Missing Info</button>
-                  <button class="prompt-chip" type="button">Risk Flags</button>
-                </div>
                 <button class="send-button" id="sendButton" type="submit">Send</button>
               </div>
             </form>
@@ -108,10 +101,14 @@
 
           <aside class="insight-panel" aria-label="Submission workspace placeholders">
             <div class="insight-tabs" aria-label="Workspace sections">
-              <button class="tab-button active" type="button" data-panel-tab="details">Details</button>
+              <button class="tab-button active" id="detailsTabButton" type="button" data-panel-tab="details">
+                Details
+              </button>
               <button class="tab-button" type="button" data-panel-tab="timeline">Timeline</button>
+              <button class="tab-button" type="button" data-panel-tab="tasks">
+                Tasks <span class="due-dot" id="tasksDueDot" aria-hidden="true"></span>
+              </button>
               <button class="tab-button" type="button" data-panel-tab="note">Note</button>
-              <button class="tab-button" type="button" data-panel-tab="guide">Guide</button>
             </div>
 
             <section class="panel-view active" data-panel-view="details">
@@ -125,11 +122,6 @@
                   appetite fit, and recommended next action.
                 </p>
               </section>
-
-              <article class="insight-card alert-card">
-                <h3>Alerts</h3>
-                <p>High severity cyber alerts, missing documents, and referral triggers will appear here.</p>
-              </article>
             </section>
 
             <section class="panel-view" data-panel-view="timeline">
@@ -141,32 +133,72 @@
               </article>
             </section>
 
-            <section class="panel-view" data-panel-view="note">
-              <article class="insight-card">
-                <h3>Notes</h3>
-                <p>Reserve space for underwriter notes, broker calls, and internal comments.</p>
+            <section class="panel-view" data-panel-view="tasks">
+              <article class="insight-card task-stage-card">
+                <div class="card-heading">
+                  <h3>Underwriting Stages</h3>
+                </div>
+                <div class="stage-checklist" id="stageChecklist">
+                  <p>Select a submission to view stages.</p>
+                </div>
+              </article>
+
+              <article class="insight-card follow-up-card">
+                <div class="card-heading">
+                  <h3>Scheduled Tasks <span class="due-dot" id="followUpDueDot" aria-hidden="true"></span></h3>
+                </div>
+                <form class="follow-up-form" id="followUpForm">
+                  <label class="sr-only" for="followUpTitle">Task</label>
+                  <input id="followUpTitle" type="text" placeholder="Add an underwriting task..." />
+                  <label class="sr-only" for="followUpDate">Due date</label>
+                  <input id="followUpDate" type="date" />
+                  <button class="selection-action" type="submit">Add</button>
+                </form>
+                <div class="follow-up-calendar" id="followUpCalendar"></div>
+                <div class="follow-up-list" id="followUpList">
+                  <p>No scheduled tasks.</p>
+                </div>
               </article>
             </section>
 
-            <section class="panel-view" data-panel-view="guide">
-              <article class="insight-card guidance-card">
-                <h3>Guidance</h3>
-                <form class="guide-form" id="guideForm">
-                  <label class="sr-only" for="guideInput">Add guidance</label>
+            <section class="panel-view" data-panel-view="note">
+              <article class="insight-card">
+                <h3>Notes</h3>
+                <form class="context-form" id="noteForm">
+                  <label class="sr-only" for="noteInput">Add note</label>
                   <textarea
-                    id="guideInput"
+                    id="noteInput"
                     rows="3"
-                    placeholder="Add appetite guidance, referral rules, or response style instructions..."
+                    placeholder="Add underwriter facts, broker updates, or context not found in the documents..."
                   ></textarea>
-                  <button class="selection-action" type="submit">Add Guide</button>
+                  <button class="selection-action" type="submit">Add Note</button>
                 </form>
-                <div class="guide-list" id="guideList"></div>
+                <div class="context-list" id="noteList"></div>
               </article>
             </section>
           </aside>
         </div>
       </section>
     </main>
+
+    <div class="guide-popover" id="guidePopover" aria-hidden="true">
+      <article class="insight-card guidance-card header-guide-card">
+        <div class="card-heading">
+          <h3>Guide</h3>
+          <button class="ghost-button small-ghost-button" id="guideCloseButton" type="button">Close</button>
+        </div>
+        <form class="guide-form" id="guideForm">
+          <label class="sr-only" for="guideInput">Add guidance</label>
+          <textarea
+            id="guideInput"
+            rows="3"
+            placeholder="Add appetite guidance, referral rules, or response style instructions..."
+          ></textarea>
+          <button class="selection-action" type="submit">Add Guide</button>
+        </form>
+        <div class="guide-list" id="guideList"></div>
+      </article>
+    </div>
 
     <div class="document-modal" id="documentModal" aria-hidden="true">
       <div class="document-modal-backdrop" data-close-document></div>

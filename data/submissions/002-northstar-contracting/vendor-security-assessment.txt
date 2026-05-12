@@ -1,0 +1,7 @@
+Vendor/Security Assessment
+
+Insured: Northstar Contracting Group Inc.
+Submission ID: 002-northstar-contracting
+
+Vendor and third-party security assessment:
+Critical vendors include subcontractor portal, accounting platform, payroll provider, and Microsoft 365.

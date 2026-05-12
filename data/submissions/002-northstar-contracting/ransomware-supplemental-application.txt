@@ -1,0 +1,11 @@
+Ransomware Supplemental Application
+
+Insured: Northstar Contracting Group Inc.
+Submission ID: 002-northstar-contracting
+
+Ransomware controls:
+- MFA: Enabled for Microsoft 365; not enforced for project management SaaS subcontractor accounts
+- EDR: Microsoft Defender for Business
+- Backups: Cloud accounting and project files backed up daily
+- Patching: Managed service provider patches endpoints monthly
+- Incident response: Incident response plan provided separately.

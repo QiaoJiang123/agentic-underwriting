@@ -1,0 +1,7 @@
+Vendor/Security Assessment
+
+Insured: Harborview Marina & Storage LLC
+Submission ID: 004-harborview-marina
+
+Vendor and third-party security assessment:
+Critical vendors include marina reservation platform, payment processor, fuel payment terminals, customer Wi-Fi, and access control provider.

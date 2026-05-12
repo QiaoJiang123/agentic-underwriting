@@ -1,0 +1,7 @@
+Vendor/Security Assessment
+
+Insured: Acme Foods Distribution LLC
+Submission ID: 001-acme-foods
+
+Vendor and third-party security assessment:
+Critical vendors include warehouse management, EDI ordering, fleet telematics, Microsoft 365, and customer portal providers.

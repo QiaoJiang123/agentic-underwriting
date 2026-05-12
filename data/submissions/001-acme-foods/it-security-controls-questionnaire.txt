@@ -1,0 +1,11 @@
+IT/Security Controls Questionnaire
+
+Insured: Acme Foods Distribution LLC
+Submission ID: 001-acme-foods
+
+Security controls:
+- mfa: Partial; enabled for email and VPN, not enabled for warehouse handheld device admin portal
+- edr: CrowdStrike deployed on servers and corporate laptops
+- backup: Daily backups, quarterly restore testing
+- patching: Critical patches within 15 days
+- security_training: Annual training plus simulated phishing twice per year

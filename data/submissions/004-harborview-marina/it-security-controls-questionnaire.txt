@@ -1,0 +1,11 @@
+IT/Security Controls Questionnaire
+
+Insured: Harborview Marina & Storage LLC
+Submission ID: 004-harborview-marina
+
+Security controls:
+- mfa: Enabled for email and reservation platform admins
+- edr: Managed EDR on office endpoints only
+- backup: Reservation data backed up by SaaS provider
+- patching: POS terminals maintained by payment vendor
+- security_training: Annual training for office staff

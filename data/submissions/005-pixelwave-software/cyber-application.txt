@@ -1,0 +1,40 @@
+Cyber Application
+
+Insured: PixelWave Software Inc.
+Submission ID: 005-pixelwave-software
+
+Business profile:
+- Industry: SaaS analytics platform
+- Location: Austin, TX
+- Annual revenue: 9400000
+- Employees: 64
+- Records: 1250000
+
+Requested coverage:
+- Cyber liability
+- Technology E&O
+- Media liability
+- Requested effective date: 2026-06-30
+- Requested retention: $50,000
+
+Existing application notes:
+Security Controls Summary
+
+Infrastructure:
+- AWS production environment
+- Multi-tenant SaaS application
+- Customer API integrations
+- Centralized logging and alerting
+
+Controls:
+- MFA required for all employees and admin users
+- SSO enforced through Okta
+- EDR on employee endpoints
+- Cloud security posture monitoring enabled
+- Quarterly backup restore testing
+- Critical patches within 7 days
+- Annual external penetration test
+- SOC 2 Type II report expected in Q3 2026
+
+Incident history:
+One phishing incident in 2024. No confirmed data exfiltration.

@@ -1,0 +1,11 @@
+Ransomware Supplemental Application
+
+Insured: PixelWave Software Inc.
+Submission ID: 005-pixelwave-software
+
+Ransomware controls:
+- MFA: Required for employees and administrative users
+- EDR: EDR deployed on employee endpoints; AWS workloads monitored through cloud security tooling
+- Backups: Encrypted backups with quarterly restore testing
+- Patching: Critical cloud and application patches within 7 days
+- Incident response: Incident response plan provided separately.

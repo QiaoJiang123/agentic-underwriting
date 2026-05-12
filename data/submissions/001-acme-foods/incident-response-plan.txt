@@ -1,0 +1,9 @@
+Incident Response Plan
+
+Insured: Acme Foods Distribution LLC
+Submission ID: 001-acme-foods
+
+Incident response plan:
+- Internal incident owner and broker contact are identified.
+- Escalation process includes legal, forensic, notification, and carrier reporting steps.
+- Tabletop testing cadence should be confirmed during underwriting review.

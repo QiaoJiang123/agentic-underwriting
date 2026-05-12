@@ -11,6 +11,8 @@ PDF_SPECS = [
         "file_name": "company-description.pdf",
         "file_type": "pdf",
         "category": "company_description",
+        "document_types": ["company_information"],
+        "major_categories": ["company_profile"],
         "description": "Company description and cyber exposure overview",
         "title": "Company Description",
     },
@@ -18,6 +20,8 @@ PDF_SPECS = [
         "file_name": "overall-status.pdf",
         "file_type": "pdf",
         "category": "overall_status",
+        "document_types": ["underwriting_status_summary"],
+        "major_categories": ["underwriting_review"],
         "description": "Overall cyber underwriting status summary",
         "title": "Overall Status",
     },
@@ -43,8 +47,10 @@ def main():
 
             document_metadata = {
                 "file_name": spec["file_name"],
-                "file_type": spec["file_type"],
-                "category": spec["category"],
+                "file_type": spec["document_types"][0],
+                "category": spec["major_categories"][0],
+                "document_types": spec["document_types"],
+                "major_categories": spec["major_categories"],
                 "file_created_at": created_at,
                 "received_at": metadata.get("received_at"),
                 "description": spec["description"],
@@ -174,4 +180,3 @@ def format_number(value):
 
 if __name__ == "__main__":
     main()
-

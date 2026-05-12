@@ -7,6 +7,8 @@ PUBLIC_DIR = ROOT / "public"
 DATA_DIR = ROOT / "data" / "submissions"
 CHAT_HISTORY_DIR = ROOT / "data" / "chat_history"
 GUIDE_DIR = ROOT / "data" / "guide"
+NOTE_DIR = ROOT / "data" / "note"
+FOLLOW_UP_DIR = ROOT / "data" / "follow_up"
 SEARCH_METADATA_PATH = ROOT / "data" / "metadata.json"
 
 PORT = int(os.environ.get("PORT", "3000"))
@@ -51,4 +53,3 @@ load_env(ROOT / ".env")
 
 OPENAI_API_KEY = normalize_secret(os.environ.get("OPENAI_API_KEY"))
 OPENAI_MODEL = os.environ.get("OPENAI_MODEL", "gpt-5.4-nano")
-

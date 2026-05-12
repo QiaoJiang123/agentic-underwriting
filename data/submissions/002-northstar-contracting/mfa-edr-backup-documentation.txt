@@ -1,0 +1,9 @@
+MFA/EDR/Backup Documentation
+
+Insured: Northstar Contracting Group Inc.
+Submission ID: 002-northstar-contracting
+
+Control evidence:
+- MFA: Enabled for Microsoft 365; not enforced for project management SaaS subcontractor accounts
+- EDR: Microsoft Defender for Business
+- Backups: Cloud accounting and project files backed up daily

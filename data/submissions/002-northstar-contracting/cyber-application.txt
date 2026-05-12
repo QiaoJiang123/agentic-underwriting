@@ -1,0 +1,39 @@
+Cyber Application
+
+Insured: Northstar Contracting Group Inc.
+Submission ID: 002-northstar-contracting
+
+Business profile:
+- Industry: Commercial roofing and construction
+- Location: Columbus, OH
+- Annual revenue: 18400000
+- Employees: 82
+- Records: 24000
+
+Requested coverage:
+- Cyber liability
+- Funds transfer fraud
+- Invoice manipulation
+- Requested effective date: 2026-06-01
+- Requested retention: $10,000
+
+Existing application notes:
+Security Questionnaire
+
+Insured: Northstar Contracting Group Inc.
+
+Core systems:
+- Microsoft 365
+- QuickBooks Online
+- BuilderTrend project management SaaS
+- ADP payroll
+- Subcontractor document portal
+
+Controls:
+- MFA: Enabled for Microsoft 365 admins and employees
+- MFA gap: Not enforced for subcontractor portal users
+- EDR: Microsoft Defender for Business
+- Backups: Daily cloud backups for accounting and project files
+- Patch management: MSP monthly patch cycle
+- Wire verification: Verbal callback required but not documented in formal policy
+- Security awareness: New-hire overview only, no recurring phishing tests

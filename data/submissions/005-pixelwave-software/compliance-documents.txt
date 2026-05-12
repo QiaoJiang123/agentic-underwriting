@@ -1,0 +1,7 @@
+Compliance Documents
+
+Insured: PixelWave Software Inc.
+Submission ID: 005-pixelwave-software
+
+Compliance documents:
+SOC 2 Type II is in progress. Security package includes SOC 2 readiness evidence, API security documentation, and customer contract controls.

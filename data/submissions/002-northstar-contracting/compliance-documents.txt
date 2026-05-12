@@ -1,0 +1,7 @@
+Compliance Documents
+
+Insured: Northstar Contracting Group Inc.
+Submission ID: 002-northstar-contracting
+
+Compliance documents:
+No formal SOC 2, HIPAA, or PCI attestation is applicable. Evidence focuses on funds transfer controls and subcontractor portal access controls.

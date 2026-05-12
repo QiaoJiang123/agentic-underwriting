@@ -3,10 +3,10 @@ import urllib.error
 import urllib.request
 
 
-def call_openai_responses(api_key, model, messages, guide_instructions):
+def call_openai_responses(api_key, model, messages, guide_instructions, underwriter_notes):
     payload = {
         "model": model,
-        "instructions": build_model_instructions(guide_instructions),
+        "instructions": build_model_instructions(guide_instructions, underwriter_notes),
         "input": messages,
         "max_output_tokens": 900,
     }
@@ -17,7 +17,7 @@ def call_openai_responses(api_key, model, messages, guide_instructions):
     }
 
 
-def build_model_instructions(guide_instructions):
+def build_model_instructions(guide_instructions, underwriter_notes):
     base_instructions = [
         "You are an underwriting copilot for cyber insurance workflows.",
         "Help evaluate submissions, ask for missing information, summarize risks, and explain your reasoning.",
@@ -29,18 +29,33 @@ def build_model_instructions(guide_instructions):
         for guide in guide_instructions or []
         if str(guide or "").strip()
     ]
+    notes = [
+        str(note).strip()
+        for note in underwriter_notes or []
+        if str(note or "").strip()
+    ]
 
-    if not guides:
-        return " ".join(base_instructions)
+    instruction_parts = [" ".join(base_instructions)]
 
-    return "\n".join(
-        [
-            " ".join(base_instructions),
-            "",
-            "Additional underwriting guide instructions. Treat these as higher-priority operating guidance for this request:",
-            *[f"{index + 1}. {guide}" for index, guide in enumerate(guides)],
-        ]
-    )
+    if notes:
+        instruction_parts.extend(
+            [
+                "",
+                "Underwriter notes. Treat these as ground-truth submission context supplied by the underwriter. Use them when answering every message, and prefer them over conflicting document text unless the user says otherwise:",
+                *[f"{index + 1}. {note}" for index, note in enumerate(notes)],
+            ]
+        )
+
+    if guides:
+        instruction_parts.extend(
+            [
+                "",
+                "Additional underwriting guide instructions. Treat these as higher-priority operating guidance for this request:",
+                *[f"{index + 1}. {guide}" for index, guide in enumerate(guides)],
+            ]
+        )
+
+    return "\n".join(instruction_parts)
 
 
 def post_json(url, payload, api_key):
@@ -83,4 +98,3 @@ def extract_output_text(response):
                 chunks.append(text)
 
     return "\n".join(chunks).strip() or "I could not produce a response."
-

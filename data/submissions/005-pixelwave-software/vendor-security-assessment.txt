@@ -1,0 +1,7 @@
+Vendor/Security Assessment
+
+Insured: PixelWave Software Inc.
+Submission ID: 005-pixelwave-software
+
+Vendor and third-party security assessment:
+Critical vendors include cloud hosting, identity provider, observability platform, payment processor, and API integration partners.

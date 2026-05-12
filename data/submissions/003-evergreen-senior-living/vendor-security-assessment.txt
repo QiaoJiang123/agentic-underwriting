@@ -1,0 +1,7 @@
+Vendor/Security Assessment
+
+Insured: Evergreen Senior Living Partners LP
+Submission ID: 003-evergreen-senior-living
+
+Vendor and third-party security assessment:
+Critical vendors include EHR, eMAR, pharmacy interface, billing system, and managed IT provider.

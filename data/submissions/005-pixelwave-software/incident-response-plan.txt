@@ -1,0 +1,9 @@
+Incident Response Plan
+
+Insured: PixelWave Software Inc.
+Submission ID: 005-pixelwave-software
+
+Incident response plan:
+- Internal incident owner and broker contact are identified.
+- Escalation process includes legal, forensic, notification, and carrier reporting steps.
+- Tabletop testing cadence should be confirmed during underwriting review.
