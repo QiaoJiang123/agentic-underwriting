@@ -39,6 +39,11 @@
             <button class="selection-action" id="unselectAllFilesButton" type="button">Unselect All</button>
             <button class="selection-action" id="autoSelectFiles" type="button" aria-pressed="false">Auto</button>
           </div>
+          <div class="upload-actions">
+            <input id="documentUploadInput" type="file" accept=".txt,.pdf,text/plain,application/pdf" hidden />
+            <button class="selection-action" id="documentUploadButton" type="button">Upload File</button>
+            <span id="documentUploadStatus"></span>
+          </div>
           <div class="document-list panel-document-list" id="documentList">
             <p class="empty-state">Select a submission to view files.</p>
           </div>
@@ -115,7 +120,6 @@
               <section class="insight-card primary-card">
                 <div class="card-heading">
                   <h3>Submission Summary</h3>
-                  <span class="placeholder-tag">Placeholder</span>
                 </div>
                 <p id="summaryPlaceholder">
                   Select a submission to reserve this area for AI-generated account summary,
@@ -124,7 +128,12 @@
               </section>
 
               <article class="insight-card">
-                <h3>Timeline</h3>
+                <div class="card-heading">
+                  <h3>Timeline</h3>
+                  <button class="selection-action compact-action" type="button" id="refreshInsightsButton">
+                    Refresh
+                  </button>
+                </div>
                 <div class="timeline-list" id="timelineList">
                   <p>Select a submission to view timeline.</p>
                 </div>
@@ -135,7 +144,6 @@
               <article class="insight-card analytics-card">
                 <div class="card-heading">
                   <h3>Analytics</h3>
-                  <span class="placeholder-tag">Demo model</span>
                 </div>
                 <div class="analytics-panel" id="analyticsPanel">
                   <p>Select a submission to view quote and bind analytics.</p>
@@ -150,6 +158,12 @@
                 </div>
                 <div class="stage-checklist" id="stageChecklist">
                   <p>Select a submission to view stages.</p>
+                </div>
+                <div class="workflow-submit-panel">
+                  <button class="submit-workflow-button" id="submitWorkflowButton" type="button">
+                    Submit Checked Stages
+                  </button>
+                  <p id="workflowSubmitStatus">Submitting permanently locks checked stages only.</p>
                 </div>
               </article>
 

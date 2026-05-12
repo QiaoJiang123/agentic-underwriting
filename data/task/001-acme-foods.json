@@ -1,0 +1,30 @@
+{
+  "submission_id": "001-acme-foods",
+  "updated_at": "2026-05-12T14:15:01.558500Z",
+  "tasks": [
+    {
+      "id": "task-1778557967314",
+      "title": "This is a test task",
+      "due_date": "2026-05-12",
+      "status": "open",
+      "created_at": "2026-05-12T03:52:47.314Z",
+      "updated_at": "2026-05-12T14:15:01.558500Z"
+    },
+    {
+      "id": "task-1778595301558",
+      "title": "for tomorrow: call Sam",
+      "due_date": "2026-05-13",
+      "status": "open",
+      "created_at": "2026-05-12T14:15:01.558321Z",
+      "updated_at": "2026-05-12T14:15:01.558500Z"
+    },
+    {
+      "id": "task-1778595234105",
+      "title": "test task",
+      "due_date": "2026-05-13",
+      "status": "open",
+      "created_at": "2026-05-12T14:13:54.105Z",
+      "updated_at": "2026-05-12T14:15:01.558500Z"
+    }
+  ]
+}

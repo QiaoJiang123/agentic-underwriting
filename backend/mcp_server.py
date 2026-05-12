@@ -5,6 +5,7 @@ from backend.services.document_tools import (
     read_documents,
     select_documents_for_prompt,
 )
+from backend.services.chat_action_service import add_guide, add_note, add_task
 
 
 mcp = FastMCP("agentic-underwriting")
@@ -26,6 +27,24 @@ def select_documents(submission_id: str, prompt: str, max_documents: int = 6) ->
 def read_selected_documents(submission_id: str, file_names: list[str]) -> dict:
     """Read extracted text and metadata for selected documents."""
     return read_documents(submission_id, file_names)
+
+
+@mcp.tool
+def add_underwriter_note(submission_id: str, text: str) -> dict:
+    """Add an underwriter note for a submission. Notes are ground-truth context."""
+    return add_note(submission_id, text)
+
+
+@mcp.tool
+def add_guide_instruction(submission_id: str, text: str) -> dict:
+    """Add a guide instruction for a submission. Guides are sent as operating guidance."""
+    return add_guide(submission_id, text)
+
+
+@mcp.tool
+def add_scheduled_task(submission_id: str, title: str, due_date: str) -> dict:
+    """Add a scheduled underwriting task for a submission. due_date must be YYYY-MM-DD."""
+    return add_task(submission_id, title, due_date)
 
 
 if __name__ == "__main__":

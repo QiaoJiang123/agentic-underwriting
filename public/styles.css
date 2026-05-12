@@ -389,9 +389,12 @@ h3 {
   grid-template-columns: 16px minmax(0, 1fr);
   gap: 8px;
   align-items: center;
+  position: relative;
 }
 
 .panel-document-list .document-link {
+  padding-right: 34px;
+  padding-bottom: 20px;
   border-color: rgba(255, 255, 255, 0.12);
   background: rgba(255, 255, 255, 0.075);
   color: #f8fafc;
@@ -406,10 +409,49 @@ h3 {
   color: #b6c3d4;
 }
 
+.document-delete-button {
+  width: auto;
+  height: auto;
+  position: absolute;
+  right: 10px;
+  bottom: 7px;
+  border: 0;
+  background: transparent;
+  color: #d6e1f0;
+  font-size: 0.95rem;
+  font-weight: 760;
+  line-height: 1;
+}
+
+.document-delete-button:hover {
+  color: #fecaca;
+  background: transparent;
+}
+
 .selection-actions {
   display: grid;
   grid-template-columns: 1fr 1fr 0.72fr;
   gap: 8px;
+}
+
+.upload-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 5px;
+}
+
+.upload-actions .selection-action {
+  width: 100%;
+}
+
+.upload-actions span {
+  min-height: 14px;
+  overflow: hidden;
+  color: #b6c3d4;
+  font-size: 0.68rem;
+  font-weight: 680;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .selection-action {
@@ -842,6 +884,11 @@ textarea:focus {
   gap: 10px;
 }
 
+.compact-action {
+  padding: 6px 9px;
+  font-size: 0.72rem;
+}
+
 .placeholder-tag {
   padding: 4px 7px;
   border-radius: 999px;
@@ -1049,6 +1096,20 @@ textarea:focus {
 .timeline-list {
   display: grid;
   gap: 12px;
+}
+
+.summary-block {
+  display: grid;
+  gap: 8px;
+}
+
+.summary-block p {
+  margin: 0;
+}
+
+.summary-block ul {
+  margin: 0;
+  padding-left: 18px;
 }
 
 .timeline-item {
@@ -1370,12 +1431,28 @@ textarea:focus {
   align-items: center;
 }
 
-.waterfall-row span {
+.waterfall-row span,
+.feature-name {
   min-width: 0;
   overflow: hidden;
   color: var(--ink);
   font-size: 0.72rem;
   font-weight: 720;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.feature-name {
+  display: flex;
+  align-items: center;
+  cursor: help;
+  overflow: visible;
+  position: relative;
+}
+
+.feature-label-text {
+  min-width: 0;
+  overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -1459,10 +1536,38 @@ textarea:focus {
   gap: 12px;
 }
 
-.what-if-switch {
+.what-if-sticky {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 6px;
+  gap: 10px;
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  padding-bottom: 10px;
+  background: #f8fbff;
+}
+
+.what-if-model-picker {
+  display: grid;
+  gap: 5px;
+}
+
+.what-if-model-picker span {
+  color: var(--muted);
+  font-size: 0.68rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.what-if-model-picker select {
+  min-height: 36px;
+  padding: 7px 10px;
+  border: 1px solid #9ebbe0;
+  border-radius: 7px;
+  background: #fff;
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 760;
 }
 
 .what-if-result {
@@ -1507,6 +1612,9 @@ textarea:focus {
 }
 
 .what-if-control-heading strong {
+  display: flex;
+  align-items: center;
+  gap: 5px;
   color: var(--ink);
   font-size: 0.78rem;
 }
@@ -1539,6 +1647,48 @@ textarea:focus {
   accent-color: var(--accent);
 }
 
+.range-reference {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 0.63rem;
+  font-weight: 760;
+}
+
+.range-reference span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.range-reference span:last-child {
+  text-align: right;
+}
+
+.range-input-wrap {
+  position: relative;
+}
+
+.range-input-wrap input[type="range"] {
+  display: block;
+  width: 100%;
+  margin: 0;
+}
+
+.range-current-marker {
+  width: 2px;
+  height: 18px;
+  position: absolute;
+  left: clamp(1px, var(--current-position), calc(100% - 1px));
+  top: 50%;
+  transform: translate(-50%, -50%);
+  border-radius: 999px;
+  background: #0f172a;
+  pointer-events: none;
+}
+
 .binary-option-row {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1568,6 +1718,27 @@ textarea:focus {
   font-size: 0.7rem;
   font-weight: 780;
   text-align: right;
+}
+
+.floating-feature-tooltip {
+  width: 260px;
+  padding: 8px 9px;
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  border: 1px solid #b7c7dc;
+  border-radius: 7px;
+  background: #fff;
+  color: var(--ink);
+  box-shadow: 0 10px 26px rgba(15, 23, 42, 0.18);
+  font-size: 0.72rem;
+  font-weight: 650;
+  line-height: 1.35;
+  pointer-events: none;
+}
+
+.floating-feature-tooltip.visible {
+  display: block;
 }
 
 .coefficient-table {
@@ -1624,6 +1795,10 @@ textarea:focus {
 .stage-item.current {
   border-color: rgba(37, 99, 235, 0.34);
   background: var(--accent-soft);
+}
+
+.stage-item.checked {
+  border-color: rgba(5, 150, 105, 0.3);
 }
 
 .stage-item input {
@@ -1711,21 +1886,34 @@ textarea:focus {
 
 .calendar-day {
   min-height: 24px;
+  border: 0;
   display: grid;
   place-items: center;
   border-radius: 5px;
+  background: transparent;
   color: var(--muted);
   font-size: 0.72rem;
   position: relative;
 }
 
-.calendar-day.has-follow-up {
-  background: #eaf2ff;
+.calendar-day:not(.empty):hover,
+.calendar-day.selected {
+  outline: 1px solid rgba(37, 99, 235, 0.34);
+  background: #fff;
+  color: var(--ink);
+}
+
+.calendar-day.has-task {
+  background: #fff1f2;
   color: var(--ink);
   font-weight: 760;
 }
 
-.calendar-day.due-alert::after {
+.calendar-day.has-task::after {
+  display: none;
+}
+
+.calendar-day.due-alert:not(.has-task)::before {
   content: "";
   width: 6px;
   height: 6px;
@@ -1738,6 +1926,13 @@ textarea:focus {
 
 .calendar-day.empty {
   visibility: hidden;
+}
+
+.task-list-heading {
+  color: var(--muted);
+  font-size: 0.68rem;
+  font-weight: 820;
+  text-transform: uppercase;
 }
 
 .follow-up-list {
@@ -1785,6 +1980,42 @@ textarea:focus {
 .follow-up-actions {
   display: flex;
   gap: 6px;
+}
+
+.workflow-submit-panel {
+  margin-top: 12px;
+  padding-top: 12px;
+  display: grid;
+  gap: 6px;
+  border-top: 1px solid var(--line);
+}
+
+.submit-workflow-button {
+  min-height: 36px;
+  border: 1px solid #b91c1c;
+  border-radius: 7px;
+  background: #fff;
+  color: #7f1d1d;
+  font-size: 0.8rem;
+  font-weight: 820;
+}
+
+.submit-workflow-button:hover:not(:disabled) {
+  background: #fff1f2;
+}
+
+.submit-workflow-button:disabled {
+  cursor: not-allowed;
+  border-color: var(--line);
+  color: var(--muted);
+  background: #f8fafc;
+}
+
+.workflow-submit-panel p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.68rem;
+  line-height: 1.35;
 }
 
 .guidance-card {

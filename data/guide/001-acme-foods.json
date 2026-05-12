@@ -1,18 +1,18 @@
 {
   "submission_id": "001-acme-foods",
-  "updated_at": "2026-05-12T00:17:49.367355Z",
+  "updated_at": "2026-05-12T14:20:22.900669Z",
   "guides": [
     {
       "id": "guide-cyber-baseline",
       "text": "Evaluate MFA coverage, backup resilience, EDI dependency, and business interruption exposure before recommending next steps.",
       "created_at": "2026-05-02T00:00:00-04:00",
-      "updated_at": "2026-05-12T00:17:49.367355Z"
+      "updated_at": "2026-05-12T14:20:22.900669Z"
     },
     {
-      "id": "guide-1778545069361",
-      "text": "Provide suggestion for next step",
-      "created_at": "2026-05-12T00:17:49.361Z",
-      "updated_at": "2026-05-12T00:17:49.367355Z"
+      "id": "guide-1778595622893",
+      "text": "Always provide me the next step",
+      "created_at": "2026-05-12T14:20:22.893Z",
+      "updated_at": "2026-05-12T14:20:22.900669Z"
     }
   ]
 }

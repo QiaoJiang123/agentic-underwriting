@@ -1,0 +1,17 @@
+Broker Follow-Up Note
+
+Submission: 001-acme-foods
+Insured: Acme Foods Distribution LLC
+Date: 2026-05-12
+
+The broker confirmed that MFA has now been enabled for the warehouse handheld
+admin portal. The insured expects to provide a screenshot of the MFA policy and
+an updated access control export by the end of the week.
+
+Additional underwriting context:
+- No new cyber losses have been reported since the original submission.
+- The EDI provider remains a critical vendor for order processing.
+- The insured completed a backup restore test on 2026-05-06 with no material
+  recovery issues reported.
+- The broker requested that the underwriter review whether dependent business
+  interruption terms can remain aligned with the expiring program.

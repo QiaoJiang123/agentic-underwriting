@@ -2,44 +2,45 @@ import json
 import time
 from datetime import datetime, timezone
 
-from backend.config import FOLLOW_UP_DIR
+from backend.config import TASK_DIR
 from backend.services.submission_service import is_valid_submission_id, submission_exists
 
 
 VALID_STATUSES = {"open", "done"}
 
 
-def get_follow_up_record(submission_id):
+def get_task_record(submission_id):
     validate_submission(submission_id)
-    path = get_follow_up_path(submission_id)
+    path = get_task_path(submission_id)
 
     if not path.exists():
         return {
             "submission_id": submission_id,
             "updated_at": None,
-            "follow_ups": [],
+            "tasks": [],
         }
 
     record = json.loads(path.read_text(encoding="utf-8"))
+    raw_tasks = record.get("tasks", record.get("follow_ups", []))
     return {
         "submission_id": record.get("submission_id", submission_id),
         "updated_at": record.get("updated_at"),
-        "follow_ups": sanitize_follow_ups(record.get("follow_ups", []), [], utc_now(), False),
+        "tasks": sanitize_tasks(raw_tasks, [], utc_now(), False),
     }
 
 
-def save_follow_up_record(submission_id, follow_ups):
+def save_task_record(submission_id, tasks):
     validate_submission(submission_id)
-    previous_record = get_follow_up_record(submission_id)
+    previous_record = get_task_record(submission_id)
     now = utc_now()
     record = {
         "submission_id": submission_id,
         "updated_at": now,
-        "follow_ups": sanitize_follow_ups(follow_ups, previous_record.get("follow_ups", []), now),
+        "tasks": sanitize_tasks(tasks, previous_record.get("tasks", []), now),
     }
 
-    FOLLOW_UP_DIR.mkdir(parents=True, exist_ok=True)
-    get_follow_up_path(submission_id).write_text(
+    TASK_DIR.mkdir(parents=True, exist_ok=True)
+    get_task_path(submission_id).write_text(
         json.dumps(record, indent=2) + "\n",
         encoding="utf-8",
     )
@@ -53,18 +54,18 @@ def validate_submission(submission_id):
         raise FileNotFoundError("Submission not found.")
 
 
-def sanitize_follow_ups(follow_ups, previous_follow_ups, now, refresh_updated_at=True):
-    if not isinstance(follow_ups, list):
+def sanitize_tasks(tasks, previous_tasks, now, refresh_updated_at=True):
+    if not isinstance(tasks, list):
         return []
 
     previous_by_id = {
         item.get("id"): item
-        for item in previous_follow_ups
+        for item in previous_tasks
         if isinstance(item, dict) and item.get("id")
     }
     sanitized = []
 
-    for index, item in enumerate(follow_ups):
+    for index, item in enumerate(tasks):
         item = item or {}
         title = str(item.get("title", "")).strip()
         due_date = str(item.get("due_date", "")).strip()
@@ -72,15 +73,15 @@ def sanitize_follow_ups(follow_ups, previous_follow_ups, now, refresh_updated_at
             continue
 
         raw_id = str(item.get("id", "")).strip()
-        follow_up_id = raw_id if is_safe_id(raw_id) else f"follow-up-{int(time.time() * 1000)}-{index}"
-        previous = previous_by_id.get(follow_up_id, {})
+        task_id = raw_id if is_safe_id(raw_id) else f"task-{int(time.time() * 1000)}-{index}"
+        previous = previous_by_id.get(task_id, {})
         status = str(item.get("status", "open")).strip().lower()
         if status not in VALID_STATUSES:
             status = "open"
 
         sanitized.append(
             {
-                "id": follow_up_id,
+                "id": task_id,
                 "title": title,
                 "due_date": due_date,
                 "status": status,
@@ -94,8 +95,8 @@ def sanitize_follow_ups(follow_ups, previous_follow_ups, now, refresh_updated_at
     return sorted(sanitized, key=lambda item: (item["status"] == "done", item["due_date"], item["title"].lower()))
 
 
-def get_follow_up_path(submission_id):
-    return FOLLOW_UP_DIR / f"{submission_id}.json"
+def get_task_path(submission_id):
+    return TASK_DIR / f"{submission_id}.json"
 
 
 def is_iso_date(value):

@@ -1,0 +1,57 @@
+{
+  "submission_id": "001-acme-foods",
+  "updated_at": "2026-05-12T03:36:09.118250Z",
+  "submitted_at": null,
+  "stages": [
+    {
+      "key": "intake",
+      "label": "Intake",
+      "checked": true
+    },
+    {
+      "key": "document_collection",
+      "label": "Document Collection",
+      "checked": true
+    },
+    {
+      "key": "data_extraction",
+      "label": "Data Extraction",
+      "checked": true
+    },
+    {
+      "key": "initial_review",
+      "label": "Initial Review",
+      "checked": false
+    },
+    {
+      "key": "risk_assessment",
+      "label": "Risk Assessment",
+      "checked": false
+    },
+    {
+      "key": "clarification",
+      "label": "Clarification",
+      "checked": false
+    },
+    {
+      "key": "referral_approval",
+      "label": "Referral / Approval",
+      "checked": false
+    },
+    {
+      "key": "terms_conditions",
+      "label": "Terms & Conditions",
+      "checked": false
+    },
+    {
+      "key": "quote",
+      "label": "Quote",
+      "checked": false
+    },
+    {
+      "key": "bind_close",
+      "label": "Bind / Close",
+      "checked": false
+    }
+  ]
+}

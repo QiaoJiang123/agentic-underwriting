@@ -21,11 +21,17 @@ const followUpCalendar = document.querySelector("#followUpCalendar");
 const followUpList = document.querySelector("#followUpList");
 const tasksDueDot = document.querySelector("#tasksDueDot");
 const followUpDueDot = document.querySelector("#followUpDueDot");
+const submitWorkflowButton = document.querySelector("#submitWorkflowButton");
+const workflowSubmitStatus = document.querySelector("#workflowSubmitStatus");
 const keyInfoList = document.querySelector("#keyInfoList");
 const timelineList = document.querySelector("#timelineList");
+const refreshInsightsButton = document.querySelector("#refreshInsightsButton");
 const analyticsPanel = document.querySelector("#analyticsPanel");
 const stageChecklist = document.querySelector("#stageChecklist");
 const documentList = document.querySelector("#documentList");
+const documentUploadInput = document.querySelector("#documentUploadInput");
+const documentUploadButton = document.querySelector("#documentUploadButton");
+const documentUploadStatus = document.querySelector("#documentUploadStatus");
 const selectAllFilesButton = document.querySelector("#selectAllFilesButton");
 const unselectAllFilesButton = document.querySelector("#unselectAllFilesButton");
 const autoSelectFiles = document.querySelector("#autoSelectFiles");
@@ -52,13 +58,16 @@ let editingGuideIndex = null;
 let noteItems = [];
 let editingNoteIndex = null;
 let followUpItems = [];
+let selectedTaskDate = null;
+let stageItems = [];
+let workflowSubmittedAt = null;
 let analyticsModels = null;
 let analyticsFeatureMetadata = null;
 let currentAnalytics = null;
 let currentAnalyticsFeatureLookup = null;
 let activeWhatIfModel = "quote";
-let whatIfValues = {};
-let whatIfRawValues = {};
+let whatIfScenarioState = createEmptyWhatIfScenarioState();
+let activeFeatureTooltip = null;
 const initialSubmissionId = new URLSearchParams(window.location.search).get("submission");
 
 init();
@@ -165,29 +174,23 @@ async function selectSubmission(submission, button) {
     noteItems = [];
     editingNoteIndex = null;
     followUpItems = [];
+    selectedTaskDate = null;
+    stageItems = [];
+    workflowSubmittedAt = null;
     currentAnalytics = null;
     currentAnalyticsFeatureLookup = null;
     activeWhatIfModel = "quote";
-    whatIfValues = {};
-    whatIfRawValues = {};
+    whatIfScenarioState = createEmptyWhatIfScenarioState();
 
     workspaceTitle.textContent = submission.title;
-    summaryPlaceholder.textContent = buildSummaryPlaceholder(selectedSubmission.record);
-    keyInfoList.innerHTML = buildKeyInfoItems(selectedSubmission)
-      .map(
-        (item) => `
-          <div class="key-info-item" title="${escapeHtml(`${item.label}: ${item.value}`)}">
-            <span title="${escapeHtml(item.label)}">${escapeHtml(item.label)}</span>
-            <strong title="${escapeHtml(item.value)}">${escapeHtml(item.value)}</strong>
-          </div>
-        `
-      )
-      .join("");
+    summaryPlaceholder.innerHTML = buildSummaryHtml(selectedSubmission.record);
+    keyInfoList.innerHTML = buildKeyInfoHtml(selectedSubmission);
     timelineList.innerHTML = buildTimelineItems(selectedSubmission.record);
     analyticsPanel.innerHTML = '<p class="empty-state">Loading analytics models...</p>';
     await loadAnalyticsModels();
     analyticsPanel.innerHTML = buildAnalyticsPanel(selectedSubmission.record);
-    stageChecklist.innerHTML = buildStageChecklist(selectedSubmission.record);
+    stageItems = buildDefaultStageItems(selectedSubmission.record);
+    renderStageChecklist();
     documentList.innerHTML = buildDocumentLinks(selectedSubmission.record);
     renderGuideInstructions("Loading guide...");
     renderNoteContext("Loading notes...");
@@ -195,6 +198,7 @@ async function selectSubmission(submission, button) {
     await loadGuideInstructions(submission.id);
     await loadNotes(submission.id);
     await loadFollowUps(submission.id);
+    await loadStageState(submission.id);
     selectedFiles = new Set((selectedSubmission.record.documents || []).map((document) => document.file_name));
     syncFileSelectionControls();
     updateSelectionMode("all");
@@ -323,6 +327,8 @@ form.addEventListener("submit", async (event) => {
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
+        submission_id: selectedSubmission ? selectedSubmission.id : null,
+        user_prompt: content,
         messages: temporaryModelMessages,
         guides: getActiveGuideInstructions(),
         underwriter_notes: getActiveUnderwriterNotes()
@@ -337,6 +343,7 @@ form.addEventListener("submit", async (event) => {
 
     pending.querySelector(".bubble").innerHTML = formatText(data.reply);
     messages.push({ role: "assistant", content: data.reply });
+    await refreshAfterChatActions(data.actions);
     await saveCurrentChatHistory();
   } catch (error) {
     const bubble = pending.querySelector(".bubble");
@@ -374,6 +381,12 @@ input.addEventListener("keydown", (event) => {
 });
 
 documentList.addEventListener("click", (event) => {
+  const deleteButton = event.target.closest("[data-delete-document]");
+  if (deleteButton) {
+    deleteSubmissionDocument(deleteButton.dataset.deleteDocument);
+    return;
+  }
+
   const button = event.target.closest(".document-link");
   if (!button) {
     return;
@@ -400,6 +413,36 @@ documentList.addEventListener("change", (event) => {
   autoSelectEnabled = false;
   updateSelectionMode("manual");
 });
+
+if (documentUploadButton && documentUploadInput) {
+  documentUploadButton.addEventListener("click", () => {
+    if (!selectedSubmission) {
+      setDocumentUploadStatus("Select a submission before uploading.");
+      return;
+    }
+
+    documentUploadInput.click();
+  });
+
+  documentUploadInput.addEventListener("change", async () => {
+    const file = documentUploadInput.files && documentUploadInput.files[0];
+    if (!file) {
+      return;
+    }
+
+    try {
+      await uploadSubmissionDocument(file);
+    } finally {
+      documentUploadInput.value = "";
+    }
+  });
+}
+
+if (refreshInsightsButton) {
+  refreshInsightsButton.addEventListener("click", () => {
+    refreshSubmissionInsights();
+  });
+}
 
 selectAllFilesButton.addEventListener("click", () => {
   autoSelectEnabled = false;
@@ -444,20 +487,10 @@ panelTabButtons.forEach((button) => {
 
 if (analyticsPanel) {
   analyticsPanel.addEventListener("click", (event) => {
-    const whatIfModelButton = event.target.closest("[data-what-if-model]");
-    if (whatIfModelButton) {
-      activeWhatIfModel = whatIfModelButton.dataset.whatIfModel === "bind" ? "bind" : "quote";
-      analyticsPanel.querySelectorAll("[data-what-if-model]").forEach((button) => {
-        button.classList.toggle("active", button === whatIfModelButton);
-      });
-      updateWhatIfResult();
-      return;
-    }
-
     const optionButton = event.target.closest("[data-what-if-option]");
     if (optionButton) {
       const key = optionButton.dataset.whatIfFeatureKey;
-      whatIfValues[key] = Number(optionButton.dataset.whatIfValue);
+      getActiveWhatIfState().values[key] = Number(optionButton.dataset.whatIfValue);
       analyticsPanel.querySelectorAll(`[data-what-if-option][data-what-if-feature-key="${key}"]`).forEach((button) => {
         button.classList.toggle("active", button === optionButton);
       });
@@ -492,6 +525,13 @@ if (analyticsPanel) {
   });
 
   analyticsPanel.addEventListener("change", (event) => {
+    const modelSelect = event.target.closest("[data-what-if-model-select]");
+    if (modelSelect) {
+      activeWhatIfModel = modelSelect.value === "bind" ? "bind" : "quote";
+      updateWhatIfView();
+      return;
+    }
+
     const field = event.target.closest("[data-what-if-feature]");
     if (!field) {
       return;
@@ -500,6 +540,34 @@ if (analyticsPanel) {
     updateWhatIfFeatureValueFromField(field);
     updateWhatIfFeatureDisplay(field.dataset.whatIfFeature);
     updateWhatIfResult();
+  });
+
+  analyticsPanel.addEventListener("mouseover", (event) => {
+    const featureName = getFeatureNameTooltipTarget(event.target);
+    if (!featureName || !analyticsPanel.contains(featureName)) {
+      return;
+    }
+
+    if (featureName.contains(event.relatedTarget)) {
+      return;
+    }
+
+    showFeatureTooltip(featureName, event);
+  });
+
+  analyticsPanel.addEventListener("mousemove", (event) => {
+    if (activeFeatureTooltip) {
+      positionFeatureTooltip(event);
+    }
+  });
+
+  analyticsPanel.addEventListener("mouseout", (event) => {
+    const featureName = getFeatureNameTooltipTarget(event.target);
+    if (!featureName || featureName.contains(event.relatedTarget)) {
+      return;
+    }
+
+    hideFeatureTooltip();
   });
 }
 
@@ -682,13 +750,14 @@ if (followUpForm) {
 
     const now = new Date().toISOString();
     followUpItems.push({
-      id: `follow-up-${Date.now()}`,
+      id: `task-${Date.now()}`,
       title,
       due_date: dueDate,
       status: "open",
       created_at: now,
       updated_at: now
     });
+    selectedTaskDate = dueDate;
     followUpTitle.value = "";
     followUpDate.value = "";
     renderFollowUps();
@@ -703,8 +772,9 @@ if (followUpList) {
       return;
     }
 
-    const index = Number(button.dataset.followUpIndex);
-    if (!Number.isInteger(index)) {
+    const itemId = button.dataset.followUpId;
+    const index = followUpItems.findIndex((item) => item.id === itemId);
+    if (index < 0) {
       return;
     }
 
@@ -722,6 +792,60 @@ if (followUpList) {
 
     renderFollowUps();
     await saveFollowUps();
+  });
+}
+
+if (followUpCalendar) {
+  followUpCalendar.addEventListener("click", (event) => {
+    const dayButton = event.target.closest("[data-task-date]");
+    if (!dayButton) {
+      return;
+    }
+
+    const date = dayButton.dataset.taskDate;
+    selectedTaskDate = selectedTaskDate === date ? null : date;
+    renderFollowUps();
+  });
+}
+
+if (stageChecklist) {
+  stageChecklist.addEventListener("change", async (event) => {
+    const checkbox = event.target.closest("[data-stage-key]");
+    if (!checkbox) {
+      return;
+    }
+
+    const stage = stageItems.find((item) => item.key === checkbox.dataset.stageKey);
+    if (!stage) {
+      return;
+    }
+
+    if (stage.locked) {
+      checkbox.checked = true;
+      renderStageChecklist("That stage has been submitted and locked.");
+      return;
+    }
+
+    stage.checked = checkbox.checked;
+    renderStageChecklist();
+    await saveStageState();
+  });
+}
+
+if (submitWorkflowButton) {
+  submitWorkflowButton.addEventListener("click", async () => {
+    if (!selectedSubmission || !hasUnlockedCheckedStages()) {
+      return;
+    }
+
+    const proceed = window.confirm(
+      "Submit checked underwriting stages? This permanently locks only the stages currently checked. Unchecked stages and scheduled tasks will remain editable."
+    );
+    if (!proceed) {
+      return;
+    }
+
+    await submitWorkflow();
   });
 }
 
@@ -818,6 +942,178 @@ async function autoSelectDocumentsForPrompt(prompt) {
   updateSelectionMode("auto");
 }
 
+async function uploadSubmissionDocument(file) {
+  if (!selectedSubmission) {
+    return;
+  }
+
+  const extension = file.name.split(".").pop().toLowerCase();
+  if (!["txt", "pdf"].includes(extension)) {
+    setDocumentUploadStatus("Only .txt and .pdf files are supported.");
+    return;
+  }
+
+  setDocumentUploadStatus("Uploading...");
+  const formData = new FormData();
+  formData.append("file", file);
+
+  try {
+    const response = await fetch(`/api/submissions/${encodeURIComponent(selectedSubmission.id)}/files`, {
+      method: "POST",
+      body: formData
+    });
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || "Unable to upload file.");
+    }
+
+    const uploadedDocument = data.upload && data.upload.document;
+    const updatedSubmission = data.upload && data.upload.submission;
+    if (updatedSubmission) {
+      applyUpdatedSubmissionRecord(updatedSubmission);
+    }
+    if (uploadedDocument && uploadedDocument.file_name) {
+      selectedFiles.add(uploadedDocument.file_name);
+      syncFileSelectionControls();
+      updateSelectionMode("manual");
+    }
+
+    setDocumentUploadStatus(uploadedDocument ? `Uploaded ${uploadedDocument.file_name}` : "Uploaded.");
+    askToRefreshInsights("The file was added and metadata was updated.");
+  } catch (error) {
+    console.warn(error);
+    setDocumentUploadStatus(error.message || "Unable to upload file.");
+  }
+}
+
+async function deleteSubmissionDocument(fileName) {
+  if (!selectedSubmission || !fileName) {
+    return;
+  }
+
+  const shouldDelete = window.confirm(
+    `Delete ${fileName}? This removes the file and its metadata from this submission.`
+  );
+  if (!shouldDelete) {
+    return;
+  }
+
+  setDocumentUploadStatus("Deleting...");
+  try {
+    const response = await fetch(
+      `/api/submissions/${encodeURIComponent(selectedSubmission.id)}/files/${encodeURIComponent(fileName)}`,
+      {
+        method: "DELETE"
+      }
+    );
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || "Unable to delete file.");
+    }
+
+    const updatedSubmission = data.delete && data.delete.submission;
+    if (updatedSubmission) {
+      selectedFiles.delete(fileName);
+      applyUpdatedSubmissionRecord(updatedSubmission);
+      syncFileSelectionControls();
+      updateSelectionMode("manual");
+    }
+
+    setDocumentUploadStatus(`Deleted ${fileName}`);
+    askToRefreshInsights("The file was deleted and metadata was updated.");
+  } catch (error) {
+    console.warn(error);
+    setDocumentUploadStatus(error.message || "Unable to delete file.");
+  }
+}
+
+function askToRefreshInsights(message) {
+  if (!selectedSubmission) {
+    return;
+  }
+
+  const shouldRefresh = window.confirm(
+    `${message}\n\nRefresh the submission summary and timeline now?`
+  );
+  if (shouldRefresh) {
+    refreshSubmissionInsights();
+  }
+}
+
+async function refreshSubmissionInsights() {
+  if (!selectedSubmission) {
+    setDocumentUploadStatus("Select a submission before refreshing.");
+    return;
+  }
+
+  if (refreshInsightsButton) {
+    refreshInsightsButton.disabled = true;
+    refreshInsightsButton.textContent = "Refreshing...";
+  }
+  setDocumentUploadStatus("Refreshing summary and timeline...");
+
+  try {
+    const response = await fetch(
+      `/api/submissions/${encodeURIComponent(selectedSubmission.id)}/insights/refresh`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({})
+      }
+    );
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || "Unable to refresh summary and timeline.");
+    }
+
+    const updatedSubmission = data.refresh && data.refresh.submission;
+    if (updatedSubmission) {
+      applyUpdatedSubmissionRecord(updatedSubmission);
+    }
+    setDocumentUploadStatus("Summary and timeline refreshed.");
+  } catch (error) {
+    console.warn(error);
+    setDocumentUploadStatus(error.message || "Unable to refresh summary and timeline.");
+  } finally {
+    if (refreshInsightsButton) {
+      refreshInsightsButton.disabled = false;
+      refreshInsightsButton.textContent = "Refresh";
+    }
+  }
+}
+
+function applyUpdatedSubmissionRecord(updatedSubmission) {
+  if (!selectedSubmission || !updatedSubmission) {
+    return;
+  }
+
+  selectedSubmission = {
+    ...selectedSubmission,
+    record: updatedSubmission,
+    content: formatSubmissionForPrompt(updatedSubmission)
+  };
+
+  summaryPlaceholder.innerHTML = buildSummaryHtml(updatedSubmission);
+  timelineList.innerHTML = buildTimelineItems(updatedSubmission);
+  documentList.innerHTML = buildDocumentLinks(updatedSubmission);
+  keyInfoList.innerHTML = buildKeyInfoHtml(selectedSubmission);
+  analyticsPanel.innerHTML = buildAnalyticsPanel(updatedSubmission);
+  selectedFiles = new Set(
+    Array.from(selectedFiles).filter((fileName) => getCurrentDocumentNames().includes(fileName))
+  );
+}
+
+function setDocumentUploadStatus(message) {
+  if (documentUploadStatus) {
+    documentUploadStatus.textContent = message || "";
+  }
+}
+
 function updateSelectionMode(mode) {
   selectAllFilesButton.classList.toggle("active", mode === "all");
   unselectAllFilesButton.classList.toggle("active", mode === "none");
@@ -835,6 +1131,26 @@ function getActiveUnderwriterNotes() {
   return noteItems
     .map((note) => String(note.text || "").trim())
     .filter(Boolean);
+}
+
+async function refreshAfterChatActions(actions) {
+  if (!selectedSubmission || !Array.isArray(actions) || !actions.length) {
+    return;
+  }
+
+  const actionTypes = new Set(actions.map((action) => action && action.type));
+  const refreshes = [];
+  if (actionTypes.has("guide")) {
+    refreshes.push(loadGuideInstructions(selectedSubmission.id));
+  }
+  if (actionTypes.has("note")) {
+    refreshes.push(loadNotes(selectedSubmission.id));
+  }
+  if (actionTypes.has("task")) {
+    refreshes.push(loadFollowUps(selectedSubmission.id));
+  }
+
+  await Promise.all(refreshes);
 }
 
 async function loadGuideInstructions(submissionId) {
@@ -1075,14 +1391,14 @@ function renderNoteItem(note, index) {
 
 async function loadFollowUps(submissionId) {
   try {
-    const response = await fetch(`/api/submissions/${encodeURIComponent(submissionId)}/follow-ups`);
+    const response = await fetch(`/api/submissions/${encodeURIComponent(submissionId)}/tasks`);
     const data = await response.json();
 
     if (!response.ok) {
       throw new Error(data.error || "Unable to load tasks.");
     }
 
-    followUpItems = normalizeFollowUps(data.follow_up && data.follow_up.follow_ups);
+    followUpItems = normalizeFollowUps(data.task && data.task.tasks);
     renderFollowUps();
   } catch (error) {
     console.warn(error);
@@ -1097,12 +1413,12 @@ async function saveFollowUps() {
   }
 
   try {
-    const response = await fetch(`/api/submissions/${encodeURIComponent(selectedSubmission.id)}/follow-ups`, {
+    const response = await fetch(`/api/submissions/${encodeURIComponent(selectedSubmission.id)}/tasks`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json"
       },
-      body: JSON.stringify({ follow_ups: followUpItems })
+      body: JSON.stringify({ tasks: followUpItems })
     });
     const data = await response.json();
 
@@ -1110,7 +1426,7 @@ async function saveFollowUps() {
       throw new Error(data.error || "Unable to save tasks.");
     }
 
-    followUpItems = normalizeFollowUps(data.follow_up && data.follow_up.follow_ups);
+    followUpItems = normalizeFollowUps(data.task && data.task.tasks);
     renderFollowUps();
   } catch (error) {
     console.warn(error);
@@ -1125,7 +1441,7 @@ function normalizeFollowUps(items) {
 
   return items
     .map((item, index) => ({
-      id: String(item.id || `follow-up-${Date.now()}-${index}`),
+      id: String(item.id || `task-${Date.now()}-${index}`),
       title: String(item.title || ""),
       due_date: String(item.due_date || ""),
       status: item.status === "done" ? "done" : "open",
@@ -1138,6 +1454,7 @@ function normalizeFollowUps(items) {
 function renderFollowUps(statusMessage) {
   updateFollowUpDots();
   renderFollowUpCalendar();
+  syncWorkflowSubmitControls();
 
   if (!followUpList) {
     return;
@@ -1148,13 +1465,20 @@ function renderFollowUps(statusMessage) {
     return;
   }
 
-  if (!followUpItems.length) {
-    followUpList.innerHTML = "<p>No scheduled tasks.</p>";
+  const visibleItems = getVisibleFollowUpItems();
+  if (!visibleItems.length) {
+    followUpList.innerHTML = selectedTaskDate
+      ? `<p>No scheduled tasks for ${escapeHtml(formatDateOnly(selectedTaskDate))}.</p>`
+      : "<p>No scheduled tasks.</p>";
     return;
   }
 
-  followUpList.innerHTML = followUpItems
-    .map((item, index) => {
+  followUpList.innerHTML = `
+    <div class="task-list-heading">
+      ${selectedTaskDate ? `Tasks for ${escapeHtml(formatDateOnly(selectedTaskDate))}` : "All Scheduled Tasks"}
+    </div>
+    ${visibleItems
+    .map((item) => {
       const dueState = getFollowUpDueState(item);
       return `
         <div class="follow-up-item ${item.status === "done" ? "done" : ""} ${dueState}">
@@ -1163,15 +1487,24 @@ function renderFollowUps(statusMessage) {
             <small>${escapeHtml(formatDateOnly(item.due_date))}</small>
           </div>
           <div class="follow-up-actions">
-            <button class="selection-action" type="button" data-follow-up-action="toggle" data-follow-up-index="${index}">
+            <button class="selection-action" type="button" data-follow-up-action="toggle" data-follow-up-id="${escapeHtml(item.id)}">
               ${item.status === "done" ? "Reopen" : "Done"}
             </button>
-            <button class="icon-button small-icon-button" type="button" data-follow-up-action="delete" data-follow-up-index="${index}" aria-label="Delete follow-up">&times;</button>
+            <button class="icon-button small-icon-button" type="button" data-follow-up-action="delete" data-follow-up-id="${escapeHtml(item.id)}" aria-label="Delete task">&times;</button>
           </div>
         </div>
       `;
     })
-    .join("");
+    .join("")}
+  `;
+}
+
+function getVisibleFollowUpItems() {
+  if (!selectedTaskDate) {
+    return followUpItems;
+  }
+
+  return followUpItems.filter((item) => item.due_date === selectedTaskDate);
 }
 
 function renderFollowUpCalendar() {
@@ -1205,9 +1538,13 @@ function renderFollowUpCalendar() {
     const hasDueAlert = dayItems.some((item) => getFollowUpDueState(item) === "due-alert");
     const hasItem = dayItems.length > 0;
     cells.push(`
-      <span class="calendar-day ${hasItem ? "has-follow-up" : ""} ${hasDueAlert ? "due-alert" : ""}">
+      <button
+        class="calendar-day ${hasItem ? "has-task" : ""} ${hasDueAlert ? "due-alert" : ""} ${selectedTaskDate === date ? "selected" : ""}"
+        type="button"
+        data-task-date="${escapeHtml(date)}"
+      >
         ${day}
-      </span>
+      </button>
     `);
   }
 
@@ -1579,12 +1916,14 @@ function buildAnalyticsFeatureLookup(record) {
 
 function ensureWhatIfValues(featureLookup) {
   Object.values(featureLookup || {}).forEach((feature) => {
-    if (typeof whatIfValues[feature.key] !== "number") {
-      whatIfValues[feature.key] = Number(feature.value || 0);
-    }
-    if (isNumericWhatIfFeature(feature.key) && typeof whatIfRawValues[feature.key] !== "number") {
-      whatIfRawValues[feature.key] = Number(feature.rawValue || 0);
-    }
+    Object.values(whatIfScenarioState).forEach((state) => {
+      if (typeof state.values[feature.key] !== "number") {
+        state.values[feature.key] = Number(feature.value || 0);
+      }
+      if (isNumericWhatIfFeature(feature.key) && typeof state.rawValues[feature.key] !== "number") {
+        state.rawValues[feature.key] = Number(feature.rawValue || 0);
+      }
+    });
   });
 }
 
@@ -1594,10 +1933,13 @@ function renderWhatIfView() {
   return `
     <section class="what-if-workspace">
       <div class="what-if-sticky">
-        <div class="what-if-switch" aria-label="What If model">
-          <button class="analytics-subtab ${activeWhatIfModel === "quote" ? "active" : ""}" type="button" data-what-if-model="quote">Quote</button>
-          <button class="analytics-subtab ${activeWhatIfModel === "bind" ? "active" : ""}" type="button" data-what-if-model="bind">Bind</button>
-        </div>
+        <label class="what-if-model-picker">
+          <span>Scenario Model</span>
+          <select data-what-if-model-select>
+            <option value="quote" ${activeWhatIfModel === "quote" ? "selected" : ""}>Quote</option>
+            <option value="bind" ${activeWhatIfModel === "bind" ? "selected" : ""}>Bind</option>
+          </select>
+        </label>
         <div class="what-if-summary" id="whatIfSummary">
           ${renderWhatIfSummary()}
         </div>
@@ -1667,20 +2009,34 @@ function updateWhatIfResult() {
   }
 }
 
+function updateWhatIfView() {
+  const view = analyticsPanel && analyticsPanel.querySelector('[data-analytics-view="what-if"]');
+  if (view) {
+    view.innerHTML = renderWhatIfView();
+    return;
+  }
+
+  updateWhatIfResult();
+}
+
 function updateWhatIfFeatureDisplay(key) {
   const display = analyticsPanel && analyticsPanel.querySelector(`[data-what-if-display="${key}"]`);
+  const state = getActiveWhatIfState();
   if (display) {
-    display.textContent = formatWhatIfFeatureValue(key, whatIfValues[key]);
+    display.textContent = isNumericWhatIfFeature(key)
+      ? formatRawWhatIfValue(key, state.rawValues[key])
+      : formatWhatIfFeatureValue(key, state.values[key]);
   }
 }
 
 function buildWhatIfFeatureLookup() {
+  const state = getActiveWhatIfState();
   return Object.values(currentAnalyticsFeatureLookup || {}).reduce((lookup, feature) => {
-    let value = typeof whatIfValues[feature.key] === "number" ? whatIfValues[feature.key] : feature.value;
+    let value = typeof state.values[feature.key] === "number" ? state.values[feature.key] : feature.value;
     let displayValue = formatWhatIfFeatureValue(feature.key, value);
 
     if (isNumericWhatIfFeature(feature.key)) {
-      const rawValue = typeof whatIfRawValues[feature.key] === "number" ? whatIfRawValues[feature.key] : feature.rawValue;
+      const rawValue = typeof state.rawValues[feature.key] === "number" ? state.rawValues[feature.key] : feature.rawValue;
       value = rawToModelValue(feature.key, rawValue);
       displayValue = formatRawWhatIfValue(feature.key, rawValue);
     }
@@ -1706,13 +2062,17 @@ function renderWhatIfControl(config) {
   const current = currentAnalyticsFeatureLookup && currentAnalyticsFeatureLookup[config.key]
     ? currentAnalyticsFeatureLookup[config.key]
     : { value: 0, displayValue: "TBD" };
-  const value = typeof whatIfValues[config.key] === "number" ? whatIfValues[config.key] : current.value;
+  const state = getActiveWhatIfState();
+  const value = typeof state.values[config.key] === "number" ? state.values[config.key] : current.value;
+
+  const definition = getFeatureDefinition(config.key);
+  const labelHtml = renderFeatureNameWithHelp(config.key, config.label, definition);
 
   if (config.type === "binary") {
     return `
       <div class="what-if-control">
         <div class="what-if-control-heading">
-          <strong>${escapeHtml(config.label)}</strong>
+          <strong>${labelHtml}</strong>
           <small>Current: ${escapeHtml(current.displayValue)}</small>
         </div>
         <div class="binary-option-row">
@@ -1739,7 +2099,7 @@ function renderWhatIfControl(config) {
     return `
       <label class="what-if-control">
         <div class="what-if-control-heading">
-          <strong>${escapeHtml(config.label)}</strong>
+          <strong>${labelHtml}</strong>
           <small>Current: ${escapeHtml(current.displayValue)}</small>
         </div>
         <select data-what-if-feature="${escapeHtml(config.key)}">
@@ -1754,48 +2114,64 @@ function renderWhatIfControl(config) {
     `;
   }
 
+  const rawValue = typeof state.rawValues[config.key] === "number" ? state.rawValues[config.key] : current.rawValue;
+  const sliderValue = rawValue;
+  const currentPercent = getLinearRawPercent(config.key, getFeatureCurrentRaw(config.key));
+
   return `
     <label class="what-if-control">
       <div class="what-if-control-heading">
-        <strong>${escapeHtml(config.label)}</strong>
-        <small>Current: ${escapeHtml(current.displayValue)}</small>
+        <strong>${labelHtml}</strong>
       </div>
-      <input
-        type="range"
-        min="${config.min}"
-        max="${config.max}"
-        step="${config.step}"
-        value="${value}"
-        data-what-if-feature="${escapeHtml(config.key)}"
-      />
-      <span class="what-if-value" data-what-if-display="${escapeHtml(config.key)}">${escapeHtml(formatWhatIfFeatureValue(config.key, value))}</span>
+      <div class="range-reference">
+        <span>${escapeHtml(formatRawReferenceValue(config.key, getFeatureRawMin(config.key)))}</span>
+        <span>${escapeHtml(formatRawReferenceValue(config.key, getFeatureRawMax(config.key)))}</span>
+      </div>
+      <div class="range-input-wrap">
+        <input
+          type="range"
+          min="${getFeatureRawMin(config.key)}"
+          max="${getFeatureRawMax(config.key)}"
+          step="${getNumericStep(config.key)}"
+          value="${sliderValue}"
+          data-what-if-control="numeric"
+          data-what-if-feature="${escapeHtml(config.key)}"
+        />
+        <span
+          class="range-current-marker"
+          style="--current-position: ${currentPercent}%"
+          aria-label="Current ${escapeHtml(formatRawReferenceValue(config.key, getFeatureCurrentRaw(config.key)))}"
+        ></span>
+      </div>
+      <span class="what-if-value" data-what-if-display="${escapeHtml(config.key)}">${escapeHtml(formatRawWhatIfValue(config.key, rawValue))}</span>
     </label>
   `;
 }
 
 function getWhatIfFeatureConfigs() {
-  return {
+  const metadataFeatures = analyticsFeatureMetadata && analyticsFeatureMetadata.features
+    ? analyticsFeatureMetadata.features
+    : {};
+  const configs = {
     revenue_scale: {
       key: "revenue_scale",
-      label: "Revenue Scale",
+      label: getFeatureMetadata("revenue_scale").label || "Revenue Scale",
       type: "range",
-      min: 0,
-      max: 1,
-      step: 0.01
+      rawMin: getFeatureRawMin("revenue_scale"),
+      rawMax: getFeatureRawMax("revenue_scale")
     },
     records_exposure: {
       key: "records_exposure",
-      label: "Records Exposure",
+      label: getFeatureMetadata("records_exposure").label || "Records Exposure",
       type: "range",
-      min: 0,
-      max: 1,
-      step: 0.01
+      rawMin: getFeatureRawMin("records_exposure"),
+      rawMax: getFeatureRawMax("records_exposure")
     },
     mfa_maturity: {
       key: "mfa_maturity",
-      label: "MFA Maturity",
+      label: getFeatureMetadata("mfa_maturity").label || "MFA Maturity",
       type: "select",
-      options: [
+      options: metadataFeatures.mfa_maturity && metadataFeatures.mfa_maturity.options || [
         { label: "No MFA", value: 0.2 },
         { label: "Partial MFA", value: 0.45 },
         { label: "Full MFA", value: 0.82 }
@@ -1803,9 +2179,9 @@ function getWhatIfFeatureConfigs() {
     },
     edr_coverage: {
       key: "edr_coverage",
-      label: "EDR Coverage",
+      label: getFeatureMetadata("edr_coverage").label || "EDR Coverage",
       type: "select",
-      options: [
+      options: metadataFeatures.edr_coverage && metadataFeatures.edr_coverage.options || [
         { label: "No EDR", value: 0.25 },
         { label: "Partial EDR", value: 0.58 },
         { label: "Broad EDR", value: 0.84 }
@@ -1813,9 +2189,9 @@ function getWhatIfFeatureConfigs() {
     },
     backup_resilience: {
       key: "backup_resilience",
-      label: "Backup Resilience",
+      label: getFeatureMetadata("backup_resilience").label || "Backup Resilience",
       type: "select",
-      options: [
+      options: metadataFeatures.backup_resilience && metadataFeatures.backup_resilience.options || [
         { label: "Weak", value: 0.3 },
         { label: "Daily Backup", value: 0.64 },
         { label: "Restore Tested", value: 0.78 }
@@ -1823,9 +2199,9 @@ function getWhatIfFeatureConfigs() {
     },
     patch_discipline: {
       key: "patch_discipline",
-      label: "Patch Discipline",
+      label: getFeatureMetadata("patch_discipline").label || "Patch Discipline",
       type: "select",
-      options: [
+      options: metadataFeatures.patch_discipline && metadataFeatures.patch_discipline.options || [
         { label: "Slow", value: 0.3 },
         { label: "30 Days", value: 0.58 },
         { label: "15 Days", value: 0.76 }
@@ -1833,9 +2209,9 @@ function getWhatIfFeatureConfigs() {
     },
     security_training: {
       key: "security_training",
-      label: "Security Training",
+      label: getFeatureMetadata("security_training").label || "Security Training",
       type: "select",
-      options: [
+      options: metadataFeatures.security_training && metadataFeatures.security_training.options || [
         { label: "None", value: 0.28 },
         { label: "Annual", value: 0.56 },
         { label: "Phishing Sim", value: 0.72 }
@@ -1843,31 +2219,188 @@ function getWhatIfFeatureConfigs() {
     },
     prior_claims: {
       key: "prior_claims",
-      label: "Prior Claims Signal",
+      label: getFeatureMetadata("prior_claims").label || "Prior Claims Signal",
       type: "binary",
-      options: [
+      options: metadataFeatures.prior_claims && metadataFeatures.prior_claims.options || [
         { label: "No", value: 0.28 },
         { label: "Yes", value: 0.72 }
       ]
     },
     vendor_dependency: {
       key: "vendor_dependency",
-      label: "Vendor Dependency",
+      label: getFeatureMetadata("vendor_dependency").label || "Vendor Dependency",
       type: "binary",
-      options: [
+      options: metadataFeatures.vendor_dependency && metadataFeatures.vendor_dependency.options || [
         { label: "Limited", value: 0.35 },
         { label: "Material", value: 0.7 }
       ]
     },
     limit_fit: {
       key: "limit_fit",
-      label: "Requested Limit Fit",
+      label: getFeatureMetadata("limit_fit").label || "Requested Limit Fit",
       type: "range",
-      min: 0,
-      max: 1,
-      step: 0.01
+      rawMin: getFeatureRawMin("limit_fit"),
+      rawMax: getFeatureRawMax("limit_fit")
     }
   };
+
+  return configs;
+}
+
+function updateWhatIfFeatureValueFromField(field) {
+  const key = field.dataset.whatIfFeature;
+  const state = getActiveWhatIfState();
+
+  if (field.dataset.whatIfControl === "numeric") {
+    const rawValue = Number(field.value);
+    const normalizedRawValue = normalizeScenarioRawValue(key, rawValue);
+    state.rawValues[key] = normalizedRawValue;
+    state.values[key] = rawToModelValue(key, normalizedRawValue);
+    field.value = normalizedRawValue;
+    return;
+  }
+
+  state.values[key] = Number(field.value);
+}
+
+function createEmptyWhatIfScenarioState() {
+  return {
+    quote: { values: {}, rawValues: {} },
+    bind: { values: {}, rawValues: {} }
+  };
+}
+
+function getActiveWhatIfState() {
+  if (!whatIfScenarioState[activeWhatIfModel]) {
+    whatIfScenarioState[activeWhatIfModel] = { values: {}, rawValues: {} };
+  }
+
+  return whatIfScenarioState[activeWhatIfModel];
+}
+
+function getFeatureMetadata(key) {
+  return analyticsFeatureMetadata && analyticsFeatureMetadata.features && analyticsFeatureMetadata.features[key]
+    ? analyticsFeatureMetadata.features[key]
+    : {};
+}
+
+function getFeatureDefinition(key) {
+  return getFeatureMetadata(key).definition || "Model feature used to calculate quote and bind probability.";
+}
+
+function isNumericWhatIfFeature(key) {
+  return getFeatureMetadata(key).control_type === "numeric" || ["revenue_scale", "records_exposure", "limit_fit"].includes(key);
+}
+
+function getFeatureRawMin(key) {
+  const metadata = getFeatureMetadata(key);
+  return Number(metadata.raw_min ?? 0);
+}
+
+function getFeatureRawMax(key) {
+  const metadata = getFeatureMetadata(key);
+  return Number(metadata.raw_max ?? 1);
+}
+
+function getFeatureCurrentRaw(key) {
+  const feature = currentAnalyticsFeatureLookup && currentAnalyticsFeatureLookup[key];
+  return Number(feature && typeof feature.rawValue === "number" ? feature.rawValue : getFeatureRawMin(key));
+}
+
+function getLinearRawPercent(key, rawValue) {
+  const raw = Number(rawValue || 0);
+  const min = getFeatureRawMin(key);
+  const max = getFeatureRawMax(key);
+  if (max === min) {
+    return 0;
+  }
+
+  return clamp(((raw - min) / (max - min)) * 100, 0, 100);
+}
+
+function getNumericStep(key) {
+  const span = Math.abs(getFeatureRawMax(key) - getFeatureRawMin(key));
+  if (!span) {
+    return 1;
+  }
+
+  return 1;
+}
+
+function normalizeScenarioRawValue(key, rawValue) {
+  const min = getFeatureRawMin(key);
+  const max = getFeatureRawMax(key);
+  const value = clamp(Number(rawValue || 0), min, max);
+
+  if (nearlyEqual(value, min) || nearlyEqual(value, max)) {
+    return value;
+  }
+
+  return clamp(roundToSecondHighestPlace(value), min, max);
+}
+
+function rawToModelValue(key, rawValue) {
+  const raw = Number(rawValue || 0);
+
+  if (key === "revenue_scale") {
+    const normalization = getFeatureMetadata(key).normalization || {};
+    return normalize(raw, Number(normalization.min || 5_000_000), Number(normalization.max || 500_000_000));
+  }
+
+  if (key === "records_exposure") {
+    const normalization = getFeatureMetadata(key).normalization || {};
+    return normalize(raw, Number(normalization.min || 10_000), Number(normalization.max || 1_000_000));
+  }
+
+  if (key === "limit_fit") {
+    const normalization = getFeatureMetadata(key).normalization || {};
+    const rawValues = getActiveWhatIfState().rawValues;
+    const revenue = typeof rawValues.revenue_scale === "number"
+      ? rawValues.revenue_scale
+      : getFeatureCurrentRaw("revenue_scale");
+    const targetRatio = Number(normalization.target_ratio || 0.1);
+    const min = Number(normalization.min || 0.18);
+    const max = Number(normalization.max || 0.86);
+    return revenue ? clamp(1 - Math.abs(raw / revenue - targetRatio) * 2, min, max) : 0.5;
+  }
+
+  return raw;
+}
+
+function roundToSecondHighestPlace(value) {
+  const numericValue = Number(value || 0);
+  if (!Number.isFinite(numericValue) || numericValue === 0) {
+    return numericValue;
+  }
+
+  const magnitude = Math.floor(Math.log10(Math.abs(numericValue)));
+  const unit = 10 ** Math.max(magnitude - 1, 0);
+  return Math.round(numericValue / unit) * unit;
+}
+
+function formatRawWhatIfValue(key, rawValue) {
+  const metadata = getFeatureMetadata(key);
+  const numericValue = Number(rawValue || 0);
+  const value = nearlyEqual(numericValue, getFeatureRawMin(key)) || nearlyEqual(numericValue, getFeatureRawMax(key))
+    ? numericValue
+    : roundToSecondHighestPlace(numericValue);
+
+  if (metadata.raw_format === "currency") {
+    return formatCurrency(value);
+  }
+
+  return Number.isFinite(value) ? value.toLocaleString() : "TBD";
+}
+
+function formatRawReferenceValue(key, rawValue) {
+  const metadata = getFeatureMetadata(key);
+  const value = Number(rawValue || 0);
+
+  if (metadata.raw_format === "currency") {
+    return formatCurrency(value);
+  }
+
+  return Number.isFinite(value) ? value.toLocaleString() : "TBD";
 }
 
 function formatWhatIfFeatureValue(key, value) {
@@ -1881,6 +2414,60 @@ function formatWhatIfFeatureValue(key, value) {
   }
 
   return `${Math.round(numericValue * 100)}%`;
+}
+
+function renderFeatureNameWithHelp(key, label, definition = null) {
+  const tooltip = `${label}: ${definition || getFeatureDefinition(key)}`;
+  return `
+    <span class="feature-name" data-help-text="${escapeHtml(tooltip)}" title="${escapeHtml(tooltip)}">
+      <span class="feature-label-text">${escapeHtml(label)}</span>
+    </span>
+  `;
+}
+
+function getFeatureNameTooltipTarget(target) {
+  const element = target instanceof Element ? target : target && target.parentElement;
+  return element ? element.closest(".feature-name[data-help-text]") : null;
+}
+
+function showFeatureTooltip(featureName, event) {
+  if (!activeFeatureTooltip) {
+    activeFeatureTooltip = document.createElement("div");
+    activeFeatureTooltip.className = "floating-feature-tooltip";
+    document.body.appendChild(activeFeatureTooltip);
+  }
+
+  activeFeatureTooltip.textContent = featureName.dataset.helpText || "";
+  activeFeatureTooltip.classList.add("visible");
+  positionFeatureTooltip(event);
+}
+
+function positionFeatureTooltip(event) {
+  if (!activeFeatureTooltip) {
+    return;
+  }
+
+  const gap = 12;
+  const tooltipRect = activeFeatureTooltip.getBoundingClientRect();
+  const left = Math.min(
+    Math.max(event.clientX + gap, 8),
+    window.innerWidth - tooltipRect.width - 8
+  );
+  const top = Math.min(
+    Math.max(event.clientY - tooltipRect.height - gap, 8),
+    window.innerHeight - tooltipRect.height - 8
+  );
+
+  activeFeatureTooltip.style.left = `${left}px`;
+  activeFeatureTooltip.style.top = `${top}px`;
+}
+
+function hideFeatureTooltip() {
+  if (!activeFeatureTooltip) {
+    return;
+  }
+
+  activeFeatureTooltip.classList.remove("visible");
 }
 
 function renderModelView(label, model, description) {
@@ -1932,7 +2519,7 @@ function renderProbabilityWaterfall(model) {
           const intensity = Math.abs(contribution) / maxContribution;
           return `
             <div class="waterfall-row marginal-row">
-              <span title="${escapeHtml(step.displayValue)}">${escapeHtml(step.label)}</span>
+              ${renderFeatureNameWithHelp(step.key, step.label)}
               <div class="waterfall-track" title="Current value: ${escapeHtml(step.displayValue)}">
                 <i class="${direction}" style="width: ${width}%; ${direction === "positive" ? "left: 50%" : `right: 50%`}; background: ${getContributionColor(direction, intensity)}"></i>
               </div>
@@ -2116,9 +2703,172 @@ function getFallbackBindModel() {
   };
 }
 
-function buildStageChecklist(record) {
+async function loadStageState(submissionId) {
+  try {
+    const response = await fetch(`/api/submissions/${encodeURIComponent(submissionId)}/states`);
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || "Unable to load underwriting stages.");
+    }
+
+    workflowSubmittedAt = data.state && data.state.submitted_at ? data.state.submitted_at : null;
+    mergeSavedStageState(data.state && data.state.stages);
+    renderStageChecklist();
+    renderFollowUps();
+  } catch (error) {
+    console.warn(error);
+    renderStageChecklist("Unable to load saved stage state.");
+  }
+}
+
+async function saveStageState() {
+  if (!selectedSubmission) {
+    return;
+  }
+
+  try {
+    const response = await fetch(`/api/submissions/${encodeURIComponent(selectedSubmission.id)}/states`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ stages: stageItems })
+    });
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || "Unable to save underwriting stages.");
+    }
+
+    workflowSubmittedAt = data.state && data.state.submitted_at ? data.state.submitted_at : null;
+    mergeSavedStageState(data.state && data.state.stages);
+    renderStageChecklist();
+    renderFollowUps();
+  } catch (error) {
+    console.warn(error);
+    renderStageChecklist(error.message || "Unable to save underwriting stages.");
+  }
+}
+
+async function submitWorkflow() {
+  if (!selectedSubmission || !hasUnlockedCheckedStages()) {
+    return;
+  }
+
+  try {
+    const response = await fetch(`/api/submissions/${encodeURIComponent(selectedSubmission.id)}/states/submit`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ stages: stageItems })
+    });
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || "Unable to submit stages.");
+    }
+
+    workflowSubmittedAt = data.state && data.state.submitted_at ? data.state.submitted_at : new Date().toISOString();
+    mergeSavedStageState(data.state && data.state.stages);
+    renderStageChecklist();
+    renderFollowUps();
+  } catch (error) {
+    console.warn(error);
+    renderFollowUps(error.message || "Unable to submit stages.");
+  }
+}
+
+function mergeSavedStageState(savedStages) {
+  if (!Array.isArray(savedStages) || !savedStages.length) {
+    return;
+  }
+
+  const savedByKey = new Map(savedStages.map((stage) => [stage.key, stage]));
+  stageItems = stageItems.map((stage) => {
+    const saved = savedByKey.get(stage.key);
+    return saved
+      ? {
+          ...stage,
+          checked: Boolean(saved.checked),
+          locked: Boolean(saved.locked)
+        }
+      : stage;
+  });
+}
+
+function renderStageChecklist(statusMessage) {
+  syncWorkflowSubmitControls();
+
+  if (!stageChecklist) {
+    return;
+  }
+
+  if (statusMessage) {
+    stageChecklist.innerHTML = `<p class="empty-state">${escapeHtml(statusMessage)}</p>`;
+    return;
+  }
+
+  if (!stageItems.length) {
+    stageChecklist.innerHTML = '<p class="empty-state">No underwriting stages found.</p>';
+    return;
+  }
+
+  stageChecklist.innerHTML = stageItems
+    .map((stage) => {
+      const stateLabel = stage.checked ? "Completed" : stage.isCurrent ? "Current stage" : "Pending";
+      return `
+        <label class="stage-item ${stage.isCurrent ? "current" : ""} ${stage.checked ? "checked" : ""}">
+          <input
+            type="checkbox"
+            data-stage-key="${escapeHtml(stage.key)}"
+            ${stage.checked ? "checked" : ""}
+            ${stage.locked ? "disabled" : ""}
+          />
+          <span>
+            <strong>${escapeHtml(stage.label)}</strong>
+            <small>${stage.locked ? "Submitted and locked" : stateLabel}</small>
+          </span>
+        </label>
+      `;
+    })
+    .join("");
+}
+
+function syncWorkflowSubmitControls() {
+  const canSubmitCheckedStages = Boolean(selectedSubmission) && hasUnlockedCheckedStages();
+  if (submitWorkflowButton) {
+    submitWorkflowButton.disabled = !canSubmitCheckedStages;
+    submitWorkflowButton.textContent = "Submit Checked Stages";
+  }
+
+  if (workflowSubmitStatus) {
+    workflowSubmitStatus.textContent = workflowSubmittedAt
+      ? `Checked stages were last submitted on ${formatDateTime(workflowSubmittedAt)}. Unchecked stages and scheduled tasks remain editable.`
+      : "Submitting permanently locks checked stages only. Unchecked stages and scheduled tasks remain editable.";
+  }
+}
+
+function hasUnlockedCheckedStages() {
+  return stageItems.some((stage) => stage.checked && !stage.locked);
+}
+
+function buildDefaultStageItems(record) {
   const currentStage = getCurrentStageKey(record);
-  const stages = [
+  const stages = getUnderwritingStages();
+  const currentIndex = stages.findIndex((stage) => stage.key === currentStage);
+
+  return stages.map((stage, index) => ({
+    ...stage,
+    checked: currentIndex > index,
+    isCurrent: currentIndex === index,
+    locked: false
+  }));
+}
+
+function getUnderwritingStages() {
+  return [
     ["intake", "Intake"],
     ["document_collection", "Document Collection"],
     ["data_extraction", "Data Extraction"],
@@ -2129,24 +2879,7 @@ function buildStageChecklist(record) {
     ["terms_conditions", "Terms & Conditions"],
     ["quote", "Quote"],
     ["bind_close", "Bind / Close"]
-  ];
-  const currentIndex = stages.findIndex(([key]) => key === currentStage);
-
-  return stages
-    .map(([key, label], index) => {
-      const isComplete = currentIndex > index;
-      const isCurrent = currentIndex === index;
-      return `
-        <label class="stage-item ${isCurrent ? "current" : ""}">
-          <input type="checkbox" disabled ${isComplete ? "checked" : ""} />
-          <span>
-            <strong>${escapeHtml(label)}</strong>
-            <small>${isCurrent ? "Current stage" : isComplete ? "Completed" : "Pending"}</small>
-          </span>
-        </label>
-      `;
-    })
-    .join("");
+  ].map(([key, label]) => ({ key, label }));
 }
 
 function getCurrentStageKey(record) {
@@ -2171,17 +2904,50 @@ function getCurrentStageKey(record) {
   return "initial_review";
 }
 
-function buildSummaryPlaceholder(record) {
+function buildKeyInfoHtml(submission) {
+  return buildKeyInfoItems(submission)
+    .map(
+      (item) => `
+        <div class="key-info-item" title="${escapeHtml(`${item.label}: ${item.value}`)}">
+          <span title="${escapeHtml(item.label)}">${escapeHtml(item.label)}</span>
+          <strong title="${escapeHtml(item.value)}">${escapeHtml(item.value)}</strong>
+        </div>
+      `
+    )
+    .join("");
+}
+
+function buildSummaryHtml(record) {
   if (!record) {
     return "Reserved for an AI-generated account summary, appetite fit, and recommended next action.";
   }
 
+  if (record.summary && typeof record.summary === "object") {
+    const summary = record.summary;
+    const considerations = Array.isArray(summary.key_considerations)
+      ? summary.key_considerations
+      : [];
+
+    return `
+      <div class="summary-block">
+        <p><strong>Account overview:</strong> ${escapeHtml(summary.account_overview || "Not available.")}</p>
+        <p><strong>Appetite fit:</strong> ${escapeHtml(summary.appetite_fit || "Not available.")}</p>
+        ${
+          considerations.length
+            ? `<ul>${considerations.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>`
+            : ""
+        }
+        <p><strong>Next action:</strong> ${escapeHtml(summary.recommended_next_action || "Review submission documents.")}</p>
+      </div>
+    `;
+  }
+
   const applicant = record.applicant || {};
-  return [
+  return escapeHtml([
     `${applicant.insured_name || record.title} · ${applicant.industry || "Industry TBD"}`,
     `Status: ${record.status || "New"}.`,
     "Ask the chat to generate a formal cyber underwriting summary, key risks, alerts, and guidance."
-  ].join(" ");
+  ].join(" "));
 }
 
 function buildDocumentLinks(record) {
@@ -2215,6 +2981,15 @@ function buildDocumentLinks(record) {
           >
             <span>${escapeHtml(document.file_name)}</span>
             <small>${escapeHtml(type)} · ${escapeHtml(label)}</small>
+          </button>
+          <button
+            class="document-delete-button"
+            type="button"
+            data-delete-document="${escapeHtml(document.file_name)}"
+            aria-label="Delete ${escapeHtml(document.file_name)}"
+            title="Delete file"
+          >
+            &times;
           </button>
         </div>
       `;

@@ -1,5 +1,6 @@
 import json
 import mimetypes
+import re
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from importlib.util import find_spec
 from pathlib import Path
@@ -12,9 +13,10 @@ from backend.services.chat_history_service import (
     list_chat_history,
     save_chat_history,
 )
+from backend.services.chat_action_service import run_chat_action
 from backend.services.document_tools import select_documents_for_prompt, select_documents_with_llm
-from backend.services.follow_up_service import get_follow_up_record, save_follow_up_record
 from backend.services.guide_service import get_guide_record, save_guide_record
+from backend.services.insight_service import refresh_submission_insights
 from backend.services.note_service import get_note_record, save_note_record
 from backend.services.openai_service import call_openai_responses
 from backend.services.model_service import get_model
@@ -24,6 +26,9 @@ from backend.services.submission_service import (
     get_submission_file_path,
     list_submissions,
 )
+from backend.services.stage_state_service import get_stage_state_record, save_stage_state_record, submit_stage_state_record
+from backend.services.task_service import get_task_record, save_task_record
+from backend.services.upload_service import delete_submission_file, upload_submission_file
 
 
 JSON_HEADERS = {"Content-Type": "application/json; charset=utf-8"}
@@ -41,6 +46,9 @@ class UnderwritingRequestHandler(BaseHTTPRequestHandler):
 
     def do_PUT(self):
         self.route_request("PUT")
+
+    def do_DELETE(self):
+        self.route_request("DELETE")
 
     def route_request(self, method):
         try:
@@ -88,9 +96,23 @@ class UnderwritingRequestHandler(BaseHTTPRequestHandler):
     def handle_submission_route(self, method, path):
         remainder = path.removeprefix("/api/submissions/")
 
-        if "/files/" in remainder and method == "GET":
+        if "/files/" in remainder:
             submission_id, file_name = remainder.split("/files/", 1)
-            return self.serve_submission_file(unquote(submission_id), unquote(file_name))
+            if method == "GET":
+                return self.serve_submission_file(unquote(submission_id), unquote(file_name))
+            if method == "DELETE":
+                result = delete_submission_file(unquote(submission_id), unquote(file_name))
+                return self.send_json(200, {"delete": result})
+
+        if remainder.endswith("/files"):
+            submission_id = unquote(remainder.removesuffix("/files"))
+            if method == "POST":
+                return self.handle_file_upload(submission_id)
+
+        if remainder.endswith("/insights/refresh") and method == "POST":
+            submission_id = unquote(remainder.removesuffix("/insights/refresh"))
+            result = refresh_submission_insights(submission_id, OPENAI_API_KEY, OPENAI_MODEL)
+            return self.send_json(200, {"refresh": result})
 
         if "/chat-history/" in remainder and method == "GET":
             submission_id, history_id = remainder.split("/chat-history/", 1)
@@ -120,16 +142,27 @@ class UnderwritingRequestHandler(BaseHTTPRequestHandler):
                 body = self.read_json()
                 return self.send_json(200, {"note": save_note_record(submission_id, body.get("notes", []))})
 
-        if remainder.endswith("/follow-ups"):
-            submission_id = unquote(remainder.removesuffix("/follow-ups"))
+        if remainder.endswith("/tasks"):
+            submission_id = unquote(remainder.removesuffix("/tasks"))
             if method == "GET":
-                return self.send_json(200, {"follow_up": get_follow_up_record(submission_id)})
+                return self.send_json(200, {"task": get_task_record(submission_id)})
             if method == "PUT":
                 body = self.read_json()
-                return self.send_json(
-                    200,
-                    {"follow_up": save_follow_up_record(submission_id, body.get("follow_ups", []))},
-                )
+                return self.send_json(200, {"task": save_task_record(submission_id, body.get("tasks", []))})
+
+        if remainder.endswith("/states/submit"):
+            submission_id = unquote(remainder.removesuffix("/states/submit"))
+            if method == "POST":
+                body = self.read_json()
+                return self.send_json(200, {"state": submit_stage_state_record(submission_id, body.get("stages", []))})
+
+        if remainder.endswith("/states"):
+            submission_id = unquote(remainder.removesuffix("/states"))
+            if method == "GET":
+                return self.send_json(200, {"state": get_stage_state_record(submission_id)})
+            if method == "PUT":
+                body = self.read_json()
+                return self.send_json(200, {"state": save_stage_state_record(submission_id, body.get("stages", []))})
 
         if remainder.endswith("/auto-select-documents") and method == "POST":
             submission_id = unquote(remainder.removesuffix("/auto-select-documents"))
@@ -160,16 +193,10 @@ class UnderwritingRequestHandler(BaseHTTPRequestHandler):
         return self.send_json(405, {"error": "Method not allowed"})
 
     def handle_chat(self):
-        if not OPENAI_API_KEY or OPENAI_API_KEY == "replace_with_your_openai_api_key":
-            return self.send_json(
-                400,
-                {
-                    "error": "Missing OPENAI_API_KEY. Add your key to .env, then restart the server."
-                },
-            )
-
         body = self.read_json()
         messages = body.get("messages") if isinstance(body.get("messages"), list) else []
+        submission_id = str(body.get("submission_id", "")).strip()
+        user_prompt = str(body.get("user_prompt", "")).strip()
         guide_instructions = [
             str(guide).strip()
             for guide in body.get("guides", [])
@@ -183,6 +210,28 @@ class UnderwritingRequestHandler(BaseHTTPRequestHandler):
 
         if not messages:
             return self.send_json(400, {"error": "No messages were provided."})
+
+        if submission_id and user_prompt:
+            action_result = run_chat_action(submission_id, user_prompt)
+            if action_result:
+                return self.send_json(
+                    200,
+                    {
+                        "reply": action_result["reply"],
+                        "model": "local-action",
+                        "id": None,
+                        "framework": "python-action",
+                        "actions": [action_result],
+                    },
+                )
+
+        if not OPENAI_API_KEY or OPENAI_API_KEY == "replace_with_your_openai_api_key":
+            return self.send_json(
+                400,
+                {
+                    "error": "Missing OPENAI_API_KEY. Add your key to .env, then restart the server."
+                },
+            )
 
         model_input = [
             {
@@ -220,6 +269,56 @@ class UnderwritingRequestHandler(BaseHTTPRequestHandler):
                 "framework": "python-langgraph" if is_langgraph_available() else "python-graph-fallback",
             },
         )
+
+    def handle_file_upload(self, submission_id):
+        content_type = self.headers.get("Content-Type", "")
+        if not content_type.startswith("multipart/form-data"):
+            return self.send_json(400, {"error": "Upload must use multipart/form-data."})
+
+        file_name, file_bytes = self.read_multipart_file(content_type)
+        if not file_name:
+            return self.send_json(400, {"error": "No file was uploaded."})
+
+        result = upload_submission_file(
+            submission_id=submission_id,
+            original_file_name=file_name,
+            file_bytes=file_bytes,
+            api_key=OPENAI_API_KEY,
+            model=OPENAI_MODEL,
+        )
+        return self.send_json(200, {"upload": result})
+
+    def read_multipart_file(self, content_type):
+        boundary_match = re.search(r'boundary="?([^";]+)"?', content_type)
+        if not boundary_match:
+            raise ValueError("Upload boundary is missing.")
+
+        content_length = int(self.headers.get("Content-Length", "0") or 0)
+        raw_body = self.rfile.read(content_length)
+        boundary = b"--" + boundary_match.group(1).encode("utf-8")
+
+        for raw_part in raw_body.split(boundary):
+            part = raw_part.strip(b"\r\n")
+            if not part or part == b"--" or b"\r\n\r\n" not in part:
+                continue
+
+            raw_headers, body = part.split(b"\r\n\r\n", 1)
+            header_text = raw_headers.decode("latin1", errors="replace")
+            if 'name="file"' not in header_text:
+                continue
+
+            filename_match = re.search(r'filename="([^"]+)"', header_text)
+            if not filename_match:
+                continue
+
+            if body.endswith(b"\r\n"):
+                body = body[:-2]
+            if body.endswith(b"--"):
+                body = body[:-2]
+
+            return filename_match.group(1), body
+
+        return "", b""
 
     def serve_submission_file(self, submission_id, file_name):
         file_path = get_submission_file_path(submission_id, file_name)

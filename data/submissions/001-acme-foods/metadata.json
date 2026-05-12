@@ -4,7 +4,7 @@
   "line_of_business": "Cyber liability",
   "file_created_at": "2026-04-21T09:18:00-04:00",
   "received_at": "2026-04-21T10:42:00-04:00",
-  "updated_at": "2026-05-12T09:00:00-04:00",
+  "updated_at": "2026-05-12T03:55:33.374320Z",
   "status": "New",
   "applicant": {
     "insured_name": "Acme Foods Distribution LLC",
@@ -274,7 +274,7 @@
     {
       "date": "2026-04-21T10:42:00-04:00",
       "event": "Submission received",
-      "description": "Cyber renewal package received from broker."
+      "description": "Cyber renewal package received from broker; application and supporting documents received."
     },
     {
       "date": "2026-04-23T11:30:00-04:00",
@@ -283,13 +283,28 @@
     },
     {
       "date": "2026-04-25T14:05:00-04:00",
-      "event": "Status updated",
-      "description": "Overall status and company description PDFs generated."
+      "event": "Status updated / PDFs generated",
+      "description": "Overall status and company description PDFs generated; open questions listed (confirm MFA, request vulnerability scan summary, clarify BI dependency)."
     },
     {
-      "date": "2026-05-12T09:00:00-04:00",
-      "event": "Standardized cyber underwriting document set added",
-      "description": "Cyber application, ransomware supplement, prior policy, loss runs, financials, security controls, MFA/EDR/backups, incident response plan, vendor assessment, and compliance documents added to the submission file."
+      "date": "2026-05-06",
+      "event": "Backup restore test (broker follow-up)",
+      "description": "Broker follow-up indicates a backup restore test was completed with no material recovery issues reported."
+    },
+    {
+      "date": "2026-05-12T03:54:44.631829Z",
+      "event": "Broker follow-up: MFA enabled confirmation",
+      "description": "Broker confirmed MFA enabled for warehouse handheld admin portal; expects screenshot of MFA policy and updated access control export by end of week."
+    },
+    {
+      "date": "2026-05-12T03:54:44.631829Z",
+      "event": "Broker follow-up: dependent BI alignment request",
+      "description": "Broker requested underwriter review of whether dependent business interruption terms can remain aligned with expiring program."
+    },
+    {
+      "date": "2026-05-15",
+      "event": "Requested effective date",
+      "description": "Requested cyber renewal effective date."
     }
   ],
   "document_taxonomy": {
@@ -306,5 +321,18 @@
       "underwriting_review": "Underwriting Review"
     },
     "note": "document_types and major_categories are arrays because one document can support multiple underwriting uses."
+  },
+  "summary": {
+    "account_overview": "Acme Foods Distribution LLC is a food distribution and cold storage business in Newark, NJ (annual revenue $28.4M; 146 employees; ~82,000 customer/vendor records). The technology footprint includes Microsoft 365, a cloud-hosted warehouse management system, EDI ordering platform, customer portal for order tracking, and fleet telematics. The insured reports operational dependence where a 24-hour outage would materially affect shipping and customer order processing.",
+    "appetite_fit": "Moderate fit with a near-term control gap: MFA is partial (enabled for email and VPN, but not for the warehouse handheld device admin portal at submission). Positive factors include EDR (CrowdStrike on servers and laptops), daily backups with quarterly restore testing, and security training (annual plus simulated phishing twice per year). A prior loss exists (2023 business email compromise), with no reported ransomware/data breach/privacy class action/dependent business interruption losses in the loss runs provided.",
+    "key_considerations": [
+      "Partial MFA: warehouse handheld admin portal MFA pending confirmation at time of status update (was later confirmed by broker follow-up; screenshot/evidence still requested).",
+      "Operational technology and third-party dependency: insured depends on third-party logistics and EDI providers; BI terms may be impacted by dependent system language alignment.",
+      "Customer portal exposure (explicitly listed as a risk flag in overall status).",
+      "Loss history: single 2023 business email compromise (funds recovered except investigation/legal costs); no ransomware/data breach/dependent BI losses reported.",
+      "Control coverage request: confirm all relevant warehouse admin tools are covered by MFA.",
+      "Missing underwriting inputs noted in open questions: latest vulnerability scan summary and clarification on business interruption dependency on the third-party EDI provider."
+    ],
+    "recommended_next_action": "Obtain and review evidence confirming MFA implementation for the warehouse handheld admin portal (requested screenshot/policy and updated access control export), and follow up with the latest vulnerability scan summary plus clarification/assessment of dependent business interruption dependency language for the EDI/third-party outage scenario."
   }
 }
