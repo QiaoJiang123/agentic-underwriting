@@ -15,6 +15,7 @@ from backend.services.submission_service import (
     read_json,
     submission_exists,
 )
+from backend.services.schema_service import validate_named_schema
 
 
 ALLOWED_UPLOAD_SUFFIXES = {".txt", ".pdf"}
@@ -321,6 +322,7 @@ def make_description(file_name, document_types, categories):
 
 
 def append_document_metadata(folder_path, document_metadata):
+    validate_named_schema("document_metadata", document_metadata)
     metadata_path = folder_path / "metadata.json"
     submission = read_json(metadata_path)
     documents = [
@@ -331,6 +333,7 @@ def append_document_metadata(folder_path, document_metadata):
     documents.append(document_metadata)
     submission["documents"] = documents
     submission["updated_at"] = utc_now()
+    validate_named_schema("submission_metadata", submission)
     metadata_path.write_text(json.dumps(submission, indent=2) + "\n", encoding="utf-8")
 
 

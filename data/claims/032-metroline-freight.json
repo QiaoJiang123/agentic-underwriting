@@ -1,0 +1,21 @@
+{
+  "submission_id": "032-metroline-freight",
+  "claim_system": "dummy_claims_core",
+  "updated_at": "2026-05-19T12:00:00-04:00",
+  "claims": [
+    {
+      "claim_id": "CLM-METROLIN-2023-001",
+      "loss_date": "2023-01-01",
+      "reported_date": "2023-01-05",
+      "status": "closed",
+      "claim_type": "service_outage",
+      "coverage_area": "business_interruption",
+      "severity": "moderate",
+      "amount_paid": 46000,
+      "amount_reserved": 0,
+      "cause": "Core business platform outage caused customer service disruption.",
+      "description": "Service Outage was closed after remediation was documented; costs include forensic, legal, notification, recovery, or customer credit expenses as applicable.",
+      "recovery_status": "not_applicable"
+    }
+  ]
+}

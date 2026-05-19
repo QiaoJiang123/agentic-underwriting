@@ -1,0 +1,17 @@
+{
+  "model_name": "claim_severity_prob",
+  "model_type": "glm_logistic",
+  "target": "material_claim_severity_probability",
+  "version": "0.1.0-demo",
+  "average_probability": 0.26,
+  "description": "Demo GLM for probability that a cyber claim becomes materially severe.",
+  "features": [
+    { "key": "revenue_scale", "label": "Revenue Scale", "coefficient": 0.55, "baseline_value": 0.5 },
+    { "key": "records_exposure", "label": "Records Exposure", "coefficient": 0.48, "baseline_value": 0.5 },
+    { "key": "limit_fit", "label": "Requested Limit Fit", "coefficient": 0.36, "baseline_value": 0.5 },
+    { "key": "claim_load", "label": "Historical Claim Load", "coefficient": 0.82, "baseline_value": 0.25 },
+    { "key": "open_claim_signal", "label": "Open Claim Signal", "coefficient": 0.64, "baseline_value": 0.2 },
+    { "key": "risk_flag_load", "label": "Risk Flag Load", "coefficient": 0.4, "baseline_value": 0.35 },
+    { "key": "evidence_ratio", "label": "Evidence Confidence", "coefficient": -0.3, "baseline_value": 0.75 }
+  ]
+}

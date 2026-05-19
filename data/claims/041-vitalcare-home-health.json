@@ -1,0 +1,21 @@
+{
+  "submission_id": "041-vitalcare-home-health",
+  "claim_system": "dummy_claims_core",
+  "updated_at": "2026-05-19T12:00:00-04:00",
+  "claims": [
+    {
+      "claim_id": "CLM-VITALCAR-2023-001",
+      "loss_date": "2023-01-03",
+      "reported_date": "2023-01-05",
+      "status": "closed",
+      "claim_type": "privacy_incident",
+      "coverage_area": "privacy_liability",
+      "severity": "moderate",
+      "amount_paid": 82200,
+      "amount_reserved": 0,
+      "cause": "Misdirected file or portal access exposed limited patient information.",
+      "description": "Privacy Incident was closed after remediation was documented; costs include forensic, legal, notification, recovery, or customer credit expenses as applicable.",
+      "recovery_status": "remediated"
+    }
+  ]
+}

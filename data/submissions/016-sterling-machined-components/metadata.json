@@ -1,0 +1,252 @@
+{
+  "id": "016-sterling-machined-components",
+  "title": "Sterling Machined Components",
+  "line_of_business": "Cyber liability",
+  "file_created_at": "2026-04-13T07:45:00-04:00",
+  "received_at": "2026-04-13T11:00:00-04:00",
+  "updated_at": "2026-05-19T12:00:00-04:00",
+  "status": "In Review",
+  "applicant": {
+    "insured_name": "Sterling Machined Components Co.",
+    "industry": "Precision component manufacturer",
+    "industry_bucket": "Manufacturing / OT",
+    "industry_group": "Manufacturing / OT",
+    "location": "Cleveland, OH",
+    "annual_revenue": 118000000,
+    "employee_count": 540,
+    "records_count": 83000,
+    "technology_profile": "ERP, plant floor OT network, EDI, remote vendor maintenance, Microsoft 365"
+  },
+  "coverage": {
+    "lines_requested": [
+      "Cyber liability",
+      "Privacy breach response",
+      "Business interruption"
+    ],
+    "requested_effective_date": "2026-06-13",
+    "requested_limits": {
+      "cyber_liability": "$5,000,000",
+      "privacy_breach_response": "$2,000,000",
+      "business_interruption": "$3,000,000"
+    },
+    "retention_requested": "$50,000"
+  },
+  "documents": [
+    {
+      "file_name": "cyber-application.txt",
+      "file_type": "cyber_application",
+      "category": "submission",
+      "document_types": [
+        "cyber_application",
+        "submission_form"
+      ],
+      "major_categories": [
+        "submission",
+        "cyber_security"
+      ],
+      "file_created_at": "2026-04-13T07:45:00-04:00",
+      "received_at": "2026-04-13T11:00:00-04:00",
+      "description": "Cyber application and submission form responses"
+    },
+    {
+      "file_name": "ransomware-supplemental-application.txt",
+      "file_type": "ransomware_supplemental_application",
+      "category": "submission",
+      "document_types": [
+        "ransomware_supplemental_application"
+      ],
+      "major_categories": [
+        "submission",
+        "cyber_security"
+      ],
+      "file_created_at": "2026-04-13T07:45:00-04:00",
+      "received_at": "2026-04-13T11:00:00-04:00",
+      "description": "Ransomware supplemental application"
+    },
+    {
+      "file_name": "prior-cyber-insurance-policy.txt",
+      "file_type": "prior_cyber_insurance_policy",
+      "category": "coverage_terms",
+      "document_types": [
+        "prior_cyber_insurance_policy",
+        "policy_form"
+      ],
+      "major_categories": [
+        "coverage_terms"
+      ],
+      "file_created_at": "2026-04-13T07:45:00-04:00",
+      "received_at": "2026-04-13T11:00:00-04:00",
+      "description": "Prior cyber insurance policy and expiring coverage terms"
+    },
+    {
+      "file_name": "loss-runs-claims-history.txt",
+      "file_type": "loss_runs",
+      "category": "loss_history",
+      "document_types": [
+        "loss_runs",
+        "claims_history"
+      ],
+      "major_categories": [
+        "loss_history"
+      ],
+      "file_created_at": "2026-04-13T07:45:00-04:00",
+      "received_at": "2026-04-13T11:00:00-04:00",
+      "description": "Loss runs and cyber claims history"
+    },
+    {
+      "file_name": "financial-information-revenue-breakdown.txt",
+      "file_type": "financial_information",
+      "category": "financial",
+      "document_types": [
+        "financial_information",
+        "revenue_breakdown"
+      ],
+      "major_categories": [
+        "financial",
+        "company_profile"
+      ],
+      "file_created_at": "2026-04-13T07:45:00-04:00",
+      "received_at": "2026-04-13T11:00:00-04:00",
+      "description": "Financial information and revenue breakdown"
+    },
+    {
+      "file_name": "it-security-controls-questionnaire.txt",
+      "file_type": "it_security_controls_questionnaire",
+      "category": "cyber_security",
+      "document_types": [
+        "it_security_controls_questionnaire",
+        "security_questionnaire"
+      ],
+      "major_categories": [
+        "cyber_security"
+      ],
+      "file_created_at": "2026-04-13T07:45:00-04:00",
+      "received_at": "2026-04-13T11:00:00-04:00",
+      "description": "IT and security controls questionnaire"
+    },
+    {
+      "file_name": "mfa-edr-backup-documentation.txt",
+      "file_type": "mfa_documentation",
+      "category": "cyber_security",
+      "document_types": [
+        "mfa_documentation",
+        "edr_documentation",
+        "backup_documentation"
+      ],
+      "major_categories": [
+        "cyber_security"
+      ],
+      "file_created_at": "2026-04-13T07:45:00-04:00",
+      "received_at": "2026-04-13T11:00:00-04:00",
+      "description": "MFA, EDR, and backup control documentation"
+    },
+    {
+      "file_name": "incident-response-plan.txt",
+      "file_type": "incident_response_plan",
+      "category": "cyber_security",
+      "document_types": [
+        "incident_response_plan"
+      ],
+      "major_categories": [
+        "cyber_security"
+      ],
+      "file_created_at": "2026-04-13T07:45:00-04:00",
+      "received_at": "2026-04-13T11:00:00-04:00",
+      "description": "Incident response plan and escalation workflow"
+    },
+    {
+      "file_name": "vendor-security-assessment.txt",
+      "file_type": "vendor_security_assessment",
+      "category": "vendor_risk",
+      "document_types": [
+        "vendor_security_assessment",
+        "third_party_risk_assessment"
+      ],
+      "major_categories": [
+        "vendor_risk",
+        "cyber_security"
+      ],
+      "file_created_at": "2026-04-13T07:45:00-04:00",
+      "received_at": "2026-04-13T11:00:00-04:00",
+      "description": "Vendor and third-party security assessment"
+    },
+    {
+      "file_name": "compliance-documents.txt",
+      "file_type": "compliance_documentation",
+      "category": "compliance",
+      "document_types": [
+        "compliance_documentation"
+      ],
+      "major_categories": [
+        "compliance",
+        "cyber_security"
+      ],
+      "file_created_at": "2026-04-13T07:45:00-04:00",
+      "received_at": "2026-04-13T11:00:00-04:00",
+      "description": "Relevant compliance documentation such as SOC 2, HIPAA, PCI, or equivalent evidence"
+    }
+  ],
+  "security_controls": {
+    "mfa": "Enabled for email, VPN, and privileged users",
+    "edr": "EDR deployed on corporate endpoints; server coverage in progress",
+    "backup": "Immutable backups with monthly restore testing",
+    "patching": "Critical patches within 14 days",
+    "security_training": "Annual employee training"
+  },
+  "risk_flags": [
+    "Material third-party or portal dependency",
+    "Operational technology dependency"
+  ],
+  "open_questions": [
+    "Confirm most recent backup restore test date.",
+    "Provide latest vulnerability scan executive summary.",
+    "Clarify OT segmentation and vendor remote access controls."
+  ],
+  "timeline": [
+    {
+      "date": "2026-04-13T07:45:00-04:00",
+      "event": "Submission file created",
+      "description": "Broker prepared the cyber submission package."
+    },
+    {
+      "date": "2026-04-13T11:00:00-04:00",
+      "event": "Submission received",
+      "description": "Cyber underwriting package received for review."
+    },
+    {
+      "date": "2026-05-19T12:00:00-04:00",
+      "event": "Portfolio benchmark data linked",
+      "description": "Submission connected to demo claims and industry propensity benchmark population."
+    }
+  ],
+  "document_taxonomy": {
+    "major_categories": {
+      "submission": "Submission",
+      "company_profile": "Company Profile",
+      "cyber_security": "Cyber Security",
+      "loss_history": "Loss History",
+      "financial": "Financial",
+      "coverage_terms": "Coverage Terms",
+      "vendor_risk": "Vendor Risk",
+      "compliance": "Compliance",
+      "communication": "Communication",
+      "underwriting_review": "Underwriting Review"
+    },
+    "note": "document_types and major_categories are arrays because one document can support multiple underwriting uses."
+  },
+  "broker": {
+    "broker_id": "brk-midwest-commercial-risk",
+    "firm_name": "Midwest Commercial Risk",
+    "producer_name": "Evan Brooks",
+    "producer_email": "evan.brooks@midwestcommercial.example",
+    "producer_phone": "614-555-0177",
+    "account_manager_name": "Priya Raman",
+    "account_manager_email": "priya.raman@midwestcommercial.example",
+    "account_manager_phone": "614-555-0191",
+    "relationship_type": "Broker submission",
+    "submission_channel": "Broker portal",
+    "target_quote_date": "2026-06-13",
+    "broker_priority": "Core",
+    "broker_notes": "Midwest Commercial Risk assigned based on Manufacturing / OT appetite and market focus."
+  }
+}

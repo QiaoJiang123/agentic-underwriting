@@ -1,0 +1,21 @@
+{
+  "submission_id": "006-quantum-retail-pharmacy",
+  "claim_system": "dummy_claims_core",
+  "updated_at": "2026-05-19T09:00:00-04:00",
+  "claims": [
+    {
+      "claim_id": "CLM-QUANTUM-2024-001",
+      "loss_date": "2024-03-14",
+      "reported_date": "2024-03-15",
+      "status": "closed",
+      "claim_type": "privacy_incident",
+      "coverage_area": "privacy_liability",
+      "severity": "moderate",
+      "amount_paid": 28500,
+      "amount_reserved": 0,
+      "cause": "Misdirected prescription delivery notification exposed limited patient information.",
+      "description": "Notification and legal review expenses were paid.",
+      "recovery_status": "resolved"
+    }
+  ]
+}

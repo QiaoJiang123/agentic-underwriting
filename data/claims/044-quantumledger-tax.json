@@ -1,0 +1,21 @@
+{
+  "submission_id": "044-quantumledger-tax",
+  "claim_system": "dummy_claims_core",
+  "updated_at": "2026-05-19T12:00:00-04:00",
+  "claims": [
+    {
+      "claim_id": "CLM-QUANTUML-2025-001",
+      "loss_date": "2025-12-19",
+      "reported_date": "2025-12-20",
+      "status": "closed",
+      "claim_type": "payment_card_incident",
+      "coverage_area": "pci_assessment",
+      "severity": "high",
+      "amount_paid": 159400,
+      "amount_reserved": 0,
+      "cause": "Suspicious POS activity required PCI forensic review.",
+      "description": "Payment Card Incident was closed after remediation was documented; costs include forensic, legal, notification, recovery, or customer credit expenses as applicable.",
+      "recovery_status": "resolved"
+    }
+  ]
+}

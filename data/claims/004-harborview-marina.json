@@ -1,0 +1,21 @@
+{
+  "submission_id": "004-harborview-marina",
+  "claim_system": "dummy_claims_core",
+  "updated_at": "2026-05-19T09:00:00-04:00",
+  "claims": [
+    {
+      "claim_id": "CLM-HARBOR-2024-001",
+      "loss_date": "2024-06-08",
+      "reported_date": "2024-06-10",
+      "status": "closed",
+      "claim_type": "payment_card_incident",
+      "coverage_area": "pci_assessment",
+      "severity": "moderate",
+      "amount_paid": 26500,
+      "amount_reserved": 0,
+      "cause": "Point-of-sale vendor compromise triggered PCI forensic review.",
+      "description": "Costs were limited to assessment fees and customer communication.",
+      "recovery_status": "vendor_remediated"
+    }
+  ]
+}

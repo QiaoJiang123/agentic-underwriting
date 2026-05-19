@@ -1,0 +1,21 @@
+{
+  "submission_id": "008-summit-fintech-payments",
+  "claim_system": "dummy_claims_core",
+  "updated_at": "2026-05-19T09:00:00-04:00",
+  "claims": [
+    {
+      "claim_id": "CLM-SUMMIT-2025-001",
+      "loss_date": "2025-06-03",
+      "reported_date": "2025-06-04",
+      "status": "closed",
+      "claim_type": "service_outage",
+      "coverage_area": "technology_errors_omissions",
+      "severity": "moderate",
+      "amount_paid": 56000,
+      "amount_reserved": 0,
+      "cause": "Gateway routing error caused intermittent transaction failures.",
+      "description": "Customer credits and defense review were paid.",
+      "recovery_status": "resolved"
+    }
+  ]
+}

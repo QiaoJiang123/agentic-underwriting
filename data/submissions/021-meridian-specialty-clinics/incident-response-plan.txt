@@ -1,0 +1,30 @@
+Incident response plan and escalation workflow
+
+Insured: Meridian Specialty Clinics Inc.
+Submission ID: 021-meridian-specialty-clinics
+Industry: Specialty medical clinic network
+Industry benchmark bucket: Healthcare / Pharmacy
+Revenue: $103,000,000
+Employees: 715
+Records: 880,000
+Technology profile: EHR, patient portal, imaging systems, claims clearinghouse, Microsoft 365
+
+Security controls:
+- mfa: Enabled for email, VPN, and privileged users
+- edr: Microsoft Defender for Endpoint deployed on managed endpoints
+- backup: Daily backups; last restore test was more than six months ago
+- patching: Critical patches within 14 days
+- security_training: Annual employee training plus phishing simulations
+
+Claims history:
+2025-07-06 | ransomware_attempt | closed | paid $96,700 | reserve $0
+
+Risk flags:
+- Large privacy record count
+- Material third-party or portal dependency
+- Sensitive regulated data exposure
+
+Open questions:
+- Confirm most recent backup restore test date.
+- Provide latest vulnerability scan executive summary.
+- Request latest HIPAA security risk assessment summary.

@@ -1,0 +1,49 @@
+{
+  "submission_id": "035-westfield-technical-institute",
+  "claim_system": "dummy_claims_core",
+  "updated_at": "2026-05-19T12:00:00-04:00",
+  "claims": [
+    {
+      "claim_id": "CLM-WESTFIEL-2024-001",
+      "loss_date": "2024-10-23",
+      "reported_date": "2024-10-24",
+      "status": "closed",
+      "claim_type": "ransomware_attempt",
+      "coverage_area": "incident_response",
+      "severity": "moderate",
+      "amount_paid": 71400,
+      "amount_reserved": 0,
+      "cause": "Malware activity affected academic network endpoints before containment.",
+      "description": "Ransomware Attempt was closed after remediation was documented; costs include forensic, legal, notification, recovery, or customer credit expenses as applicable.",
+      "recovery_status": "remediated"
+    },
+    {
+      "claim_id": "CLM-WESTFIEL-2023-002",
+      "loss_date": "2023-02-15",
+      "reported_date": "2023-02-18",
+      "status": "closed",
+      "claim_type": "credential_compromise",
+      "coverage_area": "incident_response",
+      "severity": "moderate",
+      "amount_paid": 44900,
+      "amount_reserved": 0,
+      "cause": "Compromised student or faculty account accessed cloud storage.",
+      "description": "Credential Compromise was closed after remediation was documented; costs include forensic, legal, notification, recovery, or customer credit expenses as applicable.",
+      "recovery_status": "resolved"
+    },
+    {
+      "claim_id": "CLM-WESTFIEL-2025-003",
+      "loss_date": "2025-04-18",
+      "reported_date": "2025-04-20",
+      "status": "closed",
+      "claim_type": "ransomware_attempt",
+      "coverage_area": "incident_response",
+      "severity": "high",
+      "amount_paid": 140700,
+      "amount_reserved": 0,
+      "cause": "Malware activity affected academic network endpoints before containment.",
+      "description": "Ransomware Attempt was closed after remediation was documented; costs include forensic, legal, notification, recovery, or customer credit expenses as applicable.",
+      "recovery_status": "resolved"
+    }
+  ]
+}

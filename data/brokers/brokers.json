@@ -1,0 +1,198 @@
+{
+  "updated_at": "2026-05-19T14:10:56.328930Z",
+  "brokers": [
+    {
+      "broker_id": "brk-atlantic-risk-partners",
+      "firm_name": "Atlantic Risk Partners",
+      "broker_type": "Retail broker",
+      "branch": "New York Metro",
+      "primary_region": "Northeast",
+      "service_tier": "Strategic",
+      "market_focus": [
+        "Food distribution",
+        "Hospitality",
+        "Cyber and technology E&O"
+      ],
+      "contacts": {
+        "producer": {
+          "name": "Maya Chen",
+          "email": "maya.chen@atlanticrisk.example",
+          "phone": "212-555-0184"
+        },
+        "account_manager": {
+          "name": "Jordan Patel",
+          "email": "jordan.patel@atlanticrisk.example",
+          "phone": "212-555-0149"
+        }
+      },
+      "relationship_metrics": {
+        "years_active": 7,
+        "submissions_ytd": 18,
+        "quote_ratio_12m": 0.74,
+        "bind_ratio_12m": 0.41,
+        "avg_response_hours": 9,
+        "data_quality_score": 88
+      },
+      "placement_notes": "Strong market access and clean submission packaging; often asks for quick quote turnaround.",
+      "communication_preferences": [
+        "Email",
+        "Shared secure portal"
+      ]
+    },
+    {
+      "broker_id": "brk-midwest-commercial-risk",
+      "firm_name": "Midwest Commercial Risk",
+      "broker_type": "Retail broker",
+      "branch": "Columbus",
+      "primary_region": "Midwest",
+      "service_tier": "Core",
+      "market_focus": [
+        "Construction",
+        "Manufacturing",
+        "Funds transfer fraud"
+      ],
+      "contacts": {
+        "producer": {
+          "name": "Evan Brooks",
+          "email": "evan.brooks@midwestcommercial.example",
+          "phone": "614-555-0177"
+        },
+        "account_manager": {
+          "name": "Priya Raman",
+          "email": "priya.raman@midwestcommercial.example",
+          "phone": "614-555-0191"
+        }
+      },
+      "relationship_metrics": {
+        "years_active": 4,
+        "submissions_ytd": 12,
+        "quote_ratio_12m": 0.68,
+        "bind_ratio_12m": 0.36,
+        "avg_response_hours": 14,
+        "data_quality_score": 79
+      },
+      "placement_notes": "Construction accounts usually need invoice manipulation and social engineering clarity.",
+      "communication_preferences": [
+        "Email",
+        "Phone follow-up for subjectivities"
+      ]
+    },
+    {
+      "broker_id": "brk-harbor-specialty",
+      "firm_name": "Harbor Specialty Brokerage",
+      "broker_type": "Wholesale broker",
+      "branch": "Boston",
+      "primary_region": "National",
+      "service_tier": "Core",
+      "market_focus": [
+        "Healthcare",
+        "Education",
+        "Public entity",
+        "Marina and recreation"
+      ],
+      "contacts": {
+        "producer": {
+          "name": "Nora Walsh",
+          "email": "nora.walsh@harborspecialty.example",
+          "phone": "617-555-0116"
+        },
+        "account_manager": {
+          "name": "Leo Martinez",
+          "email": "leo.martinez@harborspecialty.example",
+          "phone": "617-555-0130"
+        }
+      },
+      "relationship_metrics": {
+        "years_active": 6,
+        "submissions_ytd": 22,
+        "quote_ratio_12m": 0.61,
+        "bind_ratio_12m": 0.29,
+        "avg_response_hours": 18,
+        "data_quality_score": 73
+      },
+      "placement_notes": "Complex accounts frequently need second-round evidence and authority explanation.",
+      "communication_preferences": [
+        "Email",
+        "Broker portal"
+      ]
+    },
+    {
+      "broker_id": "brk-pacific-tech-risk",
+      "firm_name": "Pacific Technology Risk Advisors",
+      "broker_type": "Retail broker",
+      "branch": "San Francisco",
+      "primary_region": "West",
+      "service_tier": "Strategic",
+      "market_focus": [
+        "SaaS",
+        "Fintech",
+        "Technology E&O",
+        "API platforms"
+      ],
+      "contacts": {
+        "producer": {
+          "name": "Sofia Nguyen",
+          "email": "sofia.nguyen@pacifictechrisk.example",
+          "phone": "415-555-0108"
+        },
+        "account_manager": {
+          "name": "Caleb Ortiz",
+          "email": "caleb.ortiz@pacifictechrisk.example",
+          "phone": "415-555-0152"
+        }
+      },
+      "relationship_metrics": {
+        "years_active": 5,
+        "submissions_ytd": 16,
+        "quote_ratio_12m": 0.82,
+        "bind_ratio_12m": 0.47,
+        "avg_response_hours": 7,
+        "data_quality_score": 91
+      },
+      "placement_notes": "Strong technical detail and SOC evidence; expects clear model rationale on technology accounts.",
+      "communication_preferences": [
+        "Email",
+        "Technical data room"
+      ]
+    },
+    {
+      "broker_id": "brk-crestline-specialty",
+      "firm_name": "Crestline Specialty Partners",
+      "broker_type": "Wholesale broker",
+      "branch": "Chicago",
+      "primary_region": "National",
+      "service_tier": "Development",
+      "market_focus": [
+        "Retail pharmacy",
+        "Manufacturing",
+        "Hospitality",
+        "Privacy exposed accounts"
+      ],
+      "contacts": {
+        "producer": {
+          "name": "Amelia Ross",
+          "email": "amelia.ross@crestlinespecialty.example",
+          "phone": "312-555-0126"
+        },
+        "account_manager": {
+          "name": "Marcus Lee",
+          "email": "marcus.lee@crestlinespecialty.example",
+          "phone": "312-555-0164"
+        }
+      },
+      "relationship_metrics": {
+        "years_active": 2,
+        "submissions_ytd": 9,
+        "quote_ratio_12m": 0.56,
+        "bind_ratio_12m": 0.24,
+        "avg_response_hours": 22,
+        "data_quality_score": 68
+      },
+      "placement_notes": "Submissions can need follow-up on controls, but broker is responsive once requirements are specific.",
+      "communication_preferences": [
+        "Email",
+        "Weekly pipeline call"
+      ]
+    }
+  ]
+}

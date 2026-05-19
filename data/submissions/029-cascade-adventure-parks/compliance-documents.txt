@@ -1,0 +1,29 @@
+Relevant compliance documentation such as SOC 2, HIPAA, PCI, or equivalent evidence
+
+Insured: Cascade Adventure Parks Inc.
+Submission ID: 029-cascade-adventure-parks
+Industry: Outdoor recreation and ticketing operator
+Industry benchmark bucket: Marina / Recreation
+Revenue: $24,600,000
+Employees: 180
+Records: 112,000
+Technology profile: Ticketing platform, waiver system, POS terminals, customer Wi-Fi, Microsoft 365
+
+Security controls:
+- mfa: Enabled for email, VPN, and privileged users
+- edr: Microsoft Defender for Endpoint deployed on managed endpoints
+- backup: Daily backups with quarterly restore testing
+- patching: Critical patches within 14 days
+- security_training: Annual employee training plus phishing simulations
+
+Claims history:
+2022-05-14 | business_email_compromise | open | paid $41,300 | reserve $24,700
+
+Risk flags:
+
+Open questions:
+- Confirm most recent backup restore test date.
+- Provide latest vulnerability scan executive summary.
+- Clarify critical vendor incident notification obligations.
+
+Compliance evidence should be reviewed for applicable regulatory or contractual control frameworks.

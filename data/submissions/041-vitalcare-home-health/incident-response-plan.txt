@@ -1,0 +1,30 @@
+Incident response plan and escalation workflow
+
+Insured: VitalCare Home Health Inc.
+Submission ID: 041-vitalcare-home-health
+Industry: Home health services provider
+Industry benchmark bucket: Healthcare / Pharmacy
+Revenue: $78,000,000
+Employees: 980
+Records: 740,000
+Technology profile: EHR, mobile caregiver app, patient portal, claims clearinghouse, Microsoft 365
+
+Security controls:
+- mfa: Enabled for email, VPN, and privileged users
+- edr: Microsoft Defender for Endpoint deployed on managed endpoints
+- backup: Daily backups with quarterly restore testing
+- patching: Critical patches within 14 days
+- security_training: Annual employee training plus phishing simulations
+
+Claims history:
+2023-01-03 | privacy_incident | closed | paid $82,200 | reserve $0
+
+Risk flags:
+- Large privacy record count
+- Material third-party or portal dependency
+- Sensitive regulated data exposure
+
+Open questions:
+- Confirm most recent backup restore test date.
+- Provide latest vulnerability scan executive summary.
+- Request latest HIPAA security risk assessment summary.

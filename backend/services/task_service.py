@@ -3,6 +3,7 @@ import time
 from datetime import datetime, timezone
 
 from backend.config import TASK_DIR
+from backend.services.schema_service import validate_named_schema
 from backend.services.submission_service import is_valid_submission_id, submission_exists
 
 
@@ -38,6 +39,7 @@ def save_task_record(submission_id, tasks):
         "updated_at": now,
         "tasks": sanitize_tasks(tasks, previous_record.get("tasks", []), now),
     }
+    validate_named_schema("task_record", record)
 
     TASK_DIR.mkdir(parents=True, exist_ok=True)
     get_task_path(submission_id).write_text(

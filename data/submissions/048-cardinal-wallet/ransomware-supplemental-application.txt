@@ -1,0 +1,33 @@
+Ransomware supplemental application
+
+Insured: Cardinal Wallet Inc.
+Submission ID: 048-cardinal-wallet
+Industry: Digital wallet and prepaid card platform
+Industry benchmark bucket: Fintech / Payments
+Revenue: $188,000,000
+Employees: 620
+Records: 4,200,000
+Technology profile: Digital wallet platform, card processor APIs, fraud analytics, customer portal, AWS
+
+Security controls:
+- mfa: Partial; enabled for email and VPN with rollout pending for privileged application admins
+- edr: CrowdStrike with 24/7 MDR coverage
+- backup: Immutable backups with monthly restore testing
+- patching: Critical patches within 7 days
+- security_training: Annual employee training
+
+Claims history:
+2023-11-01 | api_security_event | closed | paid $36,000 | reserve $0
+2024-08-03 | service_outage | closed | paid $96,300 | reserve $0
+
+Risk flags:
+- Large privacy record count
+- Material third-party or portal dependency
+- PCI and payment card exposure
+- MFA rollout gap
+
+Open questions:
+- Confirm most recent backup restore test date.
+- Provide latest vulnerability scan executive summary.
+- Request PCI ROC or most recent attestation summary.
+- Confirm privileged application MFA completion timeline.

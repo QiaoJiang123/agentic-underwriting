@@ -1,0 +1,18 @@
+{
+  "model_name": "cyber_attack_prob",
+  "model_type": "glm_logistic",
+  "target": "cyber_attack_probability",
+  "version": "0.1.0-demo",
+  "average_probability": 0.42,
+  "description": "Demo GLM for cyber attack probability. Coefficients are illustrative placeholders until trained loss and telemetry data are added.",
+  "features": [
+    { "key": "records_exposure", "label": "Records Exposure", "coefficient": 0.78, "baseline_value": 0.5 },
+    { "key": "industry_propensity", "label": "Industry Propensity", "coefficient": 0.62, "baseline_value": 0.5 },
+    { "key": "vendor_dependency", "label": "Vendor Dependency", "coefficient": 0.48, "baseline_value": 0.5 },
+    { "key": "operational_dependency", "label": "Operational Dependency", "coefficient": 0.42, "baseline_value": 0.5 },
+    { "key": "risk_flag_load", "label": "Risk Flag Load", "coefficient": 0.5, "baseline_value": 0.35 },
+    { "key": "mfa_maturity", "label": "MFA Maturity", "coefficient": -0.72, "baseline_value": 0.5 },
+    { "key": "edr_coverage", "label": "EDR Coverage", "coefficient": -0.48, "baseline_value": 0.5 },
+    { "key": "security_training", "label": "Security Training", "coefficient": -0.26, "baseline_value": 0.5 }
+  ]
+}

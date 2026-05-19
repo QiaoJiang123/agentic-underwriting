@@ -4,7 +4,7 @@
   "line_of_business": "Cyber liability",
   "file_created_at": "2026-04-24T15:09:00-04:00",
   "received_at": "2026-04-24T16:22:00-04:00",
-  "updated_at": "2026-05-12T09:00:00-04:00",
+  "updated_at": "2026-05-19T12:00:00-04:00",
   "status": "New",
   "applicant": {
     "insured_name": "Harborview Marina & Storage LLC",
@@ -13,7 +13,9 @@
     "annual_revenue": 7600000,
     "employee_count": 38,
     "records_count": 31000,
-    "technology_profile": "Slip reservation platform, point-of-sale, fuel dock payment terminals, customer Wi-Fi, access control system"
+    "technology_profile": "Slip reservation platform, point-of-sale, fuel dock payment terminals, customer Wi-Fi, access control system",
+    "industry_bucket": "Marina / Recreation",
+    "industry_group": "Marina / Recreation"
   },
   "coverage": {
     "lines_requested": [
@@ -323,5 +325,20 @@
       "underwriting_review": "Underwriting Review"
     },
     "note": "document_types and major_categories are arrays because one document can support multiple underwriting uses."
+  },
+  "broker": {
+    "broker_id": "brk-harbor-specialty",
+    "firm_name": "Harbor Specialty Brokerage",
+    "producer_name": "Nora Walsh",
+    "producer_email": "nora.walsh@harborspecialty.example",
+    "producer_phone": "617-555-0116",
+    "account_manager_name": "Leo Martinez",
+    "account_manager_email": "leo.martinez@harborspecialty.example",
+    "account_manager_phone": "617-555-0130",
+    "relationship_type": "Broker submission",
+    "submission_channel": "Broker portal",
+    "target_quote_date": "2026-06-15",
+    "broker_priority": "Core",
+    "broker_notes": "Harbor Specialty Brokerage assigned based on Marina / Recreation appetite and market focus."
   }
 }

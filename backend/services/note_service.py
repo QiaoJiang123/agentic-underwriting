@@ -3,6 +3,7 @@ import time
 from datetime import datetime, timezone
 
 from backend.config import NOTE_DIR
+from backend.services.schema_service import validate_named_schema
 from backend.services.submission_service import is_valid_submission_id, submission_exists
 
 
@@ -34,6 +35,7 @@ def save_note_record(submission_id, notes):
         "updated_at": now,
         "notes": sanitize_notes(notes, previous_record.get("notes", []), now),
     }
+    validate_named_schema("note_record", record)
 
     NOTE_DIR.mkdir(parents=True, exist_ok=True)
     get_note_path(submission_id).write_text(

@@ -1,0 +1,35 @@
+{
+  "submission_id": "003-evergreen-senior-living",
+  "claim_system": "dummy_claims_core",
+  "updated_at": "2026-05-19T09:00:00-04:00",
+  "claims": [
+    {
+      "claim_id": "CLM-EVER-2022-001",
+      "loss_date": "2022-04-12",
+      "reported_date": "2022-04-14",
+      "status": "closed",
+      "claim_type": "privacy_incident",
+      "coverage_area": "privacy_liability",
+      "severity": "moderate",
+      "amount_paid": 41000,
+      "amount_reserved": 0,
+      "cause": "Misdirected resident billing file containing limited PHI.",
+      "description": "Notification, legal review, and credit monitoring expenses were paid.",
+      "recovery_status": "not_applicable"
+    },
+    {
+      "claim_id": "CLM-EVER-2025-001",
+      "loss_date": "2025-10-22",
+      "reported_date": "2025-10-23",
+      "status": "open",
+      "claim_type": "ransomware_attempt",
+      "coverage_area": "incident_response",
+      "severity": "high",
+      "amount_paid": 22000,
+      "amount_reserved": 55000,
+      "cause": "Endpoint malware attempt contained before encryption but requiring forensic review.",
+      "description": "Forensics remain open while segmentation and EDR containment evidence is reviewed.",
+      "recovery_status": "active_review"
+    }
+  ]
+}

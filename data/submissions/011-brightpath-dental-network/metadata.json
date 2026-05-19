@@ -1,0 +1,254 @@
+{
+  "id": "011-brightpath-dental-network",
+  "title": "BrightPath Dental Network",
+  "line_of_business": "Cyber liability",
+  "file_created_at": "2026-04-08T09:45:00-04:00",
+  "received_at": "2026-04-08T13:00:00-04:00",
+  "updated_at": "2026-05-19T12:00:00-04:00",
+  "status": "In Review",
+  "applicant": {
+    "insured_name": "BrightPath Dental Network LLC",
+    "industry": "Multi-site dental services organization",
+    "industry_bucket": "Healthcare / Pharmacy",
+    "industry_group": "Healthcare / Pharmacy",
+    "location": "Nashville, TN",
+    "annual_revenue": 36400000,
+    "employee_count": 420,
+    "records_count": 390000,
+    "technology_profile": "Practice management platform, imaging systems, patient portal, payment terminals, Microsoft 365"
+  },
+  "coverage": {
+    "lines_requested": [
+      "Cyber liability",
+      "Privacy breach response",
+      "Business interruption",
+      "PCI fines and assessments"
+    ],
+    "requested_effective_date": "2026-06-03",
+    "requested_limits": {
+      "cyber_liability": "$5,000,000",
+      "privacy_breach_response": "$2,000,000",
+      "business_interruption": "$3,000,000",
+      "pci": "$1,000,000"
+    },
+    "retention_requested": "$50,000"
+  },
+  "documents": [
+    {
+      "file_name": "cyber-application.txt",
+      "file_type": "cyber_application",
+      "category": "submission",
+      "document_types": [
+        "cyber_application",
+        "submission_form"
+      ],
+      "major_categories": [
+        "submission",
+        "cyber_security"
+      ],
+      "file_created_at": "2026-04-08T09:45:00-04:00",
+      "received_at": "2026-04-08T13:00:00-04:00",
+      "description": "Cyber application and submission form responses"
+    },
+    {
+      "file_name": "ransomware-supplemental-application.txt",
+      "file_type": "ransomware_supplemental_application",
+      "category": "submission",
+      "document_types": [
+        "ransomware_supplemental_application"
+      ],
+      "major_categories": [
+        "submission",
+        "cyber_security"
+      ],
+      "file_created_at": "2026-04-08T09:45:00-04:00",
+      "received_at": "2026-04-08T13:00:00-04:00",
+      "description": "Ransomware supplemental application"
+    },
+    {
+      "file_name": "prior-cyber-insurance-policy.txt",
+      "file_type": "prior_cyber_insurance_policy",
+      "category": "coverage_terms",
+      "document_types": [
+        "prior_cyber_insurance_policy",
+        "policy_form"
+      ],
+      "major_categories": [
+        "coverage_terms"
+      ],
+      "file_created_at": "2026-04-08T09:45:00-04:00",
+      "received_at": "2026-04-08T13:00:00-04:00",
+      "description": "Prior cyber insurance policy and expiring coverage terms"
+    },
+    {
+      "file_name": "loss-runs-claims-history.txt",
+      "file_type": "loss_runs",
+      "category": "loss_history",
+      "document_types": [
+        "loss_runs",
+        "claims_history"
+      ],
+      "major_categories": [
+        "loss_history"
+      ],
+      "file_created_at": "2026-04-08T09:45:00-04:00",
+      "received_at": "2026-04-08T13:00:00-04:00",
+      "description": "Loss runs and cyber claims history"
+    },
+    {
+      "file_name": "financial-information-revenue-breakdown.txt",
+      "file_type": "financial_information",
+      "category": "financial",
+      "document_types": [
+        "financial_information",
+        "revenue_breakdown"
+      ],
+      "major_categories": [
+        "financial",
+        "company_profile"
+      ],
+      "file_created_at": "2026-04-08T09:45:00-04:00",
+      "received_at": "2026-04-08T13:00:00-04:00",
+      "description": "Financial information and revenue breakdown"
+    },
+    {
+      "file_name": "it-security-controls-questionnaire.txt",
+      "file_type": "it_security_controls_questionnaire",
+      "category": "cyber_security",
+      "document_types": [
+        "it_security_controls_questionnaire",
+        "security_questionnaire"
+      ],
+      "major_categories": [
+        "cyber_security"
+      ],
+      "file_created_at": "2026-04-08T09:45:00-04:00",
+      "received_at": "2026-04-08T13:00:00-04:00",
+      "description": "IT and security controls questionnaire"
+    },
+    {
+      "file_name": "mfa-edr-backup-documentation.txt",
+      "file_type": "mfa_documentation",
+      "category": "cyber_security",
+      "document_types": [
+        "mfa_documentation",
+        "edr_documentation",
+        "backup_documentation"
+      ],
+      "major_categories": [
+        "cyber_security"
+      ],
+      "file_created_at": "2026-04-08T09:45:00-04:00",
+      "received_at": "2026-04-08T13:00:00-04:00",
+      "description": "MFA, EDR, and backup control documentation"
+    },
+    {
+      "file_name": "incident-response-plan.txt",
+      "file_type": "incident_response_plan",
+      "category": "cyber_security",
+      "document_types": [
+        "incident_response_plan"
+      ],
+      "major_categories": [
+        "cyber_security"
+      ],
+      "file_created_at": "2026-04-08T09:45:00-04:00",
+      "received_at": "2026-04-08T13:00:00-04:00",
+      "description": "Incident response plan and escalation workflow"
+    },
+    {
+      "file_name": "vendor-security-assessment.txt",
+      "file_type": "vendor_security_assessment",
+      "category": "vendor_risk",
+      "document_types": [
+        "vendor_security_assessment",
+        "third_party_risk_assessment"
+      ],
+      "major_categories": [
+        "vendor_risk",
+        "cyber_security"
+      ],
+      "file_created_at": "2026-04-08T09:45:00-04:00",
+      "received_at": "2026-04-08T13:00:00-04:00",
+      "description": "Vendor and third-party security assessment"
+    },
+    {
+      "file_name": "compliance-documents.txt",
+      "file_type": "compliance_documentation",
+      "category": "compliance",
+      "document_types": [
+        "compliance_documentation"
+      ],
+      "major_categories": [
+        "compliance",
+        "cyber_security"
+      ],
+      "file_created_at": "2026-04-08T09:45:00-04:00",
+      "received_at": "2026-04-08T13:00:00-04:00",
+      "description": "Relevant compliance documentation such as SOC 2, HIPAA, PCI, or equivalent evidence"
+    }
+  ],
+  "security_controls": {
+    "mfa": "Enabled for email, VPN, and privileged users",
+    "edr": "Microsoft Defender for Endpoint deployed on managed endpoints",
+    "backup": "Daily backups with quarterly restore testing",
+    "patching": "Critical patches within 14 days",
+    "security_training": "Annual employee training plus phishing simulations"
+  },
+  "risk_flags": [
+    "Material third-party or portal dependency",
+    "Sensitive regulated data exposure"
+  ],
+  "open_questions": [
+    "Confirm most recent backup restore test date.",
+    "Provide latest vulnerability scan executive summary.",
+    "Request latest HIPAA security risk assessment summary."
+  ],
+  "timeline": [
+    {
+      "date": "2026-04-08T09:45:00-04:00",
+      "event": "Submission file created",
+      "description": "Broker prepared the cyber submission package."
+    },
+    {
+      "date": "2026-04-08T13:00:00-04:00",
+      "event": "Submission received",
+      "description": "Cyber underwriting package received for review."
+    },
+    {
+      "date": "2026-05-19T12:00:00-04:00",
+      "event": "Portfolio benchmark data linked",
+      "description": "Submission connected to demo claims and industry propensity benchmark population."
+    }
+  ],
+  "document_taxonomy": {
+    "major_categories": {
+      "submission": "Submission",
+      "company_profile": "Company Profile",
+      "cyber_security": "Cyber Security",
+      "loss_history": "Loss History",
+      "financial": "Financial",
+      "coverage_terms": "Coverage Terms",
+      "vendor_risk": "Vendor Risk",
+      "compliance": "Compliance",
+      "communication": "Communication",
+      "underwriting_review": "Underwriting Review"
+    },
+    "note": "document_types and major_categories are arrays because one document can support multiple underwriting uses."
+  },
+  "broker": {
+    "broker_id": "brk-harbor-specialty",
+    "firm_name": "Harbor Specialty Brokerage",
+    "producer_name": "Nora Walsh",
+    "producer_email": "nora.walsh@harborspecialty.example",
+    "producer_phone": "617-555-0116",
+    "account_manager_name": "Leo Martinez",
+    "account_manager_email": "leo.martinez@harborspecialty.example",
+    "account_manager_phone": "617-555-0130",
+    "relationship_type": "Broker submission",
+    "submission_channel": "Broker portal",
+    "target_quote_date": "2026-06-03",
+    "broker_priority": "Core",
+    "broker_notes": "Harbor Specialty Brokerage assigned based on Healthcare / Pharmacy appetite and market focus."
+  }
+}

@@ -30,7 +30,7 @@
           </div>
         </section>
 
-        <section class="sidebar-section documents-section">
+        <section class="sidebar-section documents-section" data-agent-surface="documents">
           <div class="section-heading">
             <h2>Documents</h2>
           </div>
@@ -40,8 +40,8 @@
             <button class="selection-action" id="autoSelectFiles" type="button" aria-pressed="false">Auto</button>
           </div>
           <div class="upload-actions">
-            <input id="documentUploadInput" type="file" accept=".txt,.pdf,text/plain,application/pdf" hidden />
-            <button class="selection-action" id="documentUploadButton" type="button">Upload File</button>
+            <input id="documentUploadInput" type="file" accept=".txt,.pdf,text/plain,application/pdf" multiple hidden />
+            <button class="selection-action" id="documentUploadButton" type="button">Upload Files</button>
             <span id="documentUploadStatus"></span>
           </div>
           <div class="document-list panel-document-list" id="documentList">
@@ -63,12 +63,29 @@
             </div>
             <button class="ghost-button compact-guide-button" id="guideToggleButton" type="button">Guide</button>
             <button class="ghost-button" id="clearButton" type="button">Clear</button>
+            <div class="workspace-menu-wrap">
+              <button
+                class="icon-button workspace-menu-button"
+                id="workspaceMenuButton"
+                type="button"
+                aria-label="Workspace options"
+                aria-haspopup="menu"
+                aria-expanded="false"
+              >
+                &#8942;
+              </button>
+              <div class="workspace-menu" id="workspaceMenu" role="menu" hidden>
+                <button type="button" role="menuitem" data-workspace-menu-action="sop">
+                  Review SOP
+                </button>
+              </div>
+            </div>
           </div>
         </header>
 
         <div class="work-surface">
           <section class="chat-column" aria-label="Chat">
-            <section class="chat-key-info" aria-label="Key information">
+            <section class="chat-key-info" aria-label="Key information" data-agent-surface="key-info">
               <div class="key-info-grid" id="keyInfoList">
                 <div class="key-info-item">
                   <span>Insured</span>
@@ -105,6 +122,18 @@
           </section>
 
           <aside class="insight-panel" aria-label="Submission workspace placeholders">
+            <button class="panel-expand-rail" id="panelExpandRailButton" type="button" aria-label="Expand right panel">
+              &laquo;
+            </button>
+            <header class="expanded-page-header" id="expandedPageHeader" aria-hidden="true">
+              <div>
+                <p class="eyebrow">Expanded Workspace</p>
+                <h2 id="expandedPageTitle">Workspace</h2>
+              </div>
+              <button class="ghost-button back-to-chat-button" id="backToChatButton" type="button">
+                Back to Chat
+              </button>
+            </header>
             <div class="insight-tabs" aria-label="Workspace sections">
               <button class="tab-button active" id="detailsTabButton" type="button" data-panel-tab="details">
                 Details
@@ -117,7 +146,7 @@
             </div>
 
             <section class="panel-view active" data-panel-view="details">
-              <section class="insight-card primary-card">
+              <section class="insight-card primary-card" data-agent-surface="details-summary">
                 <div class="card-heading">
                   <h3>Submission Summary</h3>
                 </div>
@@ -127,7 +156,7 @@
                 </p>
               </section>
 
-              <article class="insight-card">
+              <article class="insight-card" data-agent-surface="timeline">
                 <div class="card-heading">
                   <h3>Timeline</h3>
                   <button class="selection-action compact-action" type="button" id="refreshInsightsButton">
@@ -138,10 +167,23 @@
                   <p>Select a submission to view timeline.</p>
                 </div>
               </article>
+
+              <article class="insight-card underwriting-entry-card" data-agent-surface="underwriting">
+                <div class="card-heading">
+                  <h3>Underwriting System</h3>
+                  <button class="ghost-button small-ghost-button" id="underwritingExpandButton" type="button">
+                    Open
+                  </button>
+                </div>
+                <div class="underwriting-summary-panel" id="underwritingSummaryPanel">
+                  <p>Select a submission to view underwriting system signals.</p>
+                </div>
+                <div class="underwriting-workbench-panel" id="underwritingWorkbenchPanel"></div>
+              </article>
             </section>
 
             <section class="panel-view" data-panel-view="analytics">
-              <article class="insight-card analytics-card">
+              <article class="insight-card analytics-card" data-agent-surface="analytics">
                 <div class="card-heading">
                   <h3>Analytics</h3>
                 </div>
@@ -152,7 +194,7 @@
             </section>
 
             <section class="panel-view" data-panel-view="tasks">
-              <article class="insight-card task-stage-card">
+              <article class="insight-card task-stage-card" data-agent-surface="stages">
                 <div class="card-heading">
                   <h3>Underwriting Stages</h3>
                 </div>
@@ -167,7 +209,7 @@
                 </div>
               </article>
 
-              <article class="insight-card follow-up-card">
+              <article class="insight-card follow-up-card" data-agent-surface="tasks">
                 <div class="card-heading">
                   <h3>Scheduled Tasks <span class="due-dot" id="followUpDueDot" aria-hidden="true"></span></h3>
                 </div>
@@ -175,7 +217,7 @@
                   <label class="sr-only" for="followUpTitle">Task</label>
                   <textarea id="followUpTitle" rows="3" placeholder="Add an underwriting task..."></textarea>
                   <label class="sr-only" for="followUpDate">Due date</label>
-                  <input id="followUpDate" type="date" />
+                  <input id="followUpDate" type="date" min="2000-01-01" max="2100-12-31" />
                   <button class="selection-action" type="submit">Add</button>
                 </form>
                 <div class="follow-up-calendar" id="followUpCalendar"></div>
@@ -186,7 +228,7 @@
             </section>
 
             <section class="panel-view" data-panel-view="note">
-              <article class="insight-card">
+              <article class="insight-card" data-agent-surface="notes">
                 <h3>Notes</h3>
                 <form class="context-form" id="noteForm">
                   <label class="sr-only" for="noteInput">Add note</label>
@@ -206,7 +248,7 @@
     </main>
 
     <div class="guide-popover" id="guidePopover" aria-hidden="true">
-      <article class="insight-card guidance-card header-guide-card">
+      <article class="insight-card guidance-card header-guide-card" data-agent-surface="guide">
         <div class="card-heading">
           <h3>Guide</h3>
           <button class="ghost-button small-ghost-button" id="guideCloseButton" type="button">Close</button>
@@ -224,6 +266,22 @@
       </article>
     </div>
 
+    <div class="sop-review-modal" id="sopReviewModal" aria-hidden="true">
+      <div class="sop-review-backdrop" data-close-sop-review></div>
+      <section class="sop-review-panel" role="dialog" aria-modal="true" aria-labelledby="sopReviewTitle">
+        <header class="sop-review-header">
+          <div>
+            <p class="eyebrow">Underwriting Procedure</p>
+            <h2 id="sopReviewTitle">SOP Review</h2>
+          </div>
+          <button class="ghost-button" id="sopReviewCloseButton" type="button">Close</button>
+        </header>
+        <div class="sop-review-content" id="sopReviewContent">
+          <p class="empty-state">Loading SOP...</p>
+        </div>
+      </section>
+    </div>
+
     <div class="document-modal" id="documentModal" aria-hidden="true">
       <div class="document-modal-backdrop" data-close-document></div>
       <section class="document-modal-panel" role="dialog" aria-modal="true" aria-labelledby="documentModalTitle">
@@ -238,6 +296,9 @@
       </section>
     </div>
 
+    <script src="/js/api.js"></script>
+    <script src="/js/citations.js"></script>
+    <script src="/js/decision-workflow.js"></script>
     <script src="/app.js"></script>
   </body>
 </html>

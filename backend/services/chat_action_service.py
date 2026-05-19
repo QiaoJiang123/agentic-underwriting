@@ -2,8 +2,12 @@ import re
 import time
 from datetime import datetime, timedelta
 
+from backend.services.broker_service import list_brokers
+from backend.services.document_completeness_service import get_document_completeness_record
+from backend.services.underwriting_service import get_underwriting_system_record
 from backend.services.guide_service import get_guide_record, save_guide_record
 from backend.services.note_service import get_note_record, save_note_record
+from backend.services.submission_service import update_submission_metadata_cells
 from backend.services.task_service import get_task_record, save_task_record
 
 
@@ -81,6 +85,61 @@ def run_chat_action(submission_id, prompt):
             "record": record,
         }
 
+    if action_type == "navigate":
+        return {
+            "type": "navigate",
+            "reply": action["reply"],
+            "ui_action": action["ui_action"],
+        }
+
+    if action_type == "update_submission_status":
+        record = update_submission_metadata_cells(submission_id, {"status": action["status"]})
+        return {
+            "type": "submission_update",
+            "reply": f"Updated submission status to {record.get('status', action['status'])}.",
+            "record": record,
+            "ui_action": {"panel": "details", "expand": False},
+        }
+
+    if action_type == "extract_broker":
+        system = get_underwriting_system_record(submission_id)
+        return {
+            "type": "extract",
+            "reply": format_broker_profile(system),
+            "ui_action": {"panel": "details", "expand": True},
+        }
+
+    if action_type == "extract_broker_table":
+        return {
+            "type": "broker_table",
+            "reply": format_broker_table_query(action.get("prompt", "")),
+            "ui_action": {"panel": "details", "expand": True},
+        }
+
+    if action_type == "extract_claims":
+        system = get_underwriting_system_record(submission_id)
+        return {
+            "type": "extract",
+            "reply": format_claim_summary(system),
+            "ui_action": {"panel": "details", "expand": True},
+        }
+
+    if action_type == "extract_evidence":
+        completeness = get_document_completeness_record(submission_id)
+        return {
+            "type": "document_completeness",
+            "reply": format_document_completeness_summary(completeness),
+            "ui_action": {"panel": "details", "expand": True},
+        }
+
+    if action_type == "extract_account":
+        system = get_underwriting_system_record(submission_id)
+        return {
+            "type": "extract",
+            "reply": format_account_snapshot(system),
+            "ui_action": {"panel": "details", "expand": True},
+        }
+
     return None
 
 
@@ -99,6 +158,10 @@ def parse_chat_action(prompt):
         value = clean_action_value(direct_match.group(2))
         return {"type": action_type, "text": value} if value else None
 
+    skill_action = parse_skill_action(normalized, lowered)
+    if skill_action:
+        return skill_action
+
     intent_match = re.search(
         r"\b(?:add|create|save|record)\s+(?:(?:an?|one\s+more|new|scheduled)\s+)?(note|guide|task)\b",
         lowered,
@@ -113,6 +176,111 @@ def parse_chat_action(prompt):
         return None
 
     return {"type": action_type, "text": value}
+
+
+def parse_skill_action(text, lowered):
+    status_update_match = re.search(
+        r"\b(?:set|update|change)\s+(?:the\s+)?(?:submission\s+)?status\s+(?:to|as)\s+(.+)$",
+        text,
+        re.IGNORECASE,
+    )
+    if status_update_match:
+        status = clean_action_value(status_update_match.group(1))
+        if status:
+            return {"type": "update_submission_status", "status": status}
+
+    if is_broker_table_prompt(lowered):
+        return {"type": "extract_broker_table", "prompt": text}
+
+    if re.search(r"\b(?:show|extract|summarize|who\s+is|what\s+is).*\bbroker\b", lowered):
+        return {"type": "extract_broker"}
+
+    if re.search(r"\b(?:show|extract|summarize|review).*\b(claim|claims|loss|losses|loss runs)\b", lowered):
+        return {"type": "extract_claims"}
+
+    if is_document_completeness_prompt(lowered):
+        return {"type": "extract_evidence"}
+
+    if re.search(r"\b(?:missing evidence|required evidence|what is missing|draft broker follow[- ]?up)\b", lowered):
+        return {"type": "extract_evidence"}
+
+    if re.search(r"\b(?:extract|show|summarize).*\b(account|submission|snapshot|overview)\b", lowered):
+        return {"type": "extract_account"}
+
+    navigate_match = re.search(r"\b(?:open|go to|show|navigate to)\s+(analytics|quote|bind|what if|what-if|tasks?|notes?|details|underwriting system)\b", lowered)
+    if navigate_match:
+        destination = navigate_match.group(1)
+        panel = "details"
+        analytics_tab = None
+        expand = True
+
+        if destination in {"analytics", "quote", "bind", "what if", "what-if"}:
+            panel = "analytics"
+            analytics_tab = "what-if" if "what" in destination else destination if destination in {"quote", "bind"} else None
+        elif destination.startswith("task"):
+            panel = "tasks"
+            expand = False
+        elif destination.startswith("note"):
+            panel = "note"
+            expand = False
+        elif destination in {"details", "underwriting system"}:
+            panel = "details"
+
+        label = "Analytics" if panel == "analytics" else "Tasks" if panel == "tasks" else "Note" if panel == "note" else "Underwriting System"
+        return {
+            "type": "navigate",
+            "reply": f"Opening {label}.",
+            "ui_action": {
+                "panel": panel,
+                "expand": expand,
+                "analytics_tab": analytics_tab,
+            },
+        }
+
+    return None
+
+
+def is_broker_table_prompt(lowered):
+    if "broker" not in lowered and "producer" not in lowered and "account manager" not in lowered:
+        return False
+
+    table_terms = [
+        "broker table",
+        "broker database",
+        "broker db",
+        "broker list",
+        "all broker",
+        "all brokers",
+        "compare broker",
+        "compare brokers",
+        "rank broker",
+        "rank brokers",
+        "which broker",
+        "best broker",
+        "worst broker",
+        "top broker",
+        "highest",
+        "lowest",
+        "quote ratio",
+        "bind ratio",
+        "data quality",
+        "response",
+        "fastest",
+        "slowest",
+        "market focus",
+        "service tier",
+        "strategic",
+        "wholesale",
+        "retail",
+        "submissions ytd",
+    ]
+    return any(term in lowered for term in table_terms)
+
+
+def is_document_completeness_prompt(lowered):
+    document_pattern = r"\b(?:documents?|documnts?|documnt|docs?|files?|evidence|filings?)\b"
+    completeness_pattern = r"\b(?:missing|required|requirements?|needed|outstanding|available|submitted|received|provided|checklist|gaps?|complete|completeness)\b"
+    return bool(re.search(document_pattern, lowered) and re.search(completeness_pattern, lowered))
 
 
 def extract_action_text(text, action_type, fallback_start):
@@ -229,6 +397,264 @@ def clean_task_title(text, due_date):
     )
     title = title.replace(due_date, "")
     return re.sub(r"\s+", " ", title).strip(" -:,.")
+
+
+def format_broker_profile(system):
+    broker = system.get("broker") or {}
+    contact = broker.get("submission_contact") or {}
+    metrics = broker.get("relationship_metrics") or {}
+    contacts = broker.get("contacts") or {}
+    producer = contacts.get("producer") or {}
+    account_manager = contacts.get("account_manager") or {}
+
+    if not broker:
+        return "No broker profile is linked to this submission."
+
+    return "\n".join(
+        [
+            f"**Broker:** {broker.get('firm_name', 'TBD')} ({broker.get('broker_type', 'TBD')})",
+            f"- **Service tier:** {broker.get('service_tier', 'TBD')} | **Region:** {broker.get('primary_region', 'TBD')}",
+            f"- **Producer:** {contact.get('producer_name') or producer.get('name', 'TBD')} | {contact.get('producer_email') or producer.get('email', 'TBD')} | {contact.get('producer_phone') or producer.get('phone', 'TBD')}",
+            f"- **Account manager:** {contact.get('account_manager_name') or account_manager.get('name', 'TBD')} | {contact.get('account_manager_email') or account_manager.get('email', 'TBD')}",
+            f"- **Quote ratio:** {format_percent(metrics.get('quote_ratio_12m'))} | **Bind ratio:** {format_percent(metrics.get('bind_ratio_12m'))} | **Data quality:** {metrics.get('data_quality_score', 'TBD')}/100",
+            f"- **Avg response:** {metrics.get('avg_response_hours', 'TBD')} hours | **YTD submissions:** {metrics.get('submissions_ytd', 'TBD')}",
+            f"- **Placement notes:** {broker.get('placement_notes', 'TBD')}",
+            f"- **Submission note:** {contact.get('broker_notes', 'TBD')}",
+        ]
+    )
+
+
+def format_broker_table_query(prompt):
+    brokers = list_brokers()
+    if not brokers:
+        return "**Broker Database**\n- No broker rows are available."
+
+    prompt_text = str(prompt or "").lower()
+    metric_key, metric_label, ascending = resolve_broker_metric(prompt_text)
+    matched = filter_brokers_for_prompt(brokers, prompt_text)
+    ranked = sorted(
+        matched,
+        key=lambda broker: broker_metric_value(broker, metric_key),
+        reverse=not ascending,
+    )
+
+    lines = [
+        "**Broker Database Query**",
+        f"- **Source:** `data/brokers/brokers.json`",
+        f"- **Rows matched:** {len(ranked)} of {len(brokers)}",
+        f"- **Sorted by:** {metric_label} ({'lower is better' if ascending else 'higher is better'})",
+        "",
+        f"**Broker Ranking By {metric_label}**",
+    ]
+
+    for index, broker in enumerate(ranked, start=1):
+        metrics = broker.get("relationship_metrics") or {}
+        contacts = broker.get("contacts") or {}
+        producer = contacts.get("producer") or {}
+        account_manager = contacts.get("account_manager") or {}
+        lines.extend(
+            [
+                f"{index}. **{broker.get('firm_name', 'TBD')}** - {metric_label}: {format_broker_metric(metric_key, metrics.get(metric_key))}",
+                f"- Tier: {broker.get('service_tier', 'TBD')} | Type: {broker.get('broker_type', 'TBD')} | Region: {broker.get('primary_region', 'TBD')}",
+                f"- Quote ratio: {format_percent(metrics.get('quote_ratio_12m'))} | Bind ratio: {format_percent(metrics.get('bind_ratio_12m'))} | Data quality: {metrics.get('data_quality_score', 'TBD')}/100 | Avg response: {metrics.get('avg_response_hours', 'TBD')}h | YTD submissions: {metrics.get('submissions_ytd', 'TBD')}",
+                f"- Producer: {producer.get('name', 'TBD')} | {producer.get('email', 'TBD')}",
+                f"- Account manager: {account_manager.get('name', 'TBD')} | {account_manager.get('email', 'TBD')}",
+                f"- Market focus: {', '.join(broker.get('market_focus') or []) or 'TBD'}",
+                f"- Notes: {broker.get('placement_notes', 'TBD')}",
+            ]
+        )
+
+    if len(ranked) < len(brokers):
+        lines.append("")
+        lines.append("Filtered rows came from service tier, broker type, region, or market-focus terms in the prompt.")
+
+    return "\n".join(lines)
+
+
+def filter_brokers_for_prompt(brokers, prompt_text):
+    filtered = []
+    for broker in brokers:
+        searchable = " ".join(
+            [
+                broker.get("firm_name", ""),
+                broker.get("broker_type", ""),
+                broker.get("branch", ""),
+                broker.get("primary_region", ""),
+                broker.get("service_tier", ""),
+                " ".join(broker.get("market_focus") or []),
+                " ".join(broker.get("communication_preferences") or []),
+            ]
+        ).lower()
+        if any(term in searchable for term in broker_filter_terms(prompt_text)):
+            filtered.append(broker)
+
+    return filtered or brokers
+
+
+def broker_filter_terms(prompt_text):
+    terms = []
+    for candidate in [
+        "strategic",
+        "core",
+        "development",
+        "retail",
+        "wholesale",
+        "northeast",
+        "midwest",
+        "national",
+        "west",
+        "food",
+        "hospitality",
+        "cyber",
+        "technology",
+        "construction",
+        "manufacturing",
+        "healthcare",
+        "education",
+        "public entity",
+        "marina",
+        "recreation",
+        "saas",
+        "fintech",
+        "api",
+        "privacy",
+        "pharmacy",
+    ]:
+        if candidate in prompt_text:
+            terms.append(candidate)
+    return terms
+
+
+def resolve_broker_metric(prompt_text):
+    if "bind" in prompt_text or "bound" in prompt_text:
+        return "bind_ratio_12m", "Bind ratio", False
+    if "quote" in prompt_text or "quoted" in prompt_text:
+        return "quote_ratio_12m", "Quote ratio", False
+    if "response" in prompt_text or "fastest" in prompt_text or "slowest" in prompt_text or "turnaround" in prompt_text:
+        return "avg_response_hours", "Average response hours", True
+    if "submission" in prompt_text or "volume" in prompt_text or "pipeline" in prompt_text:
+        return "submissions_ytd", "YTD submissions", False
+    if "year" in prompt_text or "tenure" in prompt_text or "relationship age" in prompt_text:
+        return "years_active", "Years active", False
+    return "data_quality_score", "Data quality score", False
+
+
+def broker_metric_value(broker, metric_key):
+    metrics = broker.get("relationship_metrics") or {}
+    try:
+        return float(metrics.get(metric_key) or 0)
+    except (TypeError, ValueError):
+        return 0
+
+
+def format_broker_metric(metric_key, value):
+    if metric_key in {"quote_ratio_12m", "bind_ratio_12m"}:
+        return format_percent(value)
+    if metric_key == "avg_response_hours":
+        return f"{format_int(value)}h"
+    if metric_key == "data_quality_score":
+        return f"{format_int(value)}/100"
+    return format_int(value)
+
+
+def format_claim_summary(system):
+    snapshot = system.get("claim_snapshot") or {}
+    claims = system.get("claims") or []
+    lines = [
+        "**Historical Claim Information**",
+        f"- **Total claims:** {snapshot.get('total_claims', 0)} | **Open:** {snapshot.get('open_claims', 0)} | **Incurred:** {format_currency(snapshot.get('total_incurred', 0))}",
+        f"- **Latest loss date:** {snapshot.get('latest_loss_date') or 'TBD'}",
+    ]
+    for claim in claims[:5]:
+        lines.append(
+            f"- **{claim.get('claim_id', 'Claim')}:** {claim.get('loss_date', 'TBD')} | "
+            f"{format_label(claim.get('claim_type'))} | {format_label(claim.get('status'))} | "
+            f"{format_currency(claim.get('amount_paid', 0))} paid, {format_currency(claim.get('amount_reserved', 0))} reserved"
+        )
+    return "\n".join(lines)
+
+
+def format_document_completeness_summary(record):
+    missing = record.get("missing_required_documents") or []
+    received = record.get("received_required_documents") or []
+    submitted = record.get("submitted_documents") or []
+    lines = [
+        "**Document Completeness Review**",
+        f"- **Required source:** {record.get('requirement_source', 'Stored cyber requirement map')}",
+        f"- **Required categories received:** {record.get('received_count', len(received))}/{record.get('required_count', len(received) + len(missing))}",
+        f"- **Submitted files reviewed:** {record.get('submitted_count', len(submitted))}",
+    ]
+    if missing:
+        lines.append("")
+        lines.append("**Missing required documents**")
+        lines.extend(f"- {item.get('label', 'Evidence')}" for item in missing)
+        lines.append("")
+        lines.append("**Broker follow-up**")
+        lines.append("Please provide " + ", ".join(item.get("label", "evidence") for item in missing[:6]) + ".")
+    else:
+        lines.append("- **Missing required documents:** None based on the current required document map.")
+
+    if received:
+        lines.append("")
+        lines.append("**Received required documents**")
+        for item in received:
+            files = ", ".join(item.get("source_files") or [])
+            lines.append(f"- {item.get('label', 'Evidence')}: {files or 'matched in metadata'}")
+
+    if submitted:
+        lines.append("")
+        lines.append("**Submitted file metadata reviewed**")
+        for document in submitted[:12]:
+            lines.append(f"- `{document.get('file_name', 'document')}`: {document.get('description') or document.get('file_type') or 'document'}")
+
+    return "\n".join(lines)
+
+
+def format_account_snapshot(system):
+    submission_id = system.get("submission_id", "")
+    broker = system.get("broker") or {}
+    appetite = system.get("appetite") or {}
+    claim_snapshot = system.get("claim_snapshot") or {}
+    evidence = system.get("evidence_status") or []
+    available = len([item for item in evidence if item.get("status") == "available"])
+    actions = system.get("recommended_actions") or []
+
+    return "\n".join(
+        [
+            f"**Account Snapshot:** {submission_id}",
+            f"- **Appetite:** {appetite.get('status', 'TBD')} - {appetite.get('rationale', 'TBD')}",
+            f"- **Broker:** {broker.get('firm_name', 'TBD')} | {broker.get('service_tier', 'TBD')}",
+            f"- **Claims:** {claim_snapshot.get('total_claims', 0)} total, {claim_snapshot.get('open_claims', 0)} open, {format_currency(claim_snapshot.get('total_incurred', 0))} incurred",
+            f"- **Evidence:** {available}/{len(evidence)} required categories available",
+            f"- **Next action:** {actions[0] if actions else 'Prepare terms after document review.'}",
+        ]
+    )
+
+
+def format_currency(value):
+    try:
+        return f"${float(value or 0):,.0f}"
+    except (TypeError, ValueError):
+        return "$0"
+
+
+def format_percent(value):
+    try:
+        return f"{float(value or 0) * 100:.0f}%"
+    except (TypeError, ValueError):
+        return "TBD"
+
+
+def format_int(value):
+    try:
+        return f"{int(float(value or 0)):,}"
+    except (TypeError, ValueError):
+        return "0"
+
+
+def format_label(value):
+    words = str(value or "TBD").replace("_", " ").replace("-", " ").split()
+    return " ".join(word[:1].upper() + word[1:] for word in words)
 
 
 def utc_now():

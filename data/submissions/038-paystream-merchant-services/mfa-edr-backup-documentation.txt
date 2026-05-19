@@ -1,0 +1,31 @@
+MFA, EDR, and backup control documentation
+
+Insured: PayStream Merchant Services Inc.
+Submission ID: 038-paystream-merchant-services
+Industry: Merchant services provider
+Industry benchmark bucket: Fintech / Payments
+Revenue: $99,000,000
+Employees: 390
+Records: 3,100,000
+Technology profile: Payment gateway, merchant portal, API platform, PCI environment, fraud analytics
+
+Security controls:
+- mfa: Phishing-resistant MFA for privileged users and SSO MFA for all employees
+- edr: CrowdStrike with 24/7 MDR coverage
+- backup: Immutable backups with monthly restore testing
+- patching: Critical patches within 7 days
+- security_training: Annual employee training plus phishing simulations
+
+Claims history:
+2023-03-08 | payment_card_incident | closed | paid $28,100 | reserve $0
+2022-01-11 | service_outage | closed | paid $80,000 | reserve $0
+
+Risk flags:
+- Large privacy record count
+- Material third-party or portal dependency
+- PCI and payment card exposure
+
+Open questions:
+- Confirm most recent backup restore test date.
+- Provide latest vulnerability scan executive summary.
+- Request PCI ROC or most recent attestation summary.

@@ -1,0 +1,33 @@
+Financial information and revenue breakdown
+
+Insured: Summit Fintech Payments LLC
+Submission ID: 008-summit-fintech-payments
+Industry: Payment processing and fintech services
+Revenue: $73,500,000
+Employees: 310
+Records: 2,100,000
+Technology profile: Payment gateway, API platform, Kubernetes, AWS, fraud analytics, customer support portal
+
+Security controls:
+- mfa: Phishing-resistant MFA for privileged users and SSO MFA for all employees
+- edr: CrowdStrike complete coverage with 24/7 MDR
+- backup: Immutable backups with monthly restore tests
+- patching: Critical patches within 7 days
+- security_training: Quarterly secure coding and phishing simulations
+
+Claims history:
+2025-06-03 | service_outage | closed | paid $56,000 | reserve $0
+
+Risk flags:
+- High transaction dependency
+- API aggregation exposure
+- Large records count
+
+Open questions:
+- Request PCI ROC summary.
+- Confirm API rate limit monitoring.
+- Clarify customer contract limitation of liability.
+
+Revenue breakdown:
+- Core operations are the primary revenue source unless otherwise stated.
+- Annual revenue: 73500000

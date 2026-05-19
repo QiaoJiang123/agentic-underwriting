@@ -1,0 +1,29 @@
+Ransomware supplemental application
+
+Insured: Evergreen Legal Advisors LLP
+Submission ID: 020-evergreen-legal-advisors
+Industry: Regional law firm
+Industry benchmark bucket: Professional Services
+Revenue: $62,800,000
+Employees: 240
+Records: 580,000
+Technology profile: Document management system, client portal, e-discovery platform, Microsoft 365, VPN
+
+Security controls:
+- mfa: Enabled for email, VPN, and privileged users
+- edr: Microsoft Defender for Endpoint deployed on managed endpoints
+- backup: Daily backups with quarterly restore testing
+- patching: Critical patches within 30 days with exception tracking
+- security_training: Annual employee training
+
+Claims history:
+No cyber claims reported in the linked loss period.
+
+Risk flags:
+- Large privacy record count
+- Material third-party or portal dependency
+
+Open questions:
+- Confirm most recent backup restore test date.
+- Provide latest vulnerability scan executive summary.
+- Clarify critical vendor incident notification obligations.

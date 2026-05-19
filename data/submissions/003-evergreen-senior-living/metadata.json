@@ -4,7 +4,7 @@
   "line_of_business": "Cyber liability",
   "file_created_at": "2026-04-23T08:41:00-04:00",
   "received_at": "2026-04-23T12:15:00-04:00",
-  "updated_at": "2026-05-12T09:00:00-04:00",
+  "updated_at": "2026-05-19T12:00:00-04:00",
   "status": "Referral Needed",
   "applicant": {
     "insured_name": "Evergreen Senior Living Partners LP",
@@ -13,7 +13,9 @@
     "annual_revenue": 12900000,
     "employee_count": 214,
     "records_count": 11800,
-    "technology_profile": "Electronic health records, eMAR, resident billing, HRIS, Wi-Fi connected medical devices"
+    "technology_profile": "Electronic health records, eMAR, resident billing, HRIS, Wi-Fi connected medical devices",
+    "industry_bucket": "Healthcare / Pharmacy",
+    "industry_group": "Healthcare / Pharmacy"
   },
   "coverage": {
     "lines_requested": [
@@ -322,5 +324,20 @@
       "underwriting_review": "Underwriting Review"
     },
     "note": "document_types and major_categories are arrays because one document can support multiple underwriting uses."
+  },
+  "broker": {
+    "broker_id": "brk-harbor-specialty",
+    "firm_name": "Harbor Specialty Brokerage",
+    "producer_name": "Nora Walsh",
+    "producer_email": "nora.walsh@harborspecialty.example",
+    "producer_phone": "617-555-0116",
+    "account_manager_name": "Leo Martinez",
+    "account_manager_email": "leo.martinez@harborspecialty.example",
+    "account_manager_phone": "617-555-0130",
+    "relationship_type": "Broker submission",
+    "submission_channel": "Broker portal",
+    "target_quote_date": "2026-07-01",
+    "broker_priority": "Core",
+    "broker_notes": "Harbor Specialty Brokerage assigned based on Healthcare / Pharmacy appetite and market focus."
   }
 }

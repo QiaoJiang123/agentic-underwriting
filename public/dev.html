@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Developer Tools</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body class="search-body dev-body">
+    <a class="ghost-button dev-nav-button" href="/">Back</a>
+    <main class="dev-shell">
+      <section class="dev-panel" aria-label="Developer console">
+        <header class="search-header dev-header">
+          <div class="brand-mark">AU</div>
+          <div>
+            <p class="eyebrow">Developer Console</p>
+            <h1>Data Support And Agent Workflow</h1>
+          </div>
+        </header>
+
+        <section class="dev-overview-grid" id="devOverviewGrid" aria-label="Developer overview">
+          <article class="dev-overview-card">
+            <span>Submissions</span>
+            <strong>--</strong>
+          </article>
+          <article class="dev-overview-card">
+            <span>Brokers</span>
+            <strong>--</strong>
+          </article>
+          <article class="dev-overview-card">
+            <span>Claims</span>
+            <strong>--</strong>
+          </article>
+          <article class="dev-overview-card">
+            <span>Agent Skills</span>
+            <strong>--</strong>
+          </article>
+        </section>
+
+        <section class="dev-console-card">
+          <div class="dev-console-toolbar">
+            <div class="dev-tabs" role="tablist" aria-label="Developer sections">
+              <button class="dev-tab active" type="button" role="tab" aria-selected="true" data-dev-tab="support">
+                Data Support
+              </button>
+              <button class="dev-tab" type="button" role="tab" aria-selected="false" data-dev-tab="delete">
+                Delete Submission
+              </button>
+              <button class="dev-tab" type="button" role="tab" aria-selected="false" data-dev-tab="brokers">
+                Broker Information
+              </button>
+              <button class="dev-tab" type="button" role="tab" aria-selected="false" data-dev-tab="claims">
+                Claim Information
+              </button>
+              <button class="dev-tab" type="button" role="tab" aria-selected="false" data-dev-tab="workflow">
+                Agent Skills Workflow
+              </button>
+            </div>
+            <label class="sr-only" for="devDataSearch">Search developer console data</label>
+            <input
+              class="dev-search-input dev-console-search"
+              id="devDataSearch"
+              type="search"
+              autocomplete="off"
+              placeholder="Search submissions, brokers, claims, skills, or data stores..."
+            />
+          </div>
+
+          <section class="dev-tab-panel active" data-dev-panel="support" role="tabpanel">
+            <div class="dev-tool-heading">
+              <div>
+                <p class="eyebrow">Data Support</p>
+                <h2>Application Data Stores</h2>
+              </div>
+              <span id="devDataSourceCount">Loading</span>
+            </div>
+            <p class="dev-muted-copy">
+              These are the local demo stores that support search, chat retrieval, underwriting workbench,
+              analytics, tasks, SOP, broker context, claims, and workflow state.
+            </p>
+            <div class="dev-source-grid" id="devDataSourceGrid" aria-live="polite">
+              <p class="empty-state">Loading data stores...</p>
+            </div>
+          </section>
+
+          <section class="dev-tab-panel" data-dev-panel="delete" role="tabpanel" hidden>
+            <div class="dev-tool-heading">
+              <div>
+                <p class="eyebrow">Delete Submissions</p>
+                <h2>Complete Removal</h2>
+              </div>
+              <span id="devSubmissionCount">Loading</span>
+            </div>
+            <p class="dev-warning-copy">
+              This area is for demo data maintenance. Deleting a submission removes its folder,
+              documents, chat history, notes, guides, tasks, stages, claims, underwriting data,
+              decision workflow, and search index entry.
+            </p>
+
+            <div class="dev-delete-list" id="devDeleteList" aria-live="polite">
+              <p class="empty-state">Loading submissions...</p>
+            </div>
+          </section>
+
+          <section class="dev-tab-panel" data-dev-panel="brokers" role="tabpanel" hidden>
+            <div class="dev-tool-heading">
+              <div>
+                <p class="eyebrow">Broker Information</p>
+                <h2>Broker Database</h2>
+              </div>
+              <span id="devBrokerCount">Loading</span>
+            </div>
+            <div class="dev-table-wrap" id="devBrokerTable" aria-live="polite">
+              <p class="empty-state">Loading broker information...</p>
+            </div>
+          </section>
+
+          <section class="dev-tab-panel" data-dev-panel="claims" role="tabpanel" hidden>
+            <div class="dev-tool-heading">
+              <div>
+                <p class="eyebrow">Claim Information</p>
+                <h2>Linked Claim System</h2>
+              </div>
+              <span id="devClaimCount">Loading</span>
+            </div>
+            <div class="dev-claim-summary" id="devClaimSummary" aria-label="Claim summary"></div>
+            <div class="dev-claim-list" id="devClaimList" aria-live="polite">
+              <p class="empty-state">Loading claim information...</p>
+            </div>
+          </section>
+
+          <section class="dev-tab-panel" data-dev-panel="workflow" role="tabpanel" hidden>
+            <div class="dev-tool-heading">
+              <div>
+                <p class="eyebrow">Agent Skills Workflow</p>
+                <h2>Centralized Information Agent</h2>
+              </div>
+              <span id="devSkillCount">Loading</span>
+            </div>
+            <div id="devWorkflowVisual" aria-live="polite">
+              <p class="empty-state">Loading agent workflow...</p>
+            </div>
+          </section>
+        </section>
+
+      </section>
+    </main>
+
+    <script src="/js/api.js"></script>
+    <script src="/dev.js"></script>
+  </body>
+</html>

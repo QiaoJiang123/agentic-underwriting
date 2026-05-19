@@ -1,0 +1,31 @@
+IT and security controls questionnaire
+
+Insured: CloudNest HR Platform Inc.
+Submission ID: 034-cloudnest-hr-platform
+Industry: Human resources SaaS
+Industry benchmark bucket: SaaS / Software
+Revenue: $58,500,000
+Employees: 260
+Records: 1,550,000
+Technology profile: HR SaaS platform, payroll integrations, API gateway, SOC 2 control environment
+
+Security controls:
+- mfa: Phishing-resistant MFA for privileged users and SSO MFA for all employees
+- edr: CrowdStrike with 24/7 MDR coverage
+- backup: Immutable backups with monthly restore testing
+- patching: Critical patches within 7 days
+- security_training: Annual employee training plus phishing simulations
+
+Claims history:
+2022-12-19 | privacy_incident | open | paid $19,600 | reserve $30,900
+2025-08-03 | privacy_incident | closed | paid $19,000 | reserve $0
+2024-02-11 | payment_card_incident | closed | paid $25,100 | reserve $0
+
+Risk flags:
+- Large privacy record count
+- Material third-party or portal dependency
+
+Open questions:
+- Confirm most recent backup restore test date.
+- Provide latest vulnerability scan executive summary.
+- Request SOC 2 bridge letter and customer incident SLA.

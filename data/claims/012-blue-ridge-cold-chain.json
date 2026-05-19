@@ -1,0 +1,35 @@
+{
+  "submission_id": "012-blue-ridge-cold-chain",
+  "claim_system": "dummy_claims_core",
+  "updated_at": "2026-05-19T12:00:00-04:00",
+  "claims": [
+    {
+      "claim_id": "CLM-BLUERIDG-2022-001",
+      "loss_date": "2022-10-14",
+      "reported_date": "2022-10-15",
+      "status": "closed",
+      "claim_type": "business_email_compromise",
+      "coverage_area": "cyber_crime",
+      "severity": "moderate",
+      "amount_paid": 31000,
+      "amount_reserved": 0,
+      "cause": "Compromised mailbox used in a fraudulent payment attempt.",
+      "description": "Business Email Compromise was closed after remediation was documented; costs include forensic, legal, notification, recovery, or customer credit expenses as applicable.",
+      "recovery_status": "not_applicable"
+    },
+    {
+      "claim_id": "CLM-BLUERIDG-2024-002",
+      "loss_date": "2024-10-07",
+      "reported_date": "2024-10-10",
+      "status": "closed",
+      "claim_type": "privacy_incident",
+      "coverage_area": "privacy_liability",
+      "severity": "low",
+      "amount_paid": 12600,
+      "amount_reserved": 0,
+      "cause": "Limited customer information was disclosed to an unauthorized recipient.",
+      "description": "Privacy Incident was closed after remediation was documented; costs include forensic, legal, notification, recovery, or customer credit expenses as applicable.",
+      "recovery_status": "remediated"
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+Prior cyber insurance policy and expiring coverage terms
+
+Insured: Nova Managed Services LLC
+Submission ID: 050-nova-managed-services
+Industry: Managed IT services provider
+Industry benchmark bucket: Professional Services
+Revenue: $68,200,000
+Employees: 295
+Records: 410,000
+Technology profile: RMM platform, client ticketing, privileged access tooling, backup management portal, Microsoft 365
+
+Security controls:
+- mfa: Enabled for email, VPN, and privileged users
+- edr: Microsoft Defender for Endpoint deployed on managed endpoints
+- backup: Daily backups with quarterly restore testing
+- patching: Critical patches within 30 days with exception tracking
+- security_training: Annual employee training plus phishing simulations
+
+Claims history:
+No cyber claims reported in the linked loss period.
+
+Risk flags:
+- Material third-party or portal dependency
+
+Open questions:
+- Confirm most recent backup restore test date.
+- Provide latest vulnerability scan executive summary.
+- Clarify critical vendor incident notification obligations.
+
+Expiring retention: $50,000
+Prior carrier terms are provided for comparison only.

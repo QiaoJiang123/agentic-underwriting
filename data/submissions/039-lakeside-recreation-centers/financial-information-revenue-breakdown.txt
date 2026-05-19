@@ -1,0 +1,31 @@
+Financial information and revenue breakdown
+
+Insured: Lakeside Recreation Centers LLC
+Submission ID: 039-lakeside-recreation-centers
+Industry: Family recreation centers
+Industry benchmark bucket: Marina / Recreation
+Revenue: $28,400,000
+Employees: 220
+Records: 85,000
+Technology profile: Membership platform, online booking, POS terminals, guest Wi-Fi, Microsoft 365
+
+Security controls:
+- mfa: Enabled for email, VPN, and privileged users
+- edr: Microsoft Defender for Endpoint deployed on managed endpoints
+- backup: Daily backups with quarterly restore testing
+- patching: Critical patches within 14 days
+- security_training: Annual employee training plus phishing simulations
+
+Claims history:
+2023-03-24 | privacy_incident | closed | paid $29,000 | reserve $0
+
+Risk flags:
+
+Open questions:
+- Confirm most recent backup restore test date.
+- Provide latest vulnerability scan executive summary.
+- Clarify critical vendor incident notification obligations.
+
+Revenue breakdown:
+- Core operations are the primary revenue source unless otherwise stated.
+- Annual revenue: $28,400,000

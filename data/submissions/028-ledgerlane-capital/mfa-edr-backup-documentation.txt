@@ -1,0 +1,30 @@
+MFA, EDR, and backup control documentation
+
+Insured: LedgerLane Capital LLC
+Submission ID: 028-ledgerlane-capital
+Industry: Digital lending and payments platform
+Industry benchmark bucket: Fintech / Payments
+Revenue: $126,000,000
+Employees: 465
+Records: 2,400,000
+Technology profile: Loan origination system, payment APIs, fraud analytics, cloud data lake, customer portal
+
+Security controls:
+- mfa: Phishing-resistant MFA for privileged users and SSO MFA for all employees
+- edr: CrowdStrike with 24/7 MDR coverage
+- backup: Daily backups; last restore test was more than six months ago
+- patching: Critical patches within 7 days
+- security_training: Annual employee training
+
+Claims history:
+2025-02-18 | payment_card_incident | open | paid $175,900 | reserve $34,800
+
+Risk flags:
+- Large privacy record count
+- Material third-party or portal dependency
+- PCI and payment card exposure
+
+Open questions:
+- Confirm most recent backup restore test date.
+- Provide latest vulnerability scan executive summary.
+- Request PCI ROC or most recent attestation summary.

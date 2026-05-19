@@ -1,0 +1,177 @@
+{
+  "version": "0.1-demo",
+  "description": "Local chat skills for extraction and navigation inside the underwriting workspace.",
+  "skills": [
+    {
+      "skill_id": "extract_broker_profile",
+      "label": "Extract Broker Profile",
+      "trigger_examples": [
+        "show broker",
+        "who is the broker",
+        "extract broker information"
+      ],
+      "action_type": "extract",
+      "output": "Broker firm, contacts, service tier, response metrics, data quality, and submission-specific notes."
+    },
+    {
+      "skill_id": "retrieve_broker_database_table",
+      "label": "Retrieve Broker Database Table",
+      "trigger_examples": [
+        "show broker table",
+        "compare brokers by bind ratio",
+        "which broker has the highest data quality",
+        "which brokers focus on fintech"
+      ],
+      "action_type": "retrieve",
+      "data_source": "data/brokers/brokers.json",
+      "output": "Broker table rows, contacts, service tier, market focus, quote ratio, bind ratio, response speed, data quality, and placement notes."
+    },
+    {
+      "skill_id": "extract_account_snapshot",
+      "label": "Extract Account Snapshot",
+      "trigger_examples": [
+        "extract account summary",
+        "show account snapshot",
+        "summarize this submission"
+      ],
+      "action_type": "extract",
+      "output": "Applicant, coverage request, broker, claim summary, evidence readiness, and next action."
+    },
+    {
+      "skill_id": "extract_claim_history",
+      "label": "Extract Claim History",
+      "trigger_examples": [
+        "show claims",
+        "extract claim history",
+        "summarize loss runs"
+      ],
+      "action_type": "extract",
+      "output": "Claim count, open claim count, incurred loss, severity mix, and claim details."
+    },
+    {
+      "skill_id": "extract_missing_evidence",
+      "label": "Extract Missing Evidence",
+      "trigger_examples": [
+        "what is missing",
+        "what documents are missing",
+        "which required documents are outstanding",
+        "extract missing evidence",
+        "draft broker follow up"
+      ],
+      "action_type": "extract",
+      "data_sources": [
+        "data/document_requirements/cyber_required_documents.json",
+        "data/submissions/<submission_id>/metadata.json"
+      ],
+      "output": "Required document checklist, submitted file metadata, missing required documents, received required documents, and broker-ready follow-up wording."
+    },
+    {
+      "skill_id": "retrieve_document_completeness",
+      "label": "Retrieve Document Completeness",
+      "trigger_examples": [
+        "what documents are missing here",
+        "compare required documents to submitted documents",
+        "show received vs missing files"
+      ],
+      "action_type": "retrieve",
+      "data_sources": [
+        "data/document_requirements/cyber_required_documents.json",
+        "data/submissions/<submission_id>/metadata.json"
+      ],
+      "output": "Compares the required cyber document categories against submitted document metadata and returns received, missing, and unmapped files."
+    },
+    {
+      "skill_id": "retrieve_relevant_documents",
+      "label": "Retrieve Relevant Documents",
+      "trigger_examples": [
+        "what does the application say about MFA",
+        "review the loss runs",
+        "pull documents for backup evidence"
+      ],
+      "action_type": "retrieve",
+      "output": "Selects and reads relevant submission files based on prompt intent and current file selection."
+    },
+    {
+      "skill_id": "retrieve_analytics_models",
+      "label": "Retrieve Analytics And Models",
+      "trigger_examples": [
+        "why is quote probability high",
+        "show model drivers",
+        "what is the industry propensity benchmark"
+      ],
+      "action_type": "retrieve",
+      "output": "Pulls quote, bind, supplemental GLM, and industry propensity model results with top drivers."
+    },
+    {
+      "skill_id": "retrieve_operating_context",
+      "label": "Retrieve Operating Context",
+      "trigger_examples": [
+        "what are the open tasks",
+        "what notes exist",
+        "what stage are we in"
+      ],
+      "action_type": "retrieve",
+      "output": "Pulls notes, guide instructions, scheduled tasks, and underwriting stage state as needed."
+    },
+    {
+      "skill_id": "retrieve_submission_current_status",
+      "label": "Retrieve Submission Current Status",
+      "trigger_examples": [
+        "what is the current status",
+        "where are we on this submission",
+        "give me a status update"
+      ],
+      "action_type": "retrieve",
+      "output": "Pulls metadata status, appetite, evidence readiness, claims, open tasks, stage progress, and locked-stage state."
+    },
+    {
+      "skill_id": "retrieve_sop_guidance",
+      "label": "Retrieve SOP Guidance",
+      "trigger_examples": [
+        "what does SOP suggest",
+        "what procedure applies",
+        "what should I do next based on SOP"
+      ],
+      "action_type": "retrieve",
+      "data_sources": [
+        "data/sop/metadata.json",
+        "data/sop/cyber_underwriting_sop.json"
+      ],
+      "output": "Uses SOP metadata to select relevant SOP steps, then pulls the matching SOP goals, templates, rationale, and related underwriting step labels."
+    },
+    {
+      "skill_id": "retrieve_workflow_stage_status",
+      "label": "Retrieve Workflow Stage Status",
+      "trigger_examples": [
+        "what stage are we in",
+        "what is the next stage",
+        "which stages are locked"
+      ],
+      "action_type": "retrieve",
+      "output": "Pulls underwriting stage checks, current or next stage, and submitted locked-stage information."
+    },
+    {
+      "skill_id": "retrieve_submission_update_history",
+      "label": "Retrieve Submission Update History",
+      "trigger_examples": [
+        "what changed recently",
+        "show status update history",
+        "what submission updates were made"
+      ],
+      "action_type": "retrieve",
+      "output": "Pulls submission timeline and metadata update events from the submission record."
+    },
+    {
+      "skill_id": "navigate_workspace",
+      "label": "Navigate Workspace",
+      "trigger_examples": [
+        "open analytics",
+        "go to tasks",
+        "show note",
+        "open underwriting system"
+      ],
+      "action_type": "navigate",
+      "output": "Switches the visible workspace panel and expands the correct view where useful."
+    }
+  ]
+}

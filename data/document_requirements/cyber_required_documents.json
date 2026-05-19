@@ -1,0 +1,66 @@
+{
+  "requirement_set_id": "commercial_cyber_required_documents",
+  "version": "0.1-demo",
+  "line_of_business": "Cyber liability",
+  "source": "Seeded from the Add Submission checklist and the 50-company sample submission portfolio metadata.",
+  "matching_fields": [
+    "file_name",
+    "file_type",
+    "category",
+    "description",
+    "document_types",
+    "major_categories"
+  ],
+  "required_documents": [
+    {
+      "key": "cyber_application",
+      "label": "Cyber application",
+      "aliases": ["cyber_application", "submission_form", "cyber application", "cyber-application"]
+    },
+    {
+      "key": "ransomware_supplemental_application",
+      "label": "Ransomware supplemental application",
+      "aliases": ["ransomware_supplemental_application", "ransomware supplement", "ransomware-supplemental-application"]
+    },
+    {
+      "key": "prior_cyber_insurance_policy",
+      "label": "Prior cyber insurance policy",
+      "aliases": ["prior_cyber_insurance_policy", "prior policy", "expiring policy", "policy_form", "prior-cyber-insurance-policy"]
+    },
+    {
+      "key": "loss_runs_claims_history",
+      "label": "Loss runs / claims history",
+      "aliases": ["loss_runs", "claims_history", "loss runs", "loss run", "claims history", "loss-runs-claims-history"]
+    },
+    {
+      "key": "financial_information_revenue_breakdown",
+      "label": "Financial information or revenue breakdown",
+      "aliases": ["financial_information", "revenue_breakdown", "financial information", "revenue breakdown", "financial-information-revenue-breakdown"]
+    },
+    {
+      "key": "it_security_controls_questionnaire",
+      "label": "IT/security controls questionnaire",
+      "aliases": ["it_security_controls_questionnaire", "security_questionnaire", "controls questionnaire", "security questionnaire", "it-security-controls-questionnaire"]
+    },
+    {
+      "key": "mfa_edr_backup_documentation",
+      "label": "MFA/EDR/backup documentation",
+      "aliases": ["mfa_documentation", "edr_documentation", "backup_documentation", "mfa edr backup", "mfa-edr-backup-documentation"]
+    },
+    {
+      "key": "incident_response_plan",
+      "label": "Incident response plan",
+      "aliases": ["incident_response_plan", "incident response", "ir plan", "incident-response-plan"]
+    },
+    {
+      "key": "vendor_security_assessment",
+      "label": "Vendor/security assessment",
+      "aliases": ["vendor_security_assessment", "third_party_risk_assessment", "vendor assessment", "security assessment", "vendor-security-assessment"]
+    },
+    {
+      "key": "compliance_documents",
+      "label": "Compliance documents",
+      "aliases": ["compliance_documentation", "compliance documents", "soc 2", "hipaa", "pci", "compliance-documents"]
+    }
+  ]
+}

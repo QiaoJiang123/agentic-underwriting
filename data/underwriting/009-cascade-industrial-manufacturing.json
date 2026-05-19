@@ -1,0 +1,127 @@
+{
+  "submission_id": "009-cascade-industrial-manufacturing",
+  "updated_at": "2026-05-19T14:11:10.486638Z",
+  "source": "demo_underwriting_workbench",
+  "maintenance_note": "Edit components or claim_review here to customize the Underwriting System page for this submission. Evidence, signals, appetite, and claim rows are still calculated by the Python backend from submission metadata and claims data.",
+  "components": [
+    {
+      "name": "Intake & Eligibility",
+      "status": "Proceed with conditions",
+      "tone": "watch",
+      "owner": "Underwriting",
+      "stage": "Intake",
+      "data_sources": [
+        "submission metadata",
+        "coverage request",
+        "appetite rules"
+      ],
+      "detail": "The account may be workable, but claims or control gaps should drive terms and subjectivities."
+    },
+    {
+      "name": "Evidence Review",
+      "status": "Complete",
+      "tone": "good",
+      "owner": "Underwriting Assistant",
+      "stage": "Document Review",
+      "data_sources": [
+        "document metadata",
+        "required evidence map"
+      ],
+      "detail": "Core cyber underwriting evidence is available for review."
+    },
+    {
+      "name": "Controls Review",
+      "status": "Review",
+      "tone": "watch",
+      "owner": "Cyber Risk",
+      "stage": "Risk Review",
+      "data_sources": [
+        "security controls",
+        "risk flags",
+        "questionnaires"
+      ],
+      "detail": "Claim history, MFA maturity, Evidence readiness"
+    },
+    {
+      "name": "Claim Review",
+      "status": "0 claims",
+      "tone": "good",
+      "owner": "Claims Liaison",
+      "stage": "Loss Review",
+      "data_sources": [
+        "dummy_claims_core",
+        "loss runs"
+      ],
+      "detail": "0 open and $0 total incurred in linked historical claims."
+    },
+    {
+      "name": "Pricing & Terms",
+      "status": "Model-ready",
+      "tone": "good",
+      "owner": "Pricing",
+      "stage": "Terms",
+      "data_sources": [
+        "quote_prob",
+        "bind_prob",
+        "feature metadata"
+      ],
+      "detail": "Quote and bind probability models are available in the Analytic Dashboard."
+    },
+    {
+      "name": "Authority & Next Action",
+      "status": "Standard Underwriter",
+      "tone": "watch",
+      "owner": "Underwriting Manager",
+      "stage": "Authority",
+      "data_sources": [
+        "appetite result",
+        "recommended actions"
+      ],
+      "detail": "Draft subjectivities tied to MFA, backups, and claim-control remediation."
+    },
+    {
+      "name": "System Coverage",
+      "status": "5/5 inputs",
+      "tone": "good",
+      "owner": "Platform",
+      "stage": "System",
+      "data_sources": [
+        "submission documents",
+        "notes",
+        "guides",
+        "models",
+        "claims"
+      ],
+      "detail": "Submission documents, metadata, notes, guides, models, and claims are connected for review."
+    },
+    {
+      "name": "Broker Relationship",
+      "status": "Core",
+      "tone": "watch",
+      "owner": "Broker Management",
+      "stage": "Broker Review",
+      "data_sources": [
+        "broker database",
+        "submission broker notes"
+      ],
+      "detail": "Midwest Commercial Risk relationship profile linked; producer Evan Brooks."
+    }
+  ],
+  "claim_review": {
+    "claim_system": "dummy_claims_core",
+    "review_focus": "Review open claims, incurred amounts, and claim causes before quote or referral decisions.",
+    "summary": "0 historical claims; 0 open; $0 incurred.",
+    "data_fields": [
+      "claim_id",
+      "loss_date",
+      "reported_date",
+      "claim_type",
+      "status",
+      "severity",
+      "amount_paid",
+      "amount_reserved",
+      "cause",
+      "description"
+    ]
+  }
+}

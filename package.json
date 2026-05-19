@@ -4,8 +4,8 @@
   "private": true,
   "description": "Local chatbot wrapper for an agentic underwriting platform.",
   "scripts": {
-    "dev": "python3 -m backend.main",
-    "start": "python3 -m backend.main",
+    "dev": ".venv/bin/python -m backend.main",
+    "start": ".venv/bin/python -m backend.main",
     "mcp": ".venv/bin/python -m backend.mcp_server"
   }
 }

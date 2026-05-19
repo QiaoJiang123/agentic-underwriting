@@ -1,0 +1,21 @@
+{
+  "submission_id": "016-sterling-machined-components",
+  "claim_system": "dummy_claims_core",
+  "updated_at": "2026-05-19T12:00:00-04:00",
+  "claims": [
+    {
+      "claim_id": "CLM-STERLING-2024-001",
+      "loss_date": "2024-10-06",
+      "reported_date": "2024-10-10",
+      "status": "closed",
+      "claim_type": "business_interruption",
+      "coverage_area": "network_business_interruption",
+      "severity": "low",
+      "amount_paid": 31900,
+      "amount_reserved": 0,
+      "cause": "Plant system outage disrupted production scheduling.",
+      "description": "Business Interruption was closed after remediation was documented; costs include forensic, legal, notification, recovery, or customer credit expenses as applicable.",
+      "recovery_status": "not_applicable"
+    }
+  ]
+}

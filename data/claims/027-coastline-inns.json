@@ -1,0 +1,35 @@
+{
+  "submission_id": "027-coastline-inns",
+  "claim_system": "dummy_claims_core",
+  "updated_at": "2026-05-19T12:00:00-04:00",
+  "claims": [
+    {
+      "claim_id": "CLM-COASTLIN-2022-001",
+      "loss_date": "2022-09-03",
+      "reported_date": "2022-09-06",
+      "status": "closed",
+      "claim_type": "payment_card_incident",
+      "coverage_area": "pci_assessment",
+      "severity": "low",
+      "amount_paid": 12300,
+      "amount_reserved": 0,
+      "cause": "Suspicious POS activity required PCI forensic review.",
+      "description": "Payment Card Incident was closed after remediation was documented; costs include forensic, legal, notification, recovery, or customer credit expenses as applicable.",
+      "recovery_status": "partial_recovery"
+    },
+    {
+      "claim_id": "CLM-COASTLIN-2024-002",
+      "loss_date": "2024-09-17",
+      "reported_date": "2024-09-21",
+      "status": "closed",
+      "claim_type": "payment_card_incident",
+      "coverage_area": "pci_assessment",
+      "severity": "high",
+      "amount_paid": 85300,
+      "amount_reserved": 0,
+      "cause": "Suspicious POS activity required PCI forensic review.",
+      "description": "Payment Card Incident was closed after remediation was documented; costs include forensic, legal, notification, recovery, or customer credit expenses as applicable.",
+      "recovery_status": "remediated"
+    }
+  ]
+}

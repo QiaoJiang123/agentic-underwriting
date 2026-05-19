@@ -1,0 +1,20 @@
+Loss Runs / Claims History
+
+Named Insured: North Coast Demo Foods
+Policy Period Reviewed: 2021-2026
+
+Claim 1:
+Loss Date: 2024-02-14
+Cause: Business email compromise
+Status: Closed
+Paid: $18,500
+Reserve: $0
+Notes: Vendor payment instruction was changed after mailbox compromise.
+
+Claim 2:
+Loss Date: 2025-09-03
+Cause: Warehouse management outage
+Status: Open
+Paid: $12,000
+Reserve: $37,500
+Notes: Investigation pending on third-party logistics software outage.

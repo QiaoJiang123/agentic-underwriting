@@ -1,0 +1,12 @@
+{
+  "model_name": "industry_propensity",
+  "model_type": "calculated_benchmark_table",
+  "target": "industry_cyber_propensity_score",
+  "version": "0.2.0-demo",
+  "description": "Calculated by backend from data/submissions and data/claims. The stored file documents the demo formula; the API response contains current industry_history.",
+  "source_data": {
+    "submissions": "data/submissions/*/metadata.json",
+    "claims": "data/claims/*.json"
+  },
+  "score_formula": "0.25 + 0.50 * company_claim_rate + 0.25 * normalized_average_claim_severity"
+}

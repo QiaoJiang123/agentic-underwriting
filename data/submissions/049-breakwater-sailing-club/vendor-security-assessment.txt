@@ -1,0 +1,30 @@
+Vendor and third-party security assessment
+
+Insured: Breakwater Sailing Club Inc.
+Submission ID: 049-breakwater-sailing-club
+Industry: Sailing club and marina operator
+Industry benchmark bucket: Marina / Recreation
+Revenue: $18,200,000
+Employees: 84
+Records: 47,000
+Technology profile: Member portal, reservation system, POS terminals, customer Wi-Fi, Microsoft 365
+
+Security controls:
+- mfa: Enabled for email, VPN, and privileged users
+- edr: Microsoft Defender for Endpoint deployed on managed endpoints
+- backup: Daily backups; last restore test was more than six months ago
+- patching: Critical patches within 14 days
+- security_training: Annual employee training plus phishing simulations
+
+Claims history:
+No cyber claims reported in the linked loss period.
+
+Risk flags:
+- Material third-party or portal dependency
+
+Open questions:
+- Confirm most recent backup restore test date.
+- Provide latest vulnerability scan executive summary.
+- Clarify critical vendor incident notification obligations.
+
+Critical vendors should be reviewed for incident notification, recovery time, and data access controls.

@@ -1,0 +1,29 @@
+IT and security controls questionnaire
+
+Insured: Sterling Machined Components Co.
+Submission ID: 016-sterling-machined-components
+Industry: Precision component manufacturer
+Industry benchmark bucket: Manufacturing / OT
+Revenue: $118,000,000
+Employees: 540
+Records: 83,000
+Technology profile: ERP, plant floor OT network, EDI, remote vendor maintenance, Microsoft 365
+
+Security controls:
+- mfa: Enabled for email, VPN, and privileged users
+- edr: EDR deployed on corporate endpoints; server coverage in progress
+- backup: Immutable backups with monthly restore testing
+- patching: Critical patches within 14 days
+- security_training: Annual employee training
+
+Claims history:
+2024-10-06 | business_interruption | closed | paid $31,900 | reserve $0
+
+Risk flags:
+- Material third-party or portal dependency
+- Operational technology dependency
+
+Open questions:
+- Confirm most recent backup restore test date.
+- Provide latest vulnerability scan executive summary.
+- Clarify OT segmentation and vendor remote access controls.

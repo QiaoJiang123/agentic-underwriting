@@ -1,0 +1,30 @@
+MFA, EDR, and backup control documentation
+
+Insured: Northern Produce Network LLC
+Submission ID: 042-northern-produce-network
+Industry: Produce distribution and cold storage
+Industry benchmark bucket: Food Distribution / Logistics
+Revenue: $53,800,000
+Employees: 290
+Records: 102,000
+Technology profile: Warehouse management system, EDI, cold chain monitoring, fleet telematics
+
+Security controls:
+- mfa: Partial; enabled for email and VPN with rollout pending for privileged application admins
+- edr: Microsoft Defender for Endpoint deployed on managed endpoints
+- backup: Daily backups; last restore test was more than six months ago
+- patching: Critical patches within 14 days
+- security_training: Annual employee training plus phishing simulations
+
+Claims history:
+No cyber claims reported in the linked loss period.
+
+Risk flags:
+- Material third-party or portal dependency
+- MFA rollout gap
+
+Open questions:
+- Confirm most recent backup restore test date.
+- Provide latest vulnerability scan executive summary.
+- Clarify critical vendor incident notification obligations.
+- Confirm privileged application MFA completion timeline.

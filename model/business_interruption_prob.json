@@ -1,0 +1,17 @@
+{
+  "model_name": "business_interruption_prob",
+  "model_type": "glm_logistic",
+  "target": "business_interruption_probability",
+  "version": "0.1.0-demo",
+  "average_probability": 0.34,
+  "description": "Demo GLM for cyber business interruption probability using operational dependency and resilience controls.",
+  "features": [
+    { "key": "operational_dependency", "label": "Operational Dependency", "coefficient": 0.86, "baseline_value": 0.5 },
+    { "key": "vendor_dependency", "label": "Vendor Dependency", "coefficient": 0.68, "baseline_value": 0.5 },
+    { "key": "revenue_scale", "label": "Revenue Scale", "coefficient": 0.44, "baseline_value": 0.5 },
+    { "key": "industry_propensity", "label": "Industry Propensity", "coefficient": 0.34, "baseline_value": 0.5 },
+    { "key": "backup_resilience", "label": "Backup Resilience", "coefficient": -0.64, "baseline_value": 0.5 },
+    { "key": "patch_discipline", "label": "Patch Discipline", "coefficient": -0.28, "baseline_value": 0.5 },
+    { "key": "evidence_ratio", "label": "Evidence Confidence", "coefficient": -0.22, "baseline_value": 0.75 }
+  ]
+}

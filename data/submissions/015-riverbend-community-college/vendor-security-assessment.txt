@@ -1,0 +1,30 @@
+Vendor and third-party security assessment
+
+Insured: Riverbend Community College
+Submission ID: 015-riverbend-community-college
+Industry: Public community college
+Industry benchmark bucket: Education
+Revenue: $92,000,000
+Employees: 780
+Records: 250,000
+Technology profile: Student information system, LMS, donor CRM, research labs, Microsoft 365
+
+Security controls:
+- mfa: Enabled for email, VPN, and privileged users
+- edr: Microsoft Defender for Endpoint deployed on managed endpoints
+- backup: Daily backups with quarterly restore testing
+- patching: Critical patches within 30 days with exception tracking
+- security_training: Annual employee training plus phishing simulations
+
+Claims history:
+No cyber claims reported in the linked loss period.
+
+Risk flags:
+- Sensitive regulated data exposure
+
+Open questions:
+- Confirm most recent backup restore test date.
+- Provide latest vulnerability scan executive summary.
+- Clarify student MFA and research network segmentation.
+
+Critical vendors should be reviewed for incident notification, recovery time, and data access controls.

@@ -1,0 +1,33 @@
+Financial information and revenue breakdown
+
+Insured: Lakeview University
+Submission ID: 007-lakeview-university
+Industry: Higher education
+Revenue: $186,000,000
+Employees: 1120
+Records: 420,000
+Technology profile: Student information system, learning management system, research network, donor CRM, Microsoft 365
+
+Security controls:
+- mfa: Enabled for faculty, staff, and remote access; student MFA rollout in progress
+- edr: CrowdStrike on managed endpoints; research lab exceptions under review
+- backup: Daily backups with semiannual restore tests
+- patching: Critical patches within 20 days with research network exceptions
+- security_training: Annual employee training plus phishing simulations
+
+Claims history:
+2025-01-28 | credential_compromise | open | paid $48,000 | reserve $95,000
+
+Risk flags:
+- Open research network
+- Student MFA rollout in progress
+- Large privacy record count
+
+Open questions:
+- Confirm research network segmentation.
+- Request student MFA rollout timeline.
+- Clarify ransomware tabletop testing.
+
+Revenue breakdown:
+- Core operations are the primary revenue source unless otherwise stated.
+- Annual revenue: 186000000

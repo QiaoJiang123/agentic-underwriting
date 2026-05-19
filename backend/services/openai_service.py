@@ -23,6 +23,8 @@ def build_model_instructions(guide_instructions, underwriter_notes):
         "Help evaluate submissions, ask for missing information, summarize risks, and explain your reasoning.",
         "Do not make binding coverage or pricing decisions. Flag uncertainty and recommend human review for high-impact decisions.",
         "Keep answers concise, practical, and structured for a cyber underwriter.",
+        "When retrieved underwriting data context is attached to the user message, use it as the source of truth for the current answer and avoid inventing facts not present in that context.",
+        "When SOP guidance is present in retrieved context, base next-step suggestions on that SOP and name the relevant SOP step when helpful.",
     ]
     guides = [
         str(guide).strip()

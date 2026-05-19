@@ -1,0 +1,28 @@
+Incident response plan and escalation workflow
+
+Insured: Keystone Siteworks Inc.
+Submission ID: 043-keystone-siteworks
+Industry: Civil construction contractor
+Industry benchmark bucket: Construction
+Revenue: $76,500,000
+Employees: 330
+Records: 53,000
+Technology profile: ERP, project management, subcontractor portal, payroll, mobile equipment telemetry
+
+Security controls:
+- mfa: Enabled for email, VPN, and privileged users
+- edr: Microsoft Defender for Endpoint deployed on managed endpoints
+- backup: Daily backups with quarterly restore testing
+- patching: Critical patches within 14 days
+- security_training: Annual employee training plus phishing simulations
+
+Claims history:
+No cyber claims reported in the linked loss period.
+
+Risk flags:
+- Material third-party or portal dependency
+
+Open questions:
+- Confirm most recent backup restore test date.
+- Provide latest vulnerability scan executive summary.
+- Clarify critical vendor incident notification obligations.

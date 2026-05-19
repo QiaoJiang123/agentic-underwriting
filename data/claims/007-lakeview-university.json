@@ -1,0 +1,21 @@
+{
+  "submission_id": "007-lakeview-university",
+  "claim_system": "dummy_claims_core",
+  "updated_at": "2026-05-19T09:00:00-04:00",
+  "claims": [
+    {
+      "claim_id": "CLM-LAKE-2025-001",
+      "loss_date": "2025-01-28",
+      "reported_date": "2025-01-29",
+      "status": "open",
+      "claim_type": "credential_compromise",
+      "coverage_area": "incident_response",
+      "severity": "high",
+      "amount_paid": 48000,
+      "amount_reserved": 95000,
+      "cause": "Compromised student account used to access cloud storage.",
+      "description": "Forensic review and notification assessment remain open.",
+      "recovery_status": "active_review"
+    }
+  ]
+}

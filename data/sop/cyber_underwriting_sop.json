@@ -1,0 +1,65 @@
+{
+  "sop_id": "cyber-commercial-underwriting-sop",
+  "version": "0.1-demo",
+  "updated_at": "2026-05-19T00:00:00Z",
+  "name": "Commercial Cyber Underwriting SOP",
+  "description": "Demo standard operating procedure for commercial cyber submission triage, evidence review, risk assessment, and broker follow-up.",
+  "principles": [
+    "Use submission evidence and underwriter notes as source of truth.",
+    "Do not recommend quote release until required cyber evidence is complete or waived by authority.",
+    "Escalate open claims, severe prior cyber loss, high privacy exposure, or material control gaps.",
+    "Tie broker follow-up questions to specific missing evidence or control uncertainty.",
+    "Use analytics as decision support, not as an automatic underwriting decision."
+  ],
+  "steps": [
+    {
+      "step_id": "intake_validation",
+      "label": "Intake Validation",
+      "priority": "high",
+      "goal": "Confirm applicant, industry, location, revenue, records, coverage request, effective date, broker, and core submission package.",
+      "suggestion_template": "Validate intake fields and request any missing applicant, exposure, coverage, or broker information before risk review."
+    },
+    {
+      "step_id": "required_evidence_review",
+      "label": "Required Evidence Review",
+      "priority": "high",
+      "goal": "Confirm cyber application, ransomware supplement, prior policy, loss runs, financials, controls questionnaire, MFA/EDR/backups, incident response, vendor assessment, and compliance evidence.",
+      "suggestion_template": "Request missing required evidence and keep the submission in document collection until the gap is resolved or formally waived."
+    },
+    {
+      "step_id": "control_baseline",
+      "label": "Control Baseline",
+      "priority": "high",
+      "goal": "Evaluate MFA, EDR, backup resilience, patching cadence, security training, privileged access, and operational dependency.",
+      "suggestion_template": "Review control gaps and draft subjectivities tied to MFA, EDR, backup, patching, or training weaknesses."
+    },
+    {
+      "step_id": "claims_review",
+      "label": "Claims Review",
+      "priority": "high",
+      "goal": "Review prior cyber loss runs and linked claim-system history for open claims, loss causes, severity, reserves, and remediation.",
+      "suggestion_template": "Review claim details and require remediation evidence before quote release when claim activity is open or material."
+    },
+    {
+      "step_id": "broker_follow_up",
+      "label": "Broker Follow-Up",
+      "priority": "medium",
+      "goal": "Create broker questions that are specific, answerable, and tied to evidence gaps or underwriting decisions.",
+      "suggestion_template": "Draft a broker follow-up using the missing evidence list and the highest-impact control questions."
+    },
+    {
+      "step_id": "referral_authority",
+      "label": "Referral Authority",
+      "priority": "high",
+      "goal": "Escalate submissions with open claims, severe controls gaps, high records exposure, or material appetite uncertainty.",
+      "suggestion_template": "Prepare referral rationale, claim summary, controls posture, and recommended subjectivities for senior review."
+    },
+    {
+      "step_id": "pricing_terms",
+      "label": "Pricing & Terms",
+      "priority": "medium",
+      "goal": "Use quote/bind analytics, controls posture, claims, and evidence quality to support terms, subjectivities, and next action.",
+      "suggestion_template": "Review quote and bind model drivers, then prepare terms or subjectivities consistent with evidence and authority."
+    }
+  ]
+}

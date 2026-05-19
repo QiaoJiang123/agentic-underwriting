@@ -1,0 +1,21 @@
+{
+  "submission_id": "029-cascade-adventure-parks",
+  "claim_system": "dummy_claims_core",
+  "updated_at": "2026-05-19T12:00:00-04:00",
+  "claims": [
+    {
+      "claim_id": "CLM-CASCADEA-2022-001",
+      "loss_date": "2022-05-14",
+      "reported_date": "2022-05-15",
+      "status": "open",
+      "claim_type": "business_email_compromise",
+      "coverage_area": "cyber_crime",
+      "severity": "moderate",
+      "amount_paid": 41300,
+      "amount_reserved": 24700,
+      "cause": "Compromised mailbox used in a fraudulent payment attempt.",
+      "description": "Business Email Compromise remains under review; costs include forensic, legal, notification, recovery, or customer credit expenses as applicable.",
+      "recovery_status": "active_review"
+    }
+  ]
+}

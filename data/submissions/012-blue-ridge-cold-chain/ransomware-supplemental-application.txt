@@ -1,0 +1,31 @@
+Ransomware supplemental application
+
+Insured: Blue Ridge Cold Chain Inc.
+Submission ID: 012-blue-ridge-cold-chain
+Industry: Refrigerated logistics and cold storage
+Industry benchmark bucket: Food Distribution / Logistics
+Revenue: $51,200,000
+Employees: 260
+Records: 96,000
+Technology profile: Warehouse management system, EDI ordering, fleet telematics, customer portal, Microsoft 365
+
+Security controls:
+- mfa: Partial; enabled for email and VPN with rollout pending for privileged application admins
+- edr: Microsoft Defender for Endpoint deployed on managed endpoints
+- backup: Daily backups with quarterly restore testing
+- patching: Critical patches within 14 days
+- security_training: Annual employee training
+
+Claims history:
+2022-10-14 | business_email_compromise | closed | paid $31,000 | reserve $0
+2024-10-07 | privacy_incident | closed | paid $12,600 | reserve $0
+
+Risk flags:
+- Material third-party or portal dependency
+- MFA rollout gap
+
+Open questions:
+- Confirm most recent backup restore test date.
+- Provide latest vulnerability scan executive summary.
+- Clarify critical vendor incident notification obligations.
+- Confirm privileged application MFA completion timeline.

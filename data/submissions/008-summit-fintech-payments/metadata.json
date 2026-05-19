@@ -1,0 +1,253 @@
+{
+  "id": "008-summit-fintech-payments",
+  "title": "Summit Fintech Payments",
+  "line_of_business": "Cyber liability",
+  "file_created_at": "2026-05-03T08:16:00-04:00",
+  "received_at": "2026-05-03T09:35:00-04:00",
+  "updated_at": "2026-05-19T12:00:00-04:00",
+  "status": "In Review",
+  "applicant": {
+    "insured_name": "Summit Fintech Payments LLC",
+    "industry": "Payment processing and fintech services",
+    "location": "Charlotte, NC",
+    "annual_revenue": 73500000,
+    "employee_count": 310,
+    "records_count": 2100000,
+    "technology_profile": "Payment gateway, API platform, Kubernetes, AWS, fraud analytics, customer support portal",
+    "industry_bucket": "Fintech / Payments",
+    "industry_group": "Fintech / Payments"
+  },
+  "coverage": {
+    "lines_requested": [
+      "Cyber liability",
+      "Technology E&O",
+      "PCI fines and assessments"
+    ],
+    "requested_effective_date": "2026-06-20",
+    "requested_limits": {
+      "cyber_liability": "$10,000,000",
+      "technology_eo": "$5,000,000",
+      "pci": "$2,000,000"
+    },
+    "retention_requested": "$150,000"
+  },
+  "documents": [
+    {
+      "file_name": "cyber-application.txt",
+      "file_type": "cyber_application",
+      "category": "submission",
+      "document_types": [
+        "cyber_application",
+        "submission_form"
+      ],
+      "major_categories": [
+        "submission",
+        "cyber_security"
+      ],
+      "file_created_at": "2026-05-03T08:16:00-04:00",
+      "received_at": "2026-05-03T09:35:00-04:00",
+      "description": "Cyber application and submission form responses"
+    },
+    {
+      "file_name": "ransomware-supplemental-application.txt",
+      "file_type": "ransomware_supplemental_application",
+      "category": "submission",
+      "document_types": [
+        "ransomware_supplemental_application"
+      ],
+      "major_categories": [
+        "submission",
+        "cyber_security"
+      ],
+      "file_created_at": "2026-05-03T08:16:00-04:00",
+      "received_at": "2026-05-03T09:35:00-04:00",
+      "description": "Ransomware supplemental application"
+    },
+    {
+      "file_name": "prior-cyber-insurance-policy.txt",
+      "file_type": "prior_cyber_insurance_policy",
+      "category": "coverage_terms",
+      "document_types": [
+        "prior_cyber_insurance_policy",
+        "policy_form"
+      ],
+      "major_categories": [
+        "coverage_terms"
+      ],
+      "file_created_at": "2026-05-03T08:16:00-04:00",
+      "received_at": "2026-05-03T09:35:00-04:00",
+      "description": "Prior cyber insurance policy and expiring coverage terms"
+    },
+    {
+      "file_name": "loss-runs-claims-history.txt",
+      "file_type": "loss_runs",
+      "category": "loss_history",
+      "document_types": [
+        "loss_runs",
+        "claims_history"
+      ],
+      "major_categories": [
+        "loss_history"
+      ],
+      "file_created_at": "2026-05-03T08:16:00-04:00",
+      "received_at": "2026-05-03T09:35:00-04:00",
+      "description": "Loss runs and cyber claims history"
+    },
+    {
+      "file_name": "financial-information-revenue-breakdown.txt",
+      "file_type": "financial_information",
+      "category": "financial",
+      "document_types": [
+        "financial_information",
+        "revenue_breakdown"
+      ],
+      "major_categories": [
+        "financial",
+        "company_profile"
+      ],
+      "file_created_at": "2026-05-03T08:16:00-04:00",
+      "received_at": "2026-05-03T09:35:00-04:00",
+      "description": "Financial information and revenue breakdown"
+    },
+    {
+      "file_name": "it-security-controls-questionnaire.txt",
+      "file_type": "it_security_controls_questionnaire",
+      "category": "cyber_security",
+      "document_types": [
+        "it_security_controls_questionnaire",
+        "security_questionnaire"
+      ],
+      "major_categories": [
+        "cyber_security"
+      ],
+      "file_created_at": "2026-05-03T08:16:00-04:00",
+      "received_at": "2026-05-03T09:35:00-04:00",
+      "description": "IT and security controls questionnaire"
+    },
+    {
+      "file_name": "mfa-edr-backup-documentation.txt",
+      "file_type": "mfa_documentation",
+      "category": "cyber_security",
+      "document_types": [
+        "mfa_documentation",
+        "edr_documentation",
+        "backup_documentation"
+      ],
+      "major_categories": [
+        "cyber_security"
+      ],
+      "file_created_at": "2026-05-03T08:16:00-04:00",
+      "received_at": "2026-05-03T09:35:00-04:00",
+      "description": "MFA, EDR, and backup control documentation"
+    },
+    {
+      "file_name": "incident-response-plan.txt",
+      "file_type": "incident_response_plan",
+      "category": "cyber_security",
+      "document_types": [
+        "incident_response_plan"
+      ],
+      "major_categories": [
+        "cyber_security"
+      ],
+      "file_created_at": "2026-05-03T08:16:00-04:00",
+      "received_at": "2026-05-03T09:35:00-04:00",
+      "description": "Incident response plan and escalation workflow"
+    },
+    {
+      "file_name": "vendor-security-assessment.txt",
+      "file_type": "vendor_security_assessment",
+      "category": "vendor_risk",
+      "document_types": [
+        "vendor_security_assessment",
+        "third_party_risk_assessment"
+      ],
+      "major_categories": [
+        "vendor_risk",
+        "cyber_security"
+      ],
+      "file_created_at": "2026-05-03T08:16:00-04:00",
+      "received_at": "2026-05-03T09:35:00-04:00",
+      "description": "Vendor and third-party security assessment"
+    },
+    {
+      "file_name": "compliance-documents.txt",
+      "file_type": "compliance_documentation",
+      "category": "compliance",
+      "document_types": [
+        "compliance_documentation"
+      ],
+      "major_categories": [
+        "compliance",
+        "cyber_security"
+      ],
+      "file_created_at": "2026-05-03T08:16:00-04:00",
+      "received_at": "2026-05-03T09:35:00-04:00",
+      "description": "Relevant compliance documentation such as SOC 2, HIPAA, PCI, or equivalent evidence"
+    }
+  ],
+  "security_controls": {
+    "mfa": "Phishing-resistant MFA for privileged users and SSO MFA for all employees",
+    "edr": "CrowdStrike complete coverage with 24/7 MDR",
+    "backup": "Immutable backups with monthly restore tests",
+    "patching": "Critical patches within 7 days",
+    "security_training": "Quarterly secure coding and phishing simulations"
+  },
+  "risk_flags": [
+    "High transaction dependency",
+    "API aggregation exposure",
+    "Large records count"
+  ],
+  "open_questions": [
+    "Request PCI ROC summary.",
+    "Confirm API rate limit monitoring.",
+    "Clarify customer contract limitation of liability."
+  ],
+  "timeline": [
+    {
+      "date": "2026-05-03T08:16:00-04:00",
+      "event": "Submission file created",
+      "description": "Broker prepared the cyber submission package."
+    },
+    {
+      "date": "2026-05-03T09:35:00-04:00",
+      "event": "Submission received",
+      "description": "Cyber underwriting package received for review."
+    },
+    {
+      "date": "2026-05-19T09:00:00-04:00",
+      "event": "Standardized evidence added",
+      "description": "Cyber application, supplement, prior policy, loss runs, financials, controls, vendor, incident response, and compliance evidence added."
+    }
+  ],
+  "document_taxonomy": {
+    "major_categories": {
+      "submission": "Submission",
+      "company_profile": "Company Profile",
+      "cyber_security": "Cyber Security",
+      "loss_history": "Loss History",
+      "financial": "Financial",
+      "coverage_terms": "Coverage Terms",
+      "vendor_risk": "Vendor Risk",
+      "compliance": "Compliance",
+      "communication": "Communication",
+      "underwriting_review": "Underwriting Review"
+    },
+    "note": "document_types and major_categories are arrays because one document can support multiple underwriting uses."
+  },
+  "broker": {
+    "broker_id": "brk-pacific-tech-risk",
+    "firm_name": "Pacific Technology Risk Advisors",
+    "producer_name": "Sofia Nguyen",
+    "producer_email": "sofia.nguyen@pacifictechrisk.example",
+    "producer_phone": "415-555-0108",
+    "account_manager_name": "Caleb Ortiz",
+    "account_manager_email": "caleb.ortiz@pacifictechrisk.example",
+    "account_manager_phone": "415-555-0152",
+    "relationship_type": "Broker submission",
+    "submission_channel": "Broker portal",
+    "target_quote_date": "2026-06-20",
+    "broker_priority": "Strategic",
+    "broker_notes": "Pacific Technology Risk Advisors assigned based on Fintech / Payments appetite and market focus."
+  }
+}

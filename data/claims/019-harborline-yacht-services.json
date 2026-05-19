@@ -1,0 +1,63 @@
+{
+  "submission_id": "019-harborline-yacht-services",
+  "claim_system": "dummy_claims_core",
+  "updated_at": "2026-05-19T12:00:00-04:00",
+  "claims": [
+    {
+      "claim_id": "CLM-HARBORLI-2023-001",
+      "loss_date": "2023-06-10",
+      "reported_date": "2023-06-12",
+      "status": "closed",
+      "claim_type": "service_outage",
+      "coverage_area": "business_interruption",
+      "severity": "moderate",
+      "amount_paid": 21800,
+      "amount_reserved": 0,
+      "cause": "Core business platform outage caused customer service disruption.",
+      "description": "Service Outage was closed after remediation was documented; costs include forensic, legal, notification, recovery, or customer credit expenses as applicable.",
+      "recovery_status": "resolved"
+    },
+    {
+      "claim_id": "CLM-HARBORLI-2022-002",
+      "loss_date": "2022-08-13",
+      "reported_date": "2022-08-15",
+      "status": "closed",
+      "claim_type": "payment_card_incident",
+      "coverage_area": "pci_assessment",
+      "severity": "high",
+      "amount_paid": 73600,
+      "amount_reserved": 0,
+      "cause": "Suspicious POS activity required PCI forensic review.",
+      "description": "Payment Card Incident was closed after remediation was documented; costs include forensic, legal, notification, recovery, or customer credit expenses as applicable.",
+      "recovery_status": "not_applicable"
+    },
+    {
+      "claim_id": "CLM-HARBORLI-2022-003",
+      "loss_date": "2022-01-12",
+      "reported_date": "2022-01-13",
+      "status": "closed",
+      "claim_type": "privacy_incident",
+      "coverage_area": "privacy_liability",
+      "severity": "low",
+      "amount_paid": 10000,
+      "amount_reserved": 0,
+      "cause": "Limited customer information was disclosed to an unauthorized recipient.",
+      "description": "Privacy Incident was closed after remediation was documented; costs include forensic, legal, notification, recovery, or customer credit expenses as applicable.",
+      "recovery_status": "resolved"
+    },
+    {
+      "claim_id": "CLM-HARBORLI-2024-004",
+      "loss_date": "2024-10-14",
+      "reported_date": "2024-10-16",
+      "status": "closed",
+      "claim_type": "privacy_incident",
+      "coverage_area": "privacy_liability",
+      "severity": "moderate",
+      "amount_paid": 43500,
+      "amount_reserved": 0,
+      "cause": "Limited customer information was disclosed to an unauthorized recipient.",
+      "description": "Privacy Incident was closed after remediation was documented; costs include forensic, legal, notification, recovery, or customer credit expenses as applicable.",
+      "recovery_status": "resolved"
+    }
+  ]
+}

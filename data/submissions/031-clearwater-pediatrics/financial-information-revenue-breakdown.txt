@@ -1,0 +1,33 @@
+Financial information and revenue breakdown
+
+Insured: Clearwater Pediatrics PA
+Submission ID: 031-clearwater-pediatrics
+Industry: Pediatric clinic group
+Industry benchmark bucket: Healthcare / Pharmacy
+Revenue: $22,900,000
+Employees: 185
+Records: 270,000
+Technology profile: EHR, patient portal, e-prescribing, payment terminals, Microsoft 365
+
+Security controls:
+- mfa: Enabled for email, VPN, and privileged users
+- edr: Microsoft Defender for Endpoint deployed on managed endpoints
+- backup: Daily backups with quarterly restore testing
+- patching: Critical patches within 14 days
+- security_training: Annual employee training plus phishing simulations
+
+Claims history:
+2024-02-09 | ransomware_attempt | open | paid $171,300 | reserve $91,900
+
+Risk flags:
+- Material third-party or portal dependency
+- Sensitive regulated data exposure
+
+Open questions:
+- Confirm most recent backup restore test date.
+- Provide latest vulnerability scan executive summary.
+- Request latest HIPAA security risk assessment summary.
+
+Revenue breakdown:
+- Core operations are the primary revenue source unless otherwise stated.
+- Annual revenue: $22,900,000

@@ -1,0 +1,19 @@
+{
+  "model_name": "ransomware_prob",
+  "model_type": "glm_logistic",
+  "target": "ransomware_probability",
+  "version": "0.1.0-demo",
+  "average_probability": 0.31,
+  "description": "Demo GLM for ransomware probability using controls, operational dependency, and prior claim signals.",
+  "features": [
+    { "key": "revenue_scale", "label": "Revenue Scale", "coefficient": 0.46, "baseline_value": 0.5 },
+    { "key": "vendor_dependency", "label": "Vendor Dependency", "coefficient": 0.58, "baseline_value": 0.5 },
+    { "key": "operational_dependency", "label": "Operational Dependency", "coefficient": 0.52, "baseline_value": 0.5 },
+    { "key": "prior_claims", "label": "Prior Claims Signal", "coefficient": 0.5, "baseline_value": 0.5 },
+    { "key": "risk_flag_load", "label": "Risk Flag Load", "coefficient": 0.38, "baseline_value": 0.35 },
+    { "key": "backup_resilience", "label": "Backup Resilience", "coefficient": -0.82, "baseline_value": 0.5 },
+    { "key": "edr_coverage", "label": "EDR Coverage", "coefficient": -0.62, "baseline_value": 0.5 },
+    { "key": "patch_discipline", "label": "Patch Discipline", "coefficient": -0.42, "baseline_value": 0.5 },
+    { "key": "mfa_maturity", "label": "MFA Maturity", "coefficient": -0.38, "baseline_value": 0.5 }
+  ]
+}

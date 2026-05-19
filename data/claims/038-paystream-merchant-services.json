@@ -1,0 +1,35 @@
+{
+  "submission_id": "038-paystream-merchant-services",
+  "claim_system": "dummy_claims_core",
+  "updated_at": "2026-05-19T12:00:00-04:00",
+  "claims": [
+    {
+      "claim_id": "CLM-PAYSTREA-2023-001",
+      "loss_date": "2023-03-08",
+      "reported_date": "2023-03-11",
+      "status": "closed",
+      "claim_type": "payment_card_incident",
+      "coverage_area": "pci_assessment",
+      "severity": "low",
+      "amount_paid": 28100,
+      "amount_reserved": 0,
+      "cause": "PCI forensic review triggered by suspicious payment environment activity.",
+      "description": "Payment Card Incident was closed after remediation was documented; costs include forensic, legal, notification, recovery, or customer credit expenses as applicable.",
+      "recovery_status": "partial_recovery"
+    },
+    {
+      "claim_id": "CLM-PAYSTREA-2022-002",
+      "loss_date": "2022-01-11",
+      "reported_date": "2022-01-13",
+      "status": "closed",
+      "claim_type": "service_outage",
+      "coverage_area": "technology_errors_omissions",
+      "severity": "moderate",
+      "amount_paid": 80000,
+      "amount_reserved": 0,
+      "cause": "Payment gateway routing issue caused customer transaction disruption.",
+      "description": "Service Outage was closed after remediation was documented; costs include forensic, legal, notification, recovery, or customer credit expenses as applicable.",
+      "recovery_status": "resolved"
+    }
+  ]
+}

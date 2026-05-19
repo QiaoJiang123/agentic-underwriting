@@ -1,0 +1,30 @@
+IT and security controls questionnaire
+
+Insured: Northshore Prep Academy
+Submission ID: 025-northshore-prep-academy
+Industry: Private K-12 school network
+Industry benchmark bucket: Education
+Revenue: $33,600,000
+Employees: 265
+Records: 94,000
+Technology profile: Student information system, LMS, parent portal, donor CRM, Microsoft 365
+
+Security controls:
+- mfa: Enabled for email, VPN, and privileged users
+- edr: Microsoft Defender for Endpoint deployed on managed endpoints
+- backup: Daily backups with quarterly restore testing
+- patching: Critical patches within 30 days with exception tracking
+- security_training: Annual employee training plus phishing simulations
+
+Claims history:
+2023-09-11 | credential_compromise | closed | paid $50,200 | reserve $0
+2024-11-20 | ransomware_attempt | closed | paid $105,800 | reserve $0
+
+Risk flags:
+- Material third-party or portal dependency
+- Sensitive regulated data exposure
+
+Open questions:
+- Confirm most recent backup restore test date.
+- Provide latest vulnerability scan executive summary.
+- Clarify student MFA and research network segmentation.

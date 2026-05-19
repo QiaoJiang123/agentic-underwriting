@@ -1,0 +1,32 @@
+Prior cyber insurance policy and expiring coverage terms
+
+Insured: Sunrise Hospitality Group LLC
+Submission ID: 010-sunrise-hospitality-group
+Industry: Hotel management and hospitality
+Revenue: $58,200,000
+Employees: 412
+Records: 310,000
+Technology profile: Property management system, booking engine, guest Wi-Fi, POS terminals, loyalty data platform
+
+Security controls:
+- mfa: Enabled for corporate email and VPN; property management admin MFA scheduled
+- edr: Sophos on corporate endpoints and servers
+- backup: Daily backups with quarterly restore testing
+- patching: Critical patches within 15 days
+- security_training: Annual training plus seasonal phishing campaign
+
+Claims history:
+2024-12-11 | payment_card_incident | closed | paid $39,000 | reserve $0
+
+Risk flags:
+- Guest Wi-Fi segmentation
+- PCI exposure
+- Property management vendor dependency
+
+Open questions:
+- Confirm guest Wi-Fi segmentation evidence.
+- Request PCI SAQ.
+- Clarify property management vendor incident SLA.
+
+Expiring retention: $50,000
+Prior carrier terms are provided for comparison only.

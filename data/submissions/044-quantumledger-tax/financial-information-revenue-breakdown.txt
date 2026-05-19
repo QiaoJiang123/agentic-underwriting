@@ -1,0 +1,33 @@
+Financial information and revenue breakdown
+
+Insured: QuantumLedger Tax LLC
+Submission ID: 044-quantumledger-tax
+Industry: Tax and accounting platform
+Industry benchmark bucket: SaaS / Software
+Revenue: $72,000,000
+Employees: 340
+Records: 1,850,000
+Technology profile: Tax workflow SaaS, customer portal, API integrations, cloud data lake, SOC 2 program
+
+Security controls:
+- mfa: Phishing-resistant MFA for privileged users and SSO MFA for all employees
+- edr: CrowdStrike with 24/7 MDR coverage
+- backup: Immutable backups with monthly restore testing
+- patching: Critical patches within 7 days
+- security_training: Annual employee training
+
+Claims history:
+2025-12-19 | payment_card_incident | closed | paid $159,400 | reserve $0
+
+Risk flags:
+- Large privacy record count
+- Material third-party or portal dependency
+
+Open questions:
+- Confirm most recent backup restore test date.
+- Provide latest vulnerability scan executive summary.
+- Request SOC 2 bridge letter and customer incident SLA.
+
+Revenue breakdown:
+- Core operations are the primary revenue source unless otherwise stated.
+- Annual revenue: $72,000,000

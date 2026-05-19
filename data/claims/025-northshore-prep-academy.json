@@ -1,0 +1,35 @@
+{
+  "submission_id": "025-northshore-prep-academy",
+  "claim_system": "dummy_claims_core",
+  "updated_at": "2026-05-19T12:00:00-04:00",
+  "claims": [
+    {
+      "claim_id": "CLM-NORTHSHO-2023-001",
+      "loss_date": "2023-09-11",
+      "reported_date": "2023-09-12",
+      "status": "closed",
+      "claim_type": "credential_compromise",
+      "coverage_area": "incident_response",
+      "severity": "moderate",
+      "amount_paid": 50200,
+      "amount_reserved": 0,
+      "cause": "Compromised student or faculty account accessed cloud storage.",
+      "description": "Credential Compromise was closed after remediation was documented; costs include forensic, legal, notification, recovery, or customer credit expenses as applicable.",
+      "recovery_status": "not_applicable"
+    },
+    {
+      "claim_id": "CLM-NORTHSHO-2024-002",
+      "loss_date": "2024-11-20",
+      "reported_date": "2024-11-23",
+      "status": "closed",
+      "claim_type": "ransomware_attempt",
+      "coverage_area": "incident_response",
+      "severity": "high",
+      "amount_paid": 105800,
+      "amount_reserved": 0,
+      "cause": "Malware activity affected academic network endpoints before containment.",
+      "description": "Ransomware Attempt was closed after remediation was documented; costs include forensic, legal, notification, recovery, or customer credit expenses as applicable.",
+      "recovery_status": "remediated"
+    }
+  ]
+}

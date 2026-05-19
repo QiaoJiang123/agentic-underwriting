@@ -1,0 +1,31 @@
+Vendor and third-party security assessment
+
+Insured: Coastline Inns LLC
+Submission ID: 027-coastline-inns
+Industry: Limited-service hotel group
+Industry benchmark bucket: Hospitality / Retail
+Revenue: $38,800,000
+Employees: 315
+Records: 230,000
+Technology profile: Property management system, booking engine, guest Wi-Fi, POS, loyalty data
+
+Security controls:
+- mfa: Enabled for email, VPN, and privileged users
+- edr: Microsoft Defender for Endpoint deployed on managed endpoints
+- backup: Daily backups with quarterly restore testing
+- patching: Critical patches within 14 days
+- security_training: Annual employee training plus phishing simulations
+
+Claims history:
+2022-09-03 | payment_card_incident | closed | paid $12,300 | reserve $0
+2024-09-17 | payment_card_incident | closed | paid $85,300 | reserve $0
+
+Risk flags:
+- PCI and payment card exposure
+
+Open questions:
+- Confirm most recent backup restore test date.
+- Provide latest vulnerability scan executive summary.
+- Clarify critical vendor incident notification obligations.
+
+Critical vendors should be reviewed for incident notification, recovery time, and data access controls.

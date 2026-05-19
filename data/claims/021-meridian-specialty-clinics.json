@@ -1,0 +1,21 @@
+{
+  "submission_id": "021-meridian-specialty-clinics",
+  "claim_system": "dummy_claims_core",
+  "updated_at": "2026-05-19T12:00:00-04:00",
+  "claims": [
+    {
+      "claim_id": "CLM-MERIDIAN-2025-001",
+      "loss_date": "2025-07-06",
+      "reported_date": "2025-07-07",
+      "status": "closed",
+      "claim_type": "ransomware_attempt",
+      "coverage_area": "incident_response",
+      "severity": "moderate",
+      "amount_paid": 96700,
+      "amount_reserved": 0,
+      "cause": "Endpoint malware activity required forensic containment and legal review.",
+      "description": "Ransomware Attempt was closed after remediation was documented; costs include forensic, legal, notification, recovery, or customer credit expenses as applicable.",
+      "recovery_status": "remediated"
+    }
+  ]
+}

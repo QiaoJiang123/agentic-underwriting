@@ -1,0 +1,21 @@
+{
+  "submission_id": "031-clearwater-pediatrics",
+  "claim_system": "dummy_claims_core",
+  "updated_at": "2026-05-19T12:00:00-04:00",
+  "claims": [
+    {
+      "claim_id": "CLM-CLEARWAT-2024-001",
+      "loss_date": "2024-02-09",
+      "reported_date": "2024-02-11",
+      "status": "open",
+      "claim_type": "ransomware_attempt",
+      "coverage_area": "incident_response",
+      "severity": "high",
+      "amount_paid": 171300,
+      "amount_reserved": 91900,
+      "cause": "Endpoint malware activity required forensic containment and legal review.",
+      "description": "Ransomware Attempt remains under review; costs include forensic, legal, notification, recovery, or customer credit expenses as applicable.",
+      "recovery_status": "active_review"
+    }
+  ]
+}

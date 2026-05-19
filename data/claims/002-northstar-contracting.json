@@ -1,0 +1,35 @@
+{
+  "submission_id": "002-northstar-contracting",
+  "claim_system": "dummy_claims_core",
+  "updated_at": "2026-05-19T09:00:00-04:00",
+  "claims": [
+    {
+      "claim_id": "CLM-NORTH-2024-001",
+      "loss_date": "2024-11-03",
+      "reported_date": "2024-11-05",
+      "status": "closed",
+      "claim_type": "invoice_manipulation",
+      "coverage_area": "social_engineering",
+      "severity": "moderate",
+      "amount_paid": 32000,
+      "amount_reserved": 0,
+      "cause": "Vendor banking instructions were changed through a compromised subcontractor email account.",
+      "description": "Payment redirection was discovered during reconciliation and corrected with partial recovery.",
+      "recovery_status": "partial_recovery"
+    },
+    {
+      "claim_id": "CLM-NORTH-2025-001",
+      "loss_date": "2025-07-18",
+      "reported_date": "2025-07-19",
+      "status": "closed",
+      "claim_type": "funds_transfer_fraud",
+      "coverage_area": "cyber_crime",
+      "severity": "low",
+      "amount_paid": 7500,
+      "amount_reserved": 0,
+      "cause": "Employee approved fraudulent payment after spoofed executive request.",
+      "description": "Carrier paid investigation and small unrecovered balance.",
+      "recovery_status": "mostly_recovered"
+    }
+  ]
+}

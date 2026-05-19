@@ -1,0 +1,35 @@
+{
+  "submission_id": "046-union-gearworks",
+  "claim_system": "dummy_claims_core",
+  "updated_at": "2026-05-19T12:00:00-04:00",
+  "claims": [
+    {
+      "claim_id": "CLM-UNIONGEA-2022-001",
+      "loss_date": "2022-01-19",
+      "reported_date": "2022-01-22",
+      "status": "closed",
+      "claim_type": "invoice_manipulation",
+      "coverage_area": "social_engineering",
+      "severity": "high",
+      "amount_paid": 137600,
+      "amount_reserved": 0,
+      "cause": "Vendor banking instructions were changed through compromised email.",
+      "description": "Invoice Manipulation was closed after remediation was documented; costs include forensic, legal, notification, recovery, or customer credit expenses as applicable.",
+      "recovery_status": "remediated"
+    },
+    {
+      "claim_id": "CLM-UNIONGEA-2024-002",
+      "loss_date": "2024-07-17",
+      "reported_date": "2024-07-21",
+      "status": "closed",
+      "claim_type": "vendor_remote_access_event",
+      "coverage_area": "incident_response",
+      "severity": "moderate",
+      "amount_paid": 61800,
+      "amount_reserved": 0,
+      "cause": "Remote support credential misuse required forensic review.",
+      "description": "Vendor Remote Access Event was closed after remediation was documented; costs include forensic, legal, notification, recovery, or customer credit expenses as applicable.",
+      "recovery_status": "not_applicable"
+    }
+  ]
+}

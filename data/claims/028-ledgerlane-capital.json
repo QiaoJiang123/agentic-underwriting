@@ -1,0 +1,21 @@
+{
+  "submission_id": "028-ledgerlane-capital",
+  "claim_system": "dummy_claims_core",
+  "updated_at": "2026-05-19T12:00:00-04:00",
+  "claims": [
+    {
+      "claim_id": "CLM-LEDGERLA-2025-001",
+      "loss_date": "2025-02-18",
+      "reported_date": "2025-02-20",
+      "status": "open",
+      "claim_type": "payment_card_incident",
+      "coverage_area": "pci_assessment",
+      "severity": "high",
+      "amount_paid": 175900,
+      "amount_reserved": 34800,
+      "cause": "PCI forensic review triggered by suspicious payment environment activity.",
+      "description": "Payment Card Incident remains under review; costs include forensic, legal, notification, recovery, or customer credit expenses as applicable.",
+      "recovery_status": "active_review"
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+MFA, EDR, and backup control documentation
+
+Insured: Cascade Industrial Manufacturing Co.
+Submission ID: 009-cascade-industrial-manufacturing
+Industry: Industrial parts manufacturing
+Revenue: $128,500,000
+Employees: 684
+Records: 94,000
+Technology profile: ERP, plant floor OT network, EDI with suppliers, remote vendor maintenance, Microsoft 365
+
+Security controls:
+- mfa: Enabled for email, VPN, and ERP admins; vendor remote access MFA pending
+- edr: Microsoft Defender for Endpoint on corporate assets; OT monitoring pilot underway
+- backup: Daily backups with quarterly restore testing
+- patching: Critical corporate patches within 14 days; OT patch windows quarterly
+- security_training: Annual employee training
+
+Claims history:
+No cyber claims reported in the linked loss period.
+
+Risk flags:
+- OT dependency
+- Vendor remote access MFA pending
+- EDI supplier concentration
+
+Open questions:
+- Confirm vendor remote access MFA date.
+- Request OT network diagram.
+- Clarify production downtime exposure.

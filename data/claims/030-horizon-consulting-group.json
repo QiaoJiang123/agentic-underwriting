@@ -1,0 +1,21 @@
+{
+  "submission_id": "030-horizon-consulting-group",
+  "claim_system": "dummy_claims_core",
+  "updated_at": "2026-05-19T12:00:00-04:00",
+  "claims": [
+    {
+      "claim_id": "CLM-HORIZONC-2022-001",
+      "loss_date": "2022-05-22",
+      "reported_date": "2022-05-23",
+      "status": "closed",
+      "claim_type": "privacy_incident",
+      "coverage_area": "privacy_liability",
+      "severity": "high",
+      "amount_paid": 106200,
+      "amount_reserved": 0,
+      "cause": "Limited customer information was disclosed to an unauthorized recipient.",
+      "description": "Privacy Incident was closed after remediation was documented; costs include forensic, legal, notification, recovery, or customer credit expenses as applicable.",
+      "recovery_status": "resolved"
+    }
+  ]
+}

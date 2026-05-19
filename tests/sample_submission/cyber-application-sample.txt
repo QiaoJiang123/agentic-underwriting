@@ -1,0 +1,14 @@
+Insured Name: North Coast Demo Foods
+Industry: Food distribution and cold storage
+Location: Portland, Oregon
+Annual Revenue: 42000000
+Employees: 185
+Records Count: 68000
+Requested Effective Date: 2026-06-01
+Requested Limit: $2,000,000
+Retention: $25,000
+MFA: Required for VPN, remote desktop, email, and privileged administrator accounts.
+EDR: CrowdStrike deployed on workstations and servers.
+Backups: Immutable daily backups with quarterly restore testing.
+Technology Profile: Warehouse management system, EDI ordering, cloud email, and managed firewall.
+Open Questions: Confirm whether EDI vendor has SOC 2 evidence.

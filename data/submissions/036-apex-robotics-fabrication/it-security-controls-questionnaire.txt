@@ -1,0 +1,31 @@
+IT and security controls questionnaire
+
+Insured: Apex Robotics Fabrication Inc.
+Submission ID: 036-apex-robotics-fabrication
+Industry: Robotics and fabrication manufacturer
+Industry benchmark bucket: Manufacturing / OT
+Revenue: $213,000,000
+Employees: 920
+Records: 142,000
+Technology profile: ERP, robotic cell controllers, OT network, EDI, remote vendor maintenance
+
+Security controls:
+- mfa: Partial; enabled for email and VPN with rollout pending for privileged application admins
+- edr: Microsoft Defender for Endpoint deployed on managed endpoints
+- backup: Immutable backups with monthly restore testing
+- patching: Critical patches within 14 days
+- security_training: Annual employee training
+
+Claims history:
+No cyber claims reported in the linked loss period.
+
+Risk flags:
+- Material third-party or portal dependency
+- Operational technology dependency
+- MFA rollout gap
+
+Open questions:
+- Confirm most recent backup restore test date.
+- Provide latest vulnerability scan executive summary.
+- Clarify OT segmentation and vendor remote access controls.
+- Confirm privileged application MFA completion timeline.

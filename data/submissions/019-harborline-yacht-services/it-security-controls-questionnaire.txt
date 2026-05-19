@@ -1,0 +1,30 @@
+IT and security controls questionnaire
+
+Insured: Harborline Yacht Services LLC
+Submission ID: 019-harborline-yacht-services
+Industry: Marina services and boat storage
+Industry benchmark bucket: Marina / Recreation
+Revenue: $19,400,000
+Employees: 95
+Records: 36,000
+Technology profile: Reservation platform, POS terminals, customer Wi-Fi, maintenance scheduling, Microsoft 365
+
+Security controls:
+- mfa: Enabled for email, VPN, and privileged users
+- edr: Microsoft Defender for Endpoint deployed on managed endpoints
+- backup: Daily backups with quarterly restore testing
+- patching: Critical patches within 14 days
+- security_training: Annual employee training plus phishing simulations
+
+Claims history:
+2023-06-10 | service_outage | closed | paid $21,800 | reserve $0
+2022-08-13 | payment_card_incident | closed | paid $73,600 | reserve $0
+2022-01-12 | privacy_incident | closed | paid $10,000 | reserve $0
+2024-10-14 | privacy_incident | closed | paid $43,500 | reserve $0
+
+Risk flags:
+
+Open questions:
+- Confirm most recent backup restore test date.
+- Provide latest vulnerability scan executive summary.
+- Clarify critical vendor incident notification obligations.

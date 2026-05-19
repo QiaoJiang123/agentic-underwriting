@@ -1,0 +1,31 @@
+Cyber application and submission form responses
+
+Insured: SignalForge DevOps Inc.
+Submission ID: 024-signalforge-devops
+Industry: DevOps tooling SaaS
+Industry benchmark bucket: SaaS / Software
+Revenue: $45,500,000
+Employees: 190
+Records: 720,000
+Technology profile: SaaS platform, CI/CD orchestration, API integrations, AWS, customer support portal
+
+Security controls:
+- mfa: Partial; enabled for email and VPN with rollout pending for privileged application admins
+- edr: CrowdStrike with 24/7 MDR coverage
+- backup: Immutable backups with monthly restore testing
+- patching: Critical patches within 7 days
+- security_training: Annual employee training
+
+Claims history:
+No cyber claims reported in the linked loss period.
+
+Risk flags:
+- Large privacy record count
+- Material third-party or portal dependency
+- MFA rollout gap
+
+Open questions:
+- Confirm most recent backup restore test date.
+- Provide latest vulnerability scan executive summary.
+- Request SOC 2 bridge letter and customer incident SLA.
+- Confirm privileged application MFA completion timeline.

@@ -1,0 +1,69 @@
+{
+  "status_id": "add_submission_status",
+  "updated_at": "2026-05-19T17:55:08.651027Z",
+  "intake_mode": "manual",
+  "overall_status": "draft",
+  "documents": [
+    {
+      "key": "cyber_application",
+      "label": "Cyber application",
+      "status": "needed",
+      "note": ""
+    },
+    {
+      "key": "ransomware_supplemental_application",
+      "label": "Ransomware supplemental application",
+      "status": "needed",
+      "note": ""
+    },
+    {
+      "key": "prior_cyber_insurance_policy",
+      "label": "Prior cyber insurance policy",
+      "status": "needed",
+      "note": ""
+    },
+    {
+      "key": "loss_runs_claims_history",
+      "label": "Loss runs / claims history",
+      "status": "needed",
+      "note": ""
+    },
+    {
+      "key": "financial_information_revenue_breakdown",
+      "label": "Financial information or revenue breakdown",
+      "status": "needed",
+      "note": ""
+    },
+    {
+      "key": "it_security_controls_questionnaire",
+      "label": "IT/security controls questionnaire",
+      "status": "needed",
+      "note": ""
+    },
+    {
+      "key": "mfa_edr_backup_documentation",
+      "label": "MFA/EDR/backup documentation",
+      "status": "needed",
+      "note": ""
+    },
+    {
+      "key": "incident_response_plan",
+      "label": "Incident response plan",
+      "status": "needed",
+      "note": ""
+    },
+    {
+      "key": "vendor_security_assessment",
+      "label": "Vendor/security assessment",
+      "status": "needed",
+      "note": ""
+    },
+    {
+      "key": "compliance_documents",
+      "label": "Compliance documents",
+      "status": "needed",
+      "note": ""
+    }
+  ],
+  "draft": {}
+}

@@ -1,0 +1,30 @@
+IT and security controls questionnaire
+
+Insured: Union Gearworks Co.
+Submission ID: 046-union-gearworks
+Industry: Industrial gear manufacturer
+Industry benchmark bucket: Manufacturing / OT
+Revenue: $88,500,000
+Employees: 510
+Records: 78,000
+Technology profile: ERP, OT production network, EDI, vendor remote access, Microsoft 365
+
+Security controls:
+- mfa: Enabled for email, VPN, and privileged users
+- edr: Microsoft Defender for Endpoint deployed on managed endpoints
+- backup: Immutable backups with monthly restore testing
+- patching: Critical patches within 14 days
+- security_training: Annual employee training plus phishing simulations
+
+Claims history:
+2022-01-19 | invoice_manipulation | closed | paid $137,600 | reserve $0
+2024-07-17 | vendor_remote_access_event | closed | paid $61,800 | reserve $0
+
+Risk flags:
+- Material third-party or portal dependency
+- Operational technology dependency
+
+Open questions:
+- Confirm most recent backup restore test date.
+- Provide latest vulnerability scan executive summary.
+- Clarify OT segmentation and vendor remote access controls.

@@ -1,0 +1,35 @@
+{
+  "submission_id": "048-cardinal-wallet",
+  "claim_system": "dummy_claims_core",
+  "updated_at": "2026-05-19T12:00:00-04:00",
+  "claims": [
+    {
+      "claim_id": "CLM-CARDINAL-2023-001",
+      "loss_date": "2023-11-01",
+      "reported_date": "2023-11-02",
+      "status": "closed",
+      "claim_type": "api_security_event",
+      "coverage_area": "incident_response",
+      "severity": "low",
+      "amount_paid": 36000,
+      "amount_reserved": 0,
+      "cause": "API credential exposure required forensic review and customer notification assessment.",
+      "description": "Api Security Event was closed after remediation was documented; costs include forensic, legal, notification, recovery, or customer credit expenses as applicable.",
+      "recovery_status": "resolved"
+    },
+    {
+      "claim_id": "CLM-CARDINAL-2024-002",
+      "loss_date": "2024-08-03",
+      "reported_date": "2024-08-04",
+      "status": "closed",
+      "claim_type": "service_outage",
+      "coverage_area": "technology_errors_omissions",
+      "severity": "moderate",
+      "amount_paid": 96300,
+      "amount_reserved": 0,
+      "cause": "Payment gateway routing issue caused customer transaction disruption.",
+      "description": "Service Outage was closed after remediation was documented; costs include forensic, legal, notification, recovery, or customer credit expenses as applicable.",
+      "recovery_status": "remediated"
+    }
+  ]
+}

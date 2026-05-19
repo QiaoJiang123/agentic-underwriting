@@ -10,6 +10,12 @@ const modelCard = document.querySelector(".model-card");
 const guideToggleButton = document.querySelector("#guideToggleButton");
 const guidePopover = document.querySelector("#guidePopover");
 const guideCloseButton = document.querySelector("#guideCloseButton");
+const workspaceMenuButton = document.querySelector("#workspaceMenuButton");
+const workspaceMenu = document.querySelector("#workspaceMenu");
+const sopReviewModal = document.querySelector("#sopReviewModal");
+const sopReviewContent = document.querySelector("#sopReviewContent");
+const sopReviewCloseButton = document.querySelector("#sopReviewCloseButton");
+const workSurface = document.querySelector(".work-surface");
 const submissionList = document.querySelector("#submissionList");
 const submissionCount = document.querySelector("#submissionCount");
 const workspaceTitle = document.querySelector("#workspaceTitle");
@@ -27,6 +33,13 @@ const keyInfoList = document.querySelector("#keyInfoList");
 const timelineList = document.querySelector("#timelineList");
 const refreshInsightsButton = document.querySelector("#refreshInsightsButton");
 const analyticsPanel = document.querySelector("#analyticsPanel");
+const panelExpandRailButton = document.querySelector("#panelExpandRailButton");
+const expandedPageHeader = document.querySelector("#expandedPageHeader");
+const expandedPageTitle = document.querySelector("#expandedPageTitle");
+const backToChatButton = document.querySelector("#backToChatButton");
+const underwritingExpandButton = document.querySelector("#underwritingExpandButton");
+const underwritingSummaryPanel = document.querySelector("#underwritingSummaryPanel");
+const underwritingWorkbenchPanel = document.querySelector("#underwritingWorkbenchPanel");
 const stageChecklist = document.querySelector("#stageChecklist");
 const documentList = document.querySelector("#documentList");
 const documentUploadInput = document.querySelector("#documentUploadInput");
@@ -49,37 +62,170 @@ const noteInput = document.querySelector("#noteInput");
 const noteList = document.querySelector("#noteList");
 
 const messages = [];
+const activeChatProcesses = [];
+const TASK_CALENDAR_MIN_YEAR = 2000;
+const TASK_CALENDAR_MAX_YEAR = 2100;
+const AGENT_SELECTED_SURFACE_CLASS = "agent-selected-surface";
+const AGENT_SELECTED_TAB_CLASS = "agent-selected-tab";
+const AGENT_SKILL_SURFACE_MAP = {
+  account: ["details_summary", "key_info"],
+  account_summary: ["details_summary", "key_info"],
+  analytics: ["analytics"],
+  bind: ["analytics"],
+  bind_model: ["analytics"],
+  bind_probability: ["analytics"],
+  broker: ["underwriting"],
+  broker_table: ["underwriting"],
+  claims: ["underwriting"],
+  claim: ["underwriting"],
+  decision_workflow: ["underwriting"],
+  details: ["details_summary", "underwriting"],
+  documents: ["documents"],
+  document: ["documents"],
+  document_completeness: ["documents", "underwriting"],
+  evidence: ["documents", "underwriting"],
+  guide: ["guide"],
+  guides: ["guide"],
+  notes: ["notes"],
+  note: ["notes"],
+  quote: ["analytics"],
+  quote_model: ["analytics"],
+  quote_probability: ["analytics"],
+  sop: ["underwriting"],
+  sop_guidance: ["underwriting"],
+  stages: ["stages"],
+  stage: ["stages"],
+  status: ["details_summary", "underwriting", "tasks", "stages"],
+  submission_update: ["details_summary", "key_info", "underwriting"],
+  tasks: ["tasks"],
+  task: ["tasks"],
+  timeline: ["timeline"],
+  underwriting: ["underwriting"]
+};
+const AGENT_ACTION_SURFACE_MAP = {
+  broker_table: ["underwriting"],
+  document_completeness: ["documents", "underwriting"],
+  extract: ["underwriting"],
+  guide: ["guide"],
+  navigate: [],
+  note: ["notes"],
+  submission_update: ["details_summary", "key_info", "underwriting"],
+  task: ["tasks"],
+};
+const AGENT_PANEL_SURFACE_MAP = {
+  analytics: ["analytics"],
+  details: ["details_summary", "underwriting"],
+  note: ["notes"],
+  tasks: ["tasks"]
+};
+const AGENT_SURFACE_TAB_MAP = {
+  analytics: "analytics",
+  details_summary: "details",
+  notes: "note",
+  stages: "tasks",
+  tasks: "tasks",
+  timeline: "details",
+  underwriting: "details"
+};
 let selectedSubmission = null;
 let selectedFiles = new Set();
 let currentChatHistoryId = null;
-let autoSelectEnabled = false;
+let autoSelectEnabled = true;
+let fileSelectionMode = "auto";
 let guideItems = [];
 let editingGuideIndex = null;
 let noteItems = [];
 let editingNoteIndex = null;
 let followUpItems = [];
 let selectedTaskDate = null;
+let taskCalendarCursor = clampTaskCalendarDate(new Date());
 let stageItems = [];
 let workflowSubmittedAt = null;
 let analyticsModels = null;
 let analyticsFeatureMetadata = null;
+let sopReviewRecord = null;
+let underwritingSystem = null;
+let decisionWorkflow = null;
 let currentAnalytics = null;
 let currentAnalyticsFeatureLookup = null;
 let activeWhatIfModel = "quote";
 let whatIfScenarioState = createEmptyWhatIfScenarioState();
 let activeFeatureTooltip = null;
+let underwritingDetailsOpen = false;
+let submissionUpdateEditingFields = new Set();
+let activeSupplementalModelKey = "cyber_attack_prob";
 const initialSubmissionId = new URLSearchParams(window.location.search).get("submission");
+
+const SUPPLEMENTAL_MODEL_KEYS = [
+  "cyber_attack_prob",
+  "ransomware_prob",
+  "data_breach_prob",
+  "business_interruption_prob",
+  "claim_severity_prob"
+];
+
+const SUPPLEMENTAL_RESULT_DEFINITIONS = {
+  cyber_attack_prob: {
+    label: "Cyber Attack Probability",
+    detail: "Likelihood of a cyber event in the underwriting period",
+    higherIsRisk: true
+  },
+  ransomware_prob: {
+    label: "Ransomware Probability",
+    detail: "Ransomware susceptibility from controls and dependency profile",
+    higherIsRisk: true
+  },
+  data_breach_prob: {
+    label: "Data Breach Probability",
+    detail: "Privacy and records-driven breach exposure",
+    higherIsRisk: true
+  },
+  business_interruption_prob: {
+    label: "Business Interruption Probability",
+    detail: "Operational outage and dependency exposure",
+    higherIsRisk: true
+  },
+  claim_severity_prob: {
+    label: "Claim Severity Probability",
+    detail: "Chance of a materially severe cyber claim",
+    higherIsRisk: true
+  },
+  industry_propensity: {
+    label: "Industry Propensity Score",
+    detail: "Industry and technology profile baseline risk",
+    higherIsRisk: true
+  },
+  broker_placement_confidence: {
+    label: "Broker Placement Confidence",
+    detail: "Broker quality, speed, evidence, and model support",
+    higherIsRisk: false
+  },
+  evidence_confidence: {
+    label: "Evidence Confidence Score",
+    detail: "Required evidence available for decision support",
+    higherIsRisk: false
+  }
+};
 
 init();
 
 function init() {
+  configureTaskDateInput();
   loadHealth();
   loadSubmissions();
 }
 
+function configureTaskDateInput() {
+  if (!followUpDate) {
+    return;
+  }
+
+  followUpDate.min = `${TASK_CALENDAR_MIN_YEAR}-01-01`;
+  followUpDate.max = `${TASK_CALENDAR_MAX_YEAR}-12-31`;
+}
+
 function loadHealth() {
-  fetch("/health")
-    .then((response) => response.json())
+  AUApi.get("/health")
     .then((data) => {
       modelStatus.textContent = data.model || "Connected";
       modelCard.classList.add("ready");
@@ -168,30 +314,45 @@ async function selectSubmission(submission, button) {
       content: formatSubmissionForPrompt(data.submission)
     };
     currentChatHistoryId = null;
-    autoSelectEnabled = false;
+    autoSelectEnabled = true;
     guideItems = [];
     editingGuideIndex = null;
     noteItems = [];
     editingNoteIndex = null;
     followUpItems = [];
     selectedTaskDate = null;
+    taskCalendarCursor = clampTaskCalendarDate(new Date());
     stageItems = [];
     workflowSubmittedAt = null;
+    underwritingSystem = null;
+    decisionWorkflow = null;
     currentAnalytics = null;
     currentAnalyticsFeatureLookup = null;
     activeWhatIfModel = "quote";
+    activeSupplementalModelKey = "cyber_attack_prob";
     whatIfScenarioState = createEmptyWhatIfScenarioState();
+    underwritingDetailsOpen = false;
+    submissionUpdateEditingFields = new Set();
+    setInsightExpanded(false);
+    clearAgentSelectedSurfaces();
 
     workspaceTitle.textContent = submission.title;
     summaryPlaceholder.innerHTML = buildSummaryHtml(selectedSubmission.record);
+    renderSubmissionUpdateForm(selectedSubmission.record);
     keyInfoList.innerHTML = buildKeyInfoHtml(selectedSubmission);
     timelineList.innerHTML = buildTimelineItems(selectedSubmission.record);
-    analyticsPanel.innerHTML = '<p class="empty-state">Loading analytics models...</p>';
-    await loadAnalyticsModels();
+    analyticsPanel.innerHTML = '<p class="empty-state">Loading analytics and underwriting system...</p>';
+    await Promise.all([
+      loadAnalyticsModels(),
+      loadUnderwritingSystem(submission.id),
+      loadDecisionWorkflow(submission.id)
+    ]);
     analyticsPanel.innerHTML = buildAnalyticsPanel(selectedSubmission.record);
+    renderUnderwritingDetails();
     stageItems = buildDefaultStageItems(selectedSubmission.record);
     renderStageChecklist();
     documentList.innerHTML = buildDocumentLinks(selectedSubmission.record);
+    setAutoDocumentMode();
     renderGuideInstructions("Loading guide...");
     renderNoteContext("Loading notes...");
     renderFollowUps("Loading tasks...");
@@ -199,9 +360,6 @@ async function selectSubmission(submission, button) {
     await loadNotes(submission.id);
     await loadFollowUps(submission.id);
     await loadStageState(submission.id);
-    selectedFiles = new Set((selectedSubmission.record.documents || []).map((document) => document.file_name));
-    syncFileSelectionControls();
-    updateSelectionMode("all");
     loadChatHistory(submission.id);
 
     input.value = "";
@@ -262,6 +420,7 @@ historyList.addEventListener("click", async (event) => {
 });
 
 async function loadChatHistoryMessages(submissionId, historyId) {
+  setAutoDocumentMode({ clearHighlights: true });
   messagesEl.innerHTML = "";
   addMessage("assistant", "Loading chat history...");
 
@@ -309,46 +468,72 @@ form.addEventListener("submit", async (event) => {
   }
 
   input.value = "";
+  clearAgentSelectedSurfaces();
   addMessage("user", content);
   messages.push({ role: "user", content });
 
   setLoading(true);
-  const pending = addMessage("assistant", "Thinking...");
+  const pending = addMessage("assistant", "");
+  const chatProcess = createChatProcess(pending);
+  addChatProcessStep(chatProcess, "Prompt received", "Preparing underwriting context.", "done");
 
   try {
     const visibleChatHistory = messages;
-    if (autoSelectEnabled) {
-      await autoSelectDocumentsForPrompt(content);
-    }
+    const actionStep = addChatProcessStep(
+      chatProcess,
+      "Checking workflow actions",
+      "Central router will check note, guide, task, navigation, and submission-update requests.",
+      "active"
+    );
+
+    const selectionStep = addChatProcessStep(
+      chatProcess,
+      "Selecting underwriting information",
+      describeCentralSelectionRequest(),
+      "active"
+    );
+
+    const contextStep = addChatProcessStep(
+      chatProcess,
+      "Routing through underwriting backend",
+      "Guide instructions, notes, selected data, and chat history are handled in one backend request.",
+      "active"
+    );
+
     const temporaryModelMessages = buildTemporaryModelMessagesWithSelectedFiles(visibleChatHistory);
-    const response = await fetch("/api/chat", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
+    const data = await AUApi.post("/api/chat", {
         submission_id: selectedSubmission ? selectedSubmission.id : null,
         user_prompt: content,
         messages: temporaryModelMessages,
+        selected_files: Array.from(selectedFiles),
+        file_selection_mode: fileSelectionMode,
         guides: getActiveGuideInstructions(),
         underwriter_notes: getActiveUnderwriterNotes()
-      })
+      });
+
+    updateChatProcessStep(actionStep, {
+      status: "done",
+      detail: describeWorkflowActionCheck(data)
     });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.error || "Request failed");
-    }
-
-    pending.querySelector(".bubble").innerHTML = formatText(data.reply);
+    applyCentralDocumentSelection(data);
+    updateChatProcessStep(selectionStep, {
+      status: "done",
+      detail: describeInformationSelection(data)
+    });
+    updateChatProcessStep(contextStep, {
+      status: "done",
+      detail: describeBackendResponse(data)
+    });
+    appendResponseProcessSteps(chatProcess, data);
+    setChatProcessAnswer(chatProcess, data.reply, data.retrieval && data.retrieval.sources);
     messages.push({ role: "assistant", content: data.reply });
     await refreshAfterChatActions(data.actions);
+    highlightAgentSelectedSurfaces(data);
+    appendWorkspaceRefreshProcessStep(chatProcess, data.actions);
     await saveCurrentChatHistory();
   } catch (error) {
-    const bubble = pending.querySelector(".bubble");
-    bubble.classList.add("error");
-    bubble.textContent = error.message || "Something went wrong.";
+    markActiveChatProcessSteps(chatProcess, "error");
+    setChatProcessError(chatProcess, error.message || "Something went wrong.");
   } finally {
     setLoading(false);
   }
@@ -371,6 +556,37 @@ if (guideToggleButton && guidePopover) {
 
 if (guideCloseButton && guidePopover) {
   guideCloseButton.addEventListener("click", closeGuidePopover);
+}
+
+if (workspaceMenuButton && workspaceMenu) {
+  workspaceMenuButton.addEventListener("click", (event) => {
+    event.stopPropagation();
+    toggleWorkspaceMenu();
+  });
+
+  workspaceMenu.addEventListener("click", (event) => {
+    const actionButton = event.target.closest("[data-workspace-menu-action]");
+    if (!actionButton) {
+      return;
+    }
+
+    closeWorkspaceMenu();
+    if (actionButton.dataset.workspaceMenuAction === "sop") {
+      openSopReview();
+    }
+  });
+}
+
+if (sopReviewCloseButton) {
+  sopReviewCloseButton.addEventListener("click", closeSopReview);
+}
+
+if (sopReviewModal) {
+  sopReviewModal.addEventListener("click", (event) => {
+    if (event.target.matches("[data-close-sop-review]")) {
+      closeSopReview();
+    }
+  });
 }
 
 input.addEventListener("keydown", (event) => {
@@ -411,6 +627,7 @@ documentList.addEventListener("change", (event) => {
     selectedFiles.delete(checkbox.value);
   }
   autoSelectEnabled = false;
+  clearAgentSelectedSurfaces();
   updateSelectionMode("manual");
 });
 
@@ -425,13 +642,16 @@ if (documentUploadButton && documentUploadInput) {
   });
 
   documentUploadInput.addEventListener("change", async () => {
-    const file = documentUploadInput.files && documentUploadInput.files[0];
-    if (!file) {
+    const files = Array.from(documentUploadInput.files || []);
+    if (!files.length) {
       return;
     }
 
     try {
-      await uploadSubmissionDocument(file);
+      await uploadSubmissionDocuments(files);
+    } catch (error) {
+      console.warn(error);
+      setDocumentUploadStatus(error.message || "Unable to upload files.");
     } finally {
       documentUploadInput.value = "";
     }
@@ -446,6 +666,7 @@ if (refreshInsightsButton) {
 
 selectAllFilesButton.addEventListener("click", () => {
   autoSelectEnabled = false;
+  clearAgentSelectedSurfaces();
   selectedFiles = new Set(getCurrentDocumentNames());
   syncFileSelectionControls();
   updateSelectionMode("all");
@@ -453,40 +674,100 @@ selectAllFilesButton.addEventListener("click", () => {
 
 unselectAllFilesButton.addEventListener("click", () => {
   autoSelectEnabled = false;
+  clearAgentSelectedSurfaces();
   selectedFiles.clear();
   syncFileSelectionControls();
   updateSelectionMode("none");
 });
 
 autoSelectFiles.addEventListener("click", async () => {
-  autoSelectEnabled = !autoSelectEnabled;
-  updateSelectionMode(autoSelectEnabled ? "auto" : "manual");
+  setAutoDocumentMode({ clearHighlights: true });
+});
 
-  if (autoSelectEnabled && input.value.trim()) {
-    try {
-      await autoSelectDocumentsForPrompt(input.value.trim());
-    } catch (error) {
-      console.warn(error);
-    }
+messagesEl.addEventListener("click", async (event) => {
+  const copyButton = event.target.closest("[data-copy-assistant-response]");
+  if (!copyButton) {
+    return;
   }
+
+  const answer = copyButton.closest(".assistant-answer, .bubble");
+  const text = answer ? answer.dataset.copyText || "" : "";
+  if (!text) {
+    return;
+  }
+
+  await copyTextToClipboard(text);
+  const originalLabel = copyButton.textContent;
+  copyButton.textContent = "Copied";
+  copyButton.classList.add("copied");
+  window.setTimeout(() => {
+    copyButton.textContent = originalLabel || "Copy";
+    copyButton.classList.remove("copied");
+  }, 1400);
 });
 
 panelTabButtons.forEach((button) => {
   button.addEventListener("click", () => {
-    const tabName = button.dataset.panelTab;
-
-    panelTabButtons.forEach((tabButton) => {
-      tabButton.classList.toggle("active", tabButton === button);
-    });
-
-    panelViews.forEach((view) => {
-      view.classList.toggle("active", view.dataset.panelView === tabName);
-    });
+    activatePanelTab(button.dataset.panelTab);
   });
 });
 
+if (panelExpandRailButton) {
+  panelExpandRailButton.addEventListener("click", () => {
+    const isExpanded = workSurface && workSurface.classList.contains("insight-expanded");
+    setInsightExpanded(!isExpanded);
+  });
+}
+
+if (backToChatButton) {
+  backToChatButton.addEventListener("click", () => {
+    setInsightExpanded(false);
+    input.focus();
+  });
+}
+
+if (underwritingExpandButton) {
+  underwritingExpandButton.addEventListener("click", () => {
+    underwritingDetailsOpen = !underwritingDetailsOpen;
+    setInsightExpanded(underwritingDetailsOpen);
+    renderUnderwritingDetails();
+  });
+}
+
+if (underwritingWorkbenchPanel) {
+  underwritingWorkbenchPanel.addEventListener("click", (event) => {
+    const updateEditButton = event.target.closest("[data-submission-update-edit]");
+    if (updateEditButton) {
+      enableSubmissionUpdateField(updateEditButton.dataset.submissionUpdateEdit);
+      return;
+    }
+
+    const promptButton = event.target.closest("[data-agent-prompt]");
+    if (promptButton) {
+      input.value = promptButton.dataset.agentPrompt || "";
+      input.focus();
+    }
+  });
+
+  underwritingWorkbenchPanel.addEventListener("submit", async (event) => {
+    if (!event.target.closest("#submissionUpdateForm")) {
+      return;
+    }
+
+    event.preventDefault();
+    await saveSubmissionUpdates();
+  });
+}
+
 if (analyticsPanel) {
   analyticsPanel.addEventListener("click", (event) => {
+    const supplementalButton = event.target.closest("[data-supplemental-model]");
+    if (supplementalButton) {
+      activeSupplementalModelKey = supplementalButton.dataset.supplementalModel || "cyber_attack_prob";
+      updateSupplementalModelDetail();
+      return;
+    }
+
     const optionButton = event.target.closest("[data-what-if-option]");
     if (optionButton) {
       const key = optionButton.dataset.whatIfFeatureKey;
@@ -504,13 +785,7 @@ if (analyticsPanel) {
       return;
     }
 
-    const tabName = button.dataset.analyticsSubtab;
-    analyticsPanel.querySelectorAll("[data-analytics-subtab]").forEach((tabButton) => {
-      tabButton.classList.toggle("active", tabButton === button);
-    });
-    analyticsPanel.querySelectorAll("[data-analytics-view]").forEach((view) => {
-      view.classList.toggle("active", view.dataset.analyticsView === tabName);
-    });
+    setAnalyticsSubtab(button.dataset.analyticsSubtab);
   });
 
   analyticsPanel.addEventListener("input", (event) => {
@@ -747,6 +1022,10 @@ if (followUpForm) {
     if (!title || !dueDate) {
       return;
     }
+    if (!isTaskDateInRange(dueDate)) {
+      renderFollowUps(`Task due date must be between ${TASK_CALENDAR_MIN_YEAR}-01-01 and ${TASK_CALENDAR_MAX_YEAR}-12-31.`);
+      return;
+    }
 
     const now = new Date().toISOString();
     followUpItems.push({
@@ -758,6 +1037,7 @@ if (followUpForm) {
       updated_at: now
     });
     selectedTaskDate = dueDate;
+    setTaskCalendarFromDate(dueDate, false);
     followUpTitle.value = "";
     followUpDate.value = "";
     renderFollowUps();
@@ -797,6 +1077,12 @@ if (followUpList) {
 
 if (followUpCalendar) {
   followUpCalendar.addEventListener("click", (event) => {
+    const navButton = event.target.closest("[data-calendar-action]");
+    if (navButton) {
+      handleTaskCalendarAction(navButton.dataset.calendarAction);
+      return;
+    }
+
     const dayButton = event.target.closest("[data-task-date]");
     if (!dayButton) {
       return;
@@ -804,6 +1090,23 @@ if (followUpCalendar) {
 
     const date = dayButton.dataset.taskDate;
     selectedTaskDate = selectedTaskDate === date ? null : date;
+    renderFollowUps();
+  });
+
+  followUpCalendar.addEventListener("change", (event) => {
+    const monthSelect = event.target.closest("[data-calendar-month]");
+    const yearSelect = event.target.closest("[data-calendar-year]");
+    if (!monthSelect && !yearSelect) {
+      return;
+    }
+
+    const month = monthSelect
+      ? Number(monthSelect.value)
+      : taskCalendarCursor.getMonth();
+    const year = yearSelect
+      ? Number(yearSelect.value)
+      : taskCalendarCursor.getFullYear();
+    setTaskCalendarMonth(year, month);
     renderFollowUps();
   });
 }
@@ -864,12 +1167,30 @@ document.addEventListener("keydown", (event) => {
   if (event.key === "Escape" && guidePopover && guidePopover.classList.contains("open")) {
     closeGuidePopover();
   }
+
+  if (event.key === "Escape" && sopReviewModal && sopReviewModal.classList.contains("open")) {
+    closeSopReview();
+  }
+
+  if (event.key === "Escape") {
+    closeWorkspaceMenu();
+  }
+});
+
+document.addEventListener("click", (event) => {
+  if (!workspaceMenu || !workspaceMenuButton) {
+    return;
+  }
+  if (!workspaceMenu.hidden && !workspaceMenu.contains(event.target) && !workspaceMenuButton.contains(event.target)) {
+    closeWorkspaceMenu();
+  }
 });
 
 function resetChat() {
   messages.length = 0;
   currentChatHistoryId = null;
   messagesEl.innerHTML = "";
+  setAutoDocumentMode({ clearHighlights: true });
   addMessage(
     "assistant",
     selectedSubmission
@@ -880,80 +1201,213 @@ function resetChat() {
 }
 
 function buildTemporaryModelMessagesWithSelectedFiles(visibleMessages) {
-  if (!selectedSubmission || !selectedSubmission.record || !selectedFiles.size) {
-    return visibleMessages;
-  }
-
-  const selectedFileContext = buildSelectedFileContext();
-  if (!selectedFileContext) {
-    return visibleMessages;
-  }
-
-  const modelMessages = visibleMessages.map((message) => ({ ...message }));
-  const lastUserIndex = findLastUserMessageIndex(modelMessages);
-
-  if (lastUserIndex === -1) {
-    return modelMessages;
-  }
-
-  modelMessages[lastUserIndex] = {
-    ...modelMessages[lastUserIndex],
-    content: [
-      modelMessages[lastUserIndex].content,
-      "",
-      "Selected file context:",
-      selectedFileContext
-    ].join("\n")
-  };
-
-  return modelMessages;
+  return visibleMessages.map((message) => ({ ...message }));
 }
 
-async function autoSelectDocumentsForPrompt(prompt) {
-  if (!selectedSubmission) {
+function toggleWorkspaceMenu() {
+  if (!workspaceMenu || !workspaceMenuButton) {
+    return;
+  }
+  const nextOpen = workspaceMenu.hidden;
+  workspaceMenu.toggleAttribute("hidden", !nextOpen);
+  workspaceMenuButton.setAttribute("aria-expanded", nextOpen ? "true" : "false");
+  workspaceMenuButton.classList.toggle("active", nextOpen);
+}
+
+function closeWorkspaceMenu() {
+  if (!workspaceMenu || !workspaceMenuButton) {
+    return;
+  }
+  workspaceMenu.setAttribute("hidden", "");
+  workspaceMenuButton.setAttribute("aria-expanded", "false");
+  workspaceMenuButton.classList.remove("active");
+}
+
+async function openSopReview() {
+  if (!sopReviewModal || !sopReviewContent) {
     return;
   }
 
-  const response = await fetch(
-    `/api/submissions/${encodeURIComponent(selectedSubmission.id)}/auto-select-documents`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        prompt,
-        max_documents: 6
-      })
-    }
-  );
-  const data = await response.json();
+  sopReviewModal.classList.add("open");
+  sopReviewModal.setAttribute("aria-hidden", "false");
+  sopReviewContent.innerHTML = '<p class="empty-state">Loading SOP...</p>';
 
-  if (!response.ok) {
-    throw new Error(data.error || "Unable to auto-select documents.");
+  try {
+    if (!sopReviewRecord) {
+      sopReviewRecord = await AUApi.get("/api/sop");
+    }
+    renderSopReview(sopReviewRecord);
+  } catch (error) {
+    console.warn(error);
+    sopReviewContent.innerHTML = `<p class="document-error">${escapeHtml(error.message || "Unable to load SOP.")}</p>`;
+  }
+}
+
+function closeSopReview() {
+  if (!sopReviewModal) {
+    return;
+  }
+  sopReviewModal.classList.remove("open");
+  sopReviewModal.setAttribute("aria-hidden", "true");
+}
+
+function renderSopReview(record) {
+  if (!sopReviewContent) {
+    return;
   }
 
-  const selected = data.document_selection && Array.isArray(data.document_selection.selected_files)
-    ? data.document_selection.selected_files
+  const sop = record && record.sop ? record.sop : {};
+  const metadata = record && record.metadata ? record.metadata : {};
+  const principles = Array.isArray(sop.principles) ? sop.principles : [];
+  const steps = Array.isArray(sop.steps) ? sop.steps : [];
+  const metadataSteps = Array.isArray(metadata.steps) ? metadata.steps : [];
+  const defaultStepIds = metadata.selection_rules && Array.isArray(metadata.selection_rules.default_step_ids)
+    ? metadata.selection_rules.default_step_ids
     : [];
 
-  selectedFiles = new Set(selected);
-  syncFileSelectionControls();
-  updateSelectionMode("auto");
+  sopReviewContent.innerHTML = `
+    <section class="sop-review-summary">
+      <div>
+        <span>Name</span>
+        <strong>${escapeHtml(sop.name || "Commercial Cyber Underwriting SOP")}</strong>
+      </div>
+      <div>
+        <span>Version</span>
+        <strong>${escapeHtml(sop.version || "TBD")}</strong>
+      </div>
+      <div>
+        <span>Updated</span>
+        <strong>${escapeHtml(formatDateOnly(sop.updated_at || metadata.updated_at))}</strong>
+      </div>
+    </section>
+    <section class="sop-review-section">
+      <h3>Principles</h3>
+      ${principles.length ? `<ul>${principles.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>` : '<p class="empty-state">No principles listed.</p>'}
+    </section>
+    <section class="sop-review-section">
+      <h3>Procedure Steps</h3>
+      <div class="sop-review-step-list">
+        ${steps.map((step) => renderSopReviewStep(step)).join("") || '<p class="empty-state">No SOP steps listed.</p>'}
+      </div>
+    </section>
+    <section class="sop-review-section">
+      <h3>Agent Selection Metadata</h3>
+      <p>Default steps: ${escapeHtml(defaultStepIds.join(", ") || "None")}</p>
+      <div class="sop-metadata-grid">
+        ${metadataSteps.map((step) => renderSopMetadataStep(step)).join("") || '<p class="empty-state">No metadata listed.</p>'}
+      </div>
+    </section>
+  `;
 }
 
-async function uploadSubmissionDocument(file) {
-  if (!selectedSubmission) {
+function renderSopReviewStep(step) {
+  return `
+    <article class="sop-review-step ${escapeHtml(statusClass(step.priority))}">
+      <div>
+        <span>${escapeHtml(step.priority || "medium")} priority</span>
+        <strong>${escapeHtml(step.label || step.step_id || "SOP Step")}</strong>
+      </div>
+      <p>${escapeHtml(step.goal || "")}</p>
+      <small>${escapeHtml(step.suggestion_template || "")}</small>
+    </article>
+  `;
+}
+
+function renderSopMetadataStep(step) {
+  const keywords = Array.isArray(step.keywords) ? step.keywords.slice(0, 8).join(", ") : "";
+  const relatedData = Array.isArray(step.related_data) ? step.related_data.join(", ") : "";
+  return `
+    <article class="sop-metadata-item">
+      <strong>${escapeHtml(step.label || step.step_id || "SOP Metadata")}</strong>
+      <span>${escapeHtml(keywords || "No keywords")}</span>
+      <small>${escapeHtml(relatedData || "No related data listed")}</small>
+    </article>
+  `;
+}
+
+function buildUnderwritingSystemPromptContext() {
+  if (!underwritingSystem) {
+    return "";
+  }
+
+  const appetite = underwritingSystem.appetite || {};
+  const claimSnapshot = underwritingSystem.claim_snapshot || {};
+  const actions = Array.isArray(underwritingSystem.recommended_actions)
+    ? underwritingSystem.recommended_actions
+    : [];
+  const signals = Array.isArray(underwritingSystem.signals)
+    ? underwritingSystem.signals
+    : [];
+  const sopGuidance = underwritingSystem.sop_guidance || {};
+  const sopSuggestions = Array.isArray(sopGuidance.suggestions) ? sopGuidance.suggestions : [];
+  const broker = underwritingSystem.broker || {};
+  const contact = broker.submission_contact || {};
+
+  return [
+    `SOP: ${sopGuidance.name || "Commercial Cyber Underwriting SOP"} ${sopGuidance.version || ""}`,
+    `Appetite Status: ${appetite.status || "TBD"}`,
+    `Appetite Rationale: ${appetite.rationale || "TBD"}`,
+    `Broker: ${broker.firm_name || contact.firm_name || "TBD"}; Producer: ${contact.producer_name || "TBD"}; Service Tier: ${broker.service_tier || "TBD"}`,
+    `Claims: ${claimSnapshot.total_claims || 0} total, ${claimSnapshot.open_claims || 0} open, ${formatCurrency(Number(claimSnapshot.total_incurred || 0))} incurred`,
+    "SOP Suggestions:",
+    ...sopSuggestions.map((suggestion) => `- ${suggestion.step_label}: ${suggestion.recommendation}`),
+    "Signals:",
+    ...signals.map((signal) => `- ${signal.label}: ${signal.severity} - ${signal.detail}`),
+    "Recommended Actions:",
+    ...actions.map((action) => `- ${action}`)
+  ].join("\n");
+}
+
+async function uploadSubmissionDocuments(files) {
+  const validFiles = files.filter((file) => {
+    const extension = String(file.name || "").split(".").pop().toLowerCase();
+    return ["txt", "pdf"].includes(extension);
+  });
+  const invalidCount = files.length - validFiles.length;
+
+  if (!validFiles.length) {
+    setDocumentUploadStatus("Only .txt and .pdf files are supported.");
     return;
+  }
+
+  const uploadedNames = [];
+  let failedCount = 0;
+  for (const [index, file] of validFiles.entries()) {
+    setDocumentUploadStatus(`Uploading ${index + 1}/${validFiles.length}: ${file.name}`);
+    try {
+      const uploadedDocument = await uploadSubmissionDocument(file, { skipRefreshPrompt: true });
+      if (uploadedDocument && uploadedDocument.file_name) {
+        uploadedNames.push(uploadedDocument.file_name);
+      }
+    } catch (error) {
+      console.warn(error);
+      failedCount += 1;
+    }
+  }
+
+  const skippedText = invalidCount ? ` ${invalidCount} unsupported file${invalidCount === 1 ? "" : "s"} skipped.` : "";
+  const failedText = failedCount ? ` ${failedCount} file${failedCount === 1 ? "" : "s"} failed.` : "";
+  setDocumentUploadStatus(
+    uploadedNames.length === 1
+      ? `Uploaded ${uploadedNames[0]}.${skippedText}${failedText}`
+      : `Uploaded ${uploadedNames.length} files.${skippedText}${failedText}`
+  );
+  if (uploadedNames.length) {
+    askToRefreshInsights("The files were added and metadata was updated.");
+  }
+}
+
+async function uploadSubmissionDocument(file, options = {}) {
+  if (!selectedSubmission) {
+    return null;
   }
 
   const extension = file.name.split(".").pop().toLowerCase();
   if (!["txt", "pdf"].includes(extension)) {
     setDocumentUploadStatus("Only .txt and .pdf files are supported.");
-    return;
+    return null;
   }
 
-  setDocumentUploadStatus("Uploading...");
   const formData = new FormData();
   formData.append("file", file);
 
@@ -974,16 +1428,18 @@ async function uploadSubmissionDocument(file) {
       applyUpdatedSubmissionRecord(updatedSubmission);
     }
     if (uploadedDocument && uploadedDocument.file_name) {
-      selectedFiles.add(uploadedDocument.file_name);
-      syncFileSelectionControls();
-      updateSelectionMode("manual");
+      reconcileSelectionAfterFileChange({ addedFileName: uploadedDocument.file_name });
     }
 
-    setDocumentUploadStatus(uploadedDocument ? `Uploaded ${uploadedDocument.file_name}` : "Uploaded.");
-    askToRefreshInsights("The file was added and metadata was updated.");
+    if (!options.skipRefreshPrompt) {
+      setDocumentUploadStatus(uploadedDocument ? `Uploaded ${uploadedDocument.file_name}` : "Uploaded.");
+      askToRefreshInsights("The file was added and metadata was updated.");
+    }
+    return uploadedDocument || null;
   } catch (error) {
     console.warn(error);
     setDocumentUploadStatus(error.message || "Unable to upload file.");
+    throw error;
   }
 }
 
@@ -1017,8 +1473,7 @@ async function deleteSubmissionDocument(fileName) {
     if (updatedSubmission) {
       selectedFiles.delete(fileName);
       applyUpdatedSubmissionRecord(updatedSubmission);
-      syncFileSelectionControls();
-      updateSelectionMode("manual");
+      reconcileSelectionAfterFileChange();
     }
 
     setDocumentUploadStatus(`Deleted ${fileName}`);
@@ -1099,13 +1554,417 @@ function applyUpdatedSubmissionRecord(updatedSubmission) {
   };
 
   summaryPlaceholder.innerHTML = buildSummaryHtml(updatedSubmission);
+  renderSubmissionUpdateForm(updatedSubmission);
   timelineList.innerHTML = buildTimelineItems(updatedSubmission);
   documentList.innerHTML = buildDocumentLinks(updatedSubmission);
   keyInfoList.innerHTML = buildKeyInfoHtml(selectedSubmission);
   analyticsPanel.innerHTML = buildAnalyticsPanel(updatedSubmission);
+  renderUnderwritingDetails();
   selectedFiles = new Set(
     Array.from(selectedFiles).filter((fileName) => getCurrentDocumentNames().includes(fileName))
   );
+}
+
+function renderSubmissionUpdateForm(record) {
+  const container = document.querySelector("#submissionUpdateEditorContainer");
+  if (!container || !record) {
+    return;
+  }
+
+  container.innerHTML = renderSubmissionUpdateEditorContent(record);
+}
+
+function renderSubmissionUpdateEditor(record) {
+  return `
+    <section class="uw-panel submission-update-panel" id="submissionUpdateEditorContainer">
+      ${renderSubmissionUpdateEditorContent(record)}
+    </section>
+  `;
+}
+
+function renderSubmissionUpdateEditorContent(record) {
+  const fields = getSubmissionUpdateFields(record);
+
+  return `
+    <div class="card-heading">
+      <div>
+        <h4>Submission Update</h4>
+        <p class="uw-section-note">Edit metadata cells used by the underwriting system, then submit all changes together.</p>
+      </div>
+      <span class="form-status" id="submissionUpdateStatus"></span>
+    </div>
+    <form class="submission-update-form uw-submission-update-form" id="submissionUpdateForm">
+      ${fields.map(renderSubmissionUpdateField).join("")}
+      <div class="submission-update-submit-row">
+        <span>${submissionUpdateEditingFields.size ? `${submissionUpdateEditingFields.size} field${submissionUpdateEditingFields.size === 1 ? "" : "s"} unlocked` : "Choose Edit beside any value before submitting."}</span>
+        <button class="selection-action" id="submissionUpdateSaveButton" type="submit">Submit Changes</button>
+      </div>
+    </form>
+  `;
+}
+
+function getSubmissionUpdateFields(record) {
+  const applicant = record.applicant || {};
+
+  return [
+    {
+      key: "status",
+      label: "Status",
+      type: "select",
+      value: record.status || "New",
+      options: ["New", "In Review", "Referral Needed", "Quoted", "Bound", "Declined"]
+    },
+    {
+      key: "industry",
+      label: "Industry",
+      type: "text",
+      value: applicant.industry || ""
+    },
+    {
+      key: "industry_bucket",
+      label: "Industry Bucket",
+      type: "select",
+      value: applicant.industry_bucket || applicant.industry_group || "Professional Services",
+      options: [
+        "Construction",
+        "Education",
+        "Fintech / Payments",
+        "Food Distribution / Logistics",
+        "Healthcare / Pharmacy",
+        "Hospitality / Retail",
+        "Manufacturing / OT",
+        "Marina / Recreation",
+        "Professional Services",
+        "SaaS / Software"
+      ]
+    },
+    {
+      key: "annual_revenue",
+      label: "Revenue",
+      type: "number",
+      value: applicant.annual_revenue || "",
+      min: 0,
+      step: 10000
+    },
+    {
+      key: "records_count",
+      label: "Records",
+      type: "number",
+      value: applicant.records_count || "",
+      min: 0,
+      step: 1000
+    },
+    {
+      key: "employee_count",
+      label: "Employees",
+      type: "number",
+      value: applicant.employee_count || "",
+      min: 0,
+      step: 1
+    },
+    {
+      key: "technology_profile",
+      label: "Technology Profile",
+      type: "textarea",
+      value: applicant.technology_profile || "",
+      rows: 2,
+      wide: true
+    },
+    {
+      key: "risk_flags",
+      label: "Risk Flags",
+      type: "textarea",
+      value: Array.isArray(record.risk_flags) ? record.risk_flags.join("\n") : "",
+      rows: 3,
+      placeholder: "One risk flag per line",
+      wide: true
+    },
+    {
+      key: "open_questions",
+      label: "Open Questions",
+      type: "textarea",
+      value: Array.isArray(record.open_questions) ? record.open_questions.join("\n") : "",
+      rows: 3,
+      placeholder: "One open question per line",
+      wide: true
+    }
+  ];
+}
+
+function renderSubmissionUpdateField(field) {
+  const isEditing = submissionUpdateEditingFields.has(field.key);
+  const disabledAttribute = isEditing ? "" : " disabled";
+  const editLabel = isEditing ? "Editing" : "Edit";
+  const inputId = `submissionUpdate_${field.key}`;
+
+  return `
+    <label class="submission-update-field ${field.wide ? "wide-field" : ""} ${isEditing ? "editing" : ""}" data-submission-update-field="${escapeHtml(field.key)}">
+      <span>${escapeHtml(field.label)}</span>
+      <div class="submission-update-control-row">
+        ${renderSubmissionUpdateControl(field, inputId, disabledAttribute)}
+        <button class="cell-edit-button" type="button" data-submission-update-edit="${escapeHtml(field.key)}"${isEditing ? " disabled" : ""}>${editLabel}</button>
+      </div>
+    </label>
+  `;
+}
+
+function renderSubmissionUpdateControl(field, inputId, disabledAttribute) {
+  const common = `id="${escapeHtml(inputId)}" data-submission-update-control="${escapeHtml(field.key)}"${disabledAttribute}`;
+
+  if (field.type === "select") {
+    const options = Array.from(new Set([...(field.options || []), field.value].filter(Boolean)));
+    return `
+      <select ${common}>
+        ${options.map((option) => `<option value="${escapeHtml(option)}"${String(option) === String(field.value) ? " selected" : ""}>${escapeHtml(option)}</option>`).join("")}
+      </select>
+    `;
+  }
+
+  if (field.type === "textarea") {
+    return `
+      <textarea ${common} rows="${escapeHtml(field.rows || 2)}" placeholder="${escapeHtml(field.placeholder || "")}">${escapeHtml(field.value)}</textarea>
+    `;
+  }
+
+  const minAttribute = field.min == null ? "" : ` min="${escapeHtml(field.min)}"`;
+  const stepAttribute = field.step == null ? "" : ` step="${escapeHtml(field.step)}"`;
+  return `<input ${common} type="${escapeHtml(field.type || "text")}" value="${escapeHtml(field.value)}"${minAttribute}${stepAttribute} />`;
+}
+
+function enableSubmissionUpdateField(fieldKey) {
+  if (!fieldKey) {
+    return;
+  }
+
+  submissionUpdateEditingFields.add(fieldKey);
+  const field = Array.from(document.querySelectorAll("[data-submission-update-field]"))
+    .find((item) => item.dataset.submissionUpdateField === fieldKey);
+  const control = field ? field.querySelector("[data-submission-update-control]") : null;
+  const editButton = field ? field.querySelector("[data-submission-update-edit]") : null;
+
+  if (field) {
+    field.classList.add("editing");
+  }
+  if (control) {
+    control.disabled = false;
+    control.focus();
+  }
+  if (editButton) {
+    editButton.textContent = "Editing";
+    editButton.disabled = true;
+  }
+  refreshSubmissionUpdateEditCount();
+}
+
+function refreshSubmissionUpdateEditCount() {
+  const row = document.querySelector(".submission-update-submit-row span");
+  if (!row) {
+    return;
+  }
+
+  row.textContent = submissionUpdateEditingFields.size
+    ? `${submissionUpdateEditingFields.size} field${submissionUpdateEditingFields.size === 1 ? "" : "s"} unlocked`
+    : "Choose Edit beside any value before submitting.";
+}
+
+function getSubmissionUpdateElements() {
+  return {
+    form: document.querySelector("#submissionUpdateForm"),
+    status: document.querySelector("#submissionUpdateStatus"),
+    saveButton: document.querySelector("#submissionUpdateSaveButton"),
+    statusInput: document.querySelector("#submissionUpdate_status"),
+    industryInput: document.querySelector("#submissionUpdate_industry"),
+    industryBucketInput: document.querySelector("#submissionUpdate_industry_bucket"),
+    revenueInput: document.querySelector("#submissionUpdate_annual_revenue"),
+    recordsInput: document.querySelector("#submissionUpdate_records_count"),
+    employeesInput: document.querySelector("#submissionUpdate_employee_count"),
+    technologyInput: document.querySelector("#submissionUpdate_technology_profile"),
+    riskFlagsInput: document.querySelector("#submissionUpdate_risk_flags"),
+    openQuestionsInput: document.querySelector("#submissionUpdate_open_questions")
+  };
+}
+
+async function saveSubmissionUpdates() {
+  if (!selectedSubmission) {
+    setSubmissionUpdateStatus("Select a submission first.", true);
+    return;
+  }
+
+  const elements = getSubmissionUpdateElements();
+  if (!elements.form) {
+    return;
+  }
+
+  if (!submissionUpdateEditingFields.size) {
+    setSubmissionUpdateStatus("Choose Edit on at least one value before submitting.", true);
+    return;
+  }
+
+  if (elements.saveButton) {
+    elements.saveButton.disabled = true;
+  }
+  setSubmissionUpdateStatus("Saving...");
+
+  const payload = {
+    status: elements.statusInput ? elements.statusInput.value : "",
+    applicant: {
+      industry: elements.industryInput ? elements.industryInput.value : "",
+      industry_bucket: elements.industryBucketInput ? elements.industryBucketInput.value : "",
+      industry_group: elements.industryBucketInput ? elements.industryBucketInput.value : "",
+      annual_revenue: elements.revenueInput ? elements.revenueInput.value : "",
+      records_count: elements.recordsInput ? elements.recordsInput.value : "",
+      employee_count: elements.employeesInput ? elements.employeesInput.value : "",
+      technology_profile: elements.technologyInput ? elements.technologyInput.value : ""
+    },
+    risk_flags: splitTextareaLines(elements.riskFlagsInput ? elements.riskFlagsInput.value : ""),
+    open_questions: splitTextareaLines(elements.openQuestionsInput ? elements.openQuestionsInput.value : "")
+  };
+
+  try {
+    const response = await fetch(
+      `/api/submissions/${encodeURIComponent(selectedSubmission.id)}/metadata-cells`,
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload)
+      }
+    );
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || "Unable to save submission updates.");
+    }
+
+    if (data.submission) {
+      submissionUpdateEditingFields = new Set();
+      await loadUnderwritingSystem(selectedSubmission.id);
+      applyUpdatedSubmissionRecord(data.submission);
+    }
+    setSubmissionUpdateStatus("Saved.");
+  } catch (error) {
+    console.warn(error);
+    setSubmissionUpdateStatus(error.message || "Unable to save.", true);
+  } finally {
+    const latestElements = getSubmissionUpdateElements();
+    if (latestElements.saveButton) {
+      latestElements.saveButton.disabled = false;
+    }
+  }
+}
+
+function splitTextareaLines(value) {
+  return String(value || "")
+    .split(/\n|;/)
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function setSubmissionUpdateStatus(message, isError = false) {
+  const status = document.querySelector("#submissionUpdateStatus");
+  if (!status) {
+    return;
+  }
+  status.textContent = message || "";
+  status.classList.toggle("error", Boolean(isError));
+}
+
+function setInsightExpanded(expanded) {
+  if (!workSurface || !panelExpandRailButton) {
+    return;
+  }
+
+  const shouldExpand = Boolean(expanded);
+  const activeTab = getActivePanelTab();
+  const wasUnderwritingOpen = underwritingDetailsOpen;
+
+  if (shouldExpand && activeTab === "details") {
+    underwritingDetailsOpen = true;
+  }
+
+  if (!shouldExpand && underwritingDetailsOpen) {
+    underwritingDetailsOpen = false;
+  }
+
+  workSurface.classList.toggle("insight-expanded", shouldExpand);
+  workSurface.classList.toggle("details-expanded", shouldExpand && activeTab === "details");
+  workSurface.classList.toggle("analytics-expanded", shouldExpand && activeTab === "analytics");
+  workSurface.classList.toggle("tasks-expanded", shouldExpand && activeTab === "tasks");
+  panelExpandRailButton.innerHTML = shouldExpand ? "&raquo;" : "&laquo;";
+  panelExpandRailButton.setAttribute("aria-label", shouldExpand ? "Shrink expanded panel" : "Expand right panel");
+  updateExpandedPageHeader();
+
+  if (activeTab === "details" || wasUnderwritingOpen !== underwritingDetailsOpen) {
+    renderUnderwritingDetails();
+  }
+}
+
+function activatePanelTab(tabName, options = {}) {
+  const targetName = tabName || "details";
+  const targetButton = Array.from(panelTabButtons).find((button) => button.dataset.panelTab === targetName);
+  if (!targetButton) {
+    return;
+  }
+
+  panelTabButtons.forEach((button) => {
+    button.classList.toggle("active", button === targetButton);
+  });
+
+  panelViews.forEach((view) => {
+    view.classList.toggle("active", view.dataset.panelView === targetName);
+  });
+
+  if (!["analytics", "details", "tasks"].includes(targetName)) {
+    setInsightExpanded(false);
+    return;
+  }
+
+  if (options.expand) {
+    setInsightExpanded(true);
+    return;
+  }
+
+  updateExpandedPageHeader();
+}
+
+function setAnalyticsSubtab(tabName) {
+  if (!analyticsPanel) {
+    return;
+  }
+
+  const targetName = tabName || "quote";
+  analyticsPanel.querySelectorAll("[data-analytics-subtab]").forEach((tabButton) => {
+    tabButton.classList.toggle("active", tabButton.dataset.analyticsSubtab === targetName);
+  });
+  analyticsPanel.querySelectorAll("[data-analytics-view]").forEach((view) => {
+    view.classList.toggle("active", view.dataset.analyticsView === targetName);
+  });
+  if (targetName === "what-if") {
+    updateWhatIfView();
+  }
+}
+
+function getActivePanelTab() {
+  const activeButton = Array.from(panelTabButtons).find((button) => button.classList.contains("active"));
+  return activeButton ? activeButton.dataset.panelTab : "details";
+}
+
+function updateExpandedPageHeader() {
+  if (!workSurface || !expandedPageHeader || !expandedPageTitle) {
+    return;
+  }
+
+  const activeTab = getActivePanelTab();
+  const isExpanded = workSurface.classList.contains("insight-expanded");
+  const title = activeTab === "analytics"
+    ? "Analytic Dashboard"
+    : activeTab === "tasks"
+      ? "Task Calendar"
+      : "Underwriting System";
+
+  expandedPageTitle.textContent = title;
+  expandedPageHeader.setAttribute("aria-hidden", isExpanded ? "false" : "true");
 }
 
 function setDocumentUploadStatus(message) {
@@ -1115,10 +1974,22 @@ function setDocumentUploadStatus(message) {
 }
 
 function updateSelectionMode(mode) {
+  fileSelectionMode = mode;
   selectAllFilesButton.classList.toggle("active", mode === "all");
   unselectAllFilesButton.classList.toggle("active", mode === "none");
   autoSelectFiles.classList.toggle("active", mode === "auto");
   autoSelectFiles.setAttribute("aria-pressed", mode === "auto" ? "true" : "false");
+}
+
+function setAutoDocumentMode(options = {}) {
+  autoSelectEnabled = true;
+  selectedFiles.clear();
+  syncFileSelectionControls();
+  updateSelectionMode("auto");
+
+  if (options.clearHighlights) {
+    clearAgentSelectedSurfaces();
+  }
 }
 
 function getActiveGuideInstructions() {
@@ -1138,6 +2009,8 @@ async function refreshAfterChatActions(actions) {
     return;
   }
 
+  applyChatUiActions(actions);
+
   const actionTypes = new Set(actions.map((action) => action && action.type));
   const refreshes = [];
   if (actionTypes.has("guide")) {
@@ -1148,9 +2021,171 @@ async function refreshAfterChatActions(actions) {
   }
   if (actionTypes.has("task")) {
     refreshes.push(loadFollowUps(selectedSubmission.id));
+    refreshes.push(loadDecisionWorkflow(selectedSubmission.id));
+  }
+  const submissionUpdateAction = actions.find((action) => action && action.type === "submission_update" && action.record);
+  if (submissionUpdateAction) {
+    await loadUnderwritingSystem(selectedSubmission.id);
+    await loadDecisionWorkflow(selectedSubmission.id);
+    applyUpdatedSubmissionRecord(submissionUpdateAction.record);
   }
 
   await Promise.all(refreshes);
+  renderUnderwritingDetails();
+}
+
+function applyChatUiActions(actions) {
+  actions.forEach((action) => {
+    const uiAction = action && action.ui_action;
+    if (!uiAction) {
+      return;
+    }
+
+    if (uiAction.panel) {
+      activatePanelTab(uiAction.panel, { expand: Boolean(uiAction.expand) });
+    }
+
+    if (uiAction.analytics_tab) {
+      setAnalyticsSubtab(uiAction.analytics_tab);
+    }
+  });
+}
+
+function highlightAgentSelectedSurfaces(data) {
+  const surfaces = new Set();
+  const retrieval = data && data.retrieval ? data.retrieval : {};
+  const plan = Array.isArray(retrieval.plan) ? retrieval.plan : [];
+  const sources = Array.isArray(retrieval.sources) ? retrieval.sources : [];
+  const actions = Array.isArray(data && data.actions) ? data.actions : [];
+
+  plan.forEach((skill) => addAgentSurfacesForKey(surfaces, skill));
+  sources.forEach((source) => addAgentSurfacesForKey(surfaces, source && source.skill));
+  actions.forEach((action) => addAgentSurfacesForAction(surfaces, action));
+
+  surfaces.delete("documents");
+  surfaces.forEach((surface) => markAgentSurface(surface));
+  highlightDocumentFiles(getSelectedDocumentNamesFromRetrieval(retrieval));
+}
+
+function applyCentralDocumentSelection(data) {
+  if (fileSelectionMode !== "auto") {
+    return;
+  }
+
+  const retrieval = data && data.retrieval ? data.retrieval : {};
+  const selection = retrieval.selection || {};
+  const documentSelection = selection.document_selection || {};
+  const selected = Array.isArray(documentSelection.selected_files)
+    ? documentSelection.selected_files
+    : getDocumentSourceNames(retrieval.sources);
+
+  selectedFiles = new Set(selected);
+  syncFileSelectionControls();
+  updateSelectionMode("auto");
+}
+
+function clearAgentSelectedSurfaces() {
+  document.querySelectorAll(`.${AGENT_SELECTED_SURFACE_CLASS}`).forEach((element) => {
+    element.classList.remove(AGENT_SELECTED_SURFACE_CLASS);
+  });
+  document.querySelectorAll(`.${AGENT_SELECTED_TAB_CLASS}`).forEach((element) => {
+    element.classList.remove(AGENT_SELECTED_TAB_CLASS);
+  });
+}
+
+function addAgentSurfacesForAction(surfaces, action) {
+  const type = normalizeAgentSurfaceKey(action && action.type);
+  (AGENT_ACTION_SURFACE_MAP[type] || []).forEach((surface) => surfaces.add(surface));
+
+  const uiAction = action && action.ui_action ? action.ui_action : {};
+  addAgentSurfacesForPanel(surfaces, uiAction.panel);
+}
+
+function addAgentSurfacesForKey(surfaces, value) {
+  const key = normalizeAgentSurfaceKey(value);
+  (AGENT_SKILL_SURFACE_MAP[key] || []).forEach((surface) => surfaces.add(surface));
+}
+
+function addAgentSurfacesForPanel(surfaces, panelName) {
+  const panelKey = normalizeAgentSurfaceKey(panelName);
+  (AGENT_PANEL_SURFACE_MAP[panelKey] || []).forEach((surface) => surfaces.add(surface));
+}
+
+function markAgentSurface(surfaceName) {
+  const surface = normalizeAgentSurfaceKey(surfaceName);
+  getAgentSurfaceTargets(surface).forEach((target) => {
+    target.classList.add(AGENT_SELECTED_SURFACE_CLASS);
+  });
+
+  const tabName = AGENT_SURFACE_TAB_MAP[surface];
+  if (tabName) {
+    const tab = Array.from(panelTabButtons).find((button) => button.dataset.panelTab === tabName);
+    if (tab) {
+      tab.classList.add(AGENT_SELECTED_TAB_CLASS);
+    }
+  }
+}
+
+function getAgentSurfaceTargets(surface) {
+  const selectorsBySurface = {
+    analytics: ['[data-agent-surface="analytics"]'],
+    documents: [],
+    details_summary: ['[data-agent-surface="details-summary"]'],
+    guide: ['[data-agent-surface="guide"]', "#guideToggleButton"],
+    key_info: ['[data-agent-surface="key-info"]'],
+    notes: ['[data-agent-surface="notes"]'],
+    stages: ['[data-agent-surface="stages"]'],
+    tasks: ['[data-agent-surface="tasks"]'],
+    timeline: ['[data-agent-surface="timeline"]'],
+    underwriting: ['[data-agent-surface="underwriting"]']
+  };
+
+  return (selectorsBySurface[surface] || [])
+    .flatMap((selector) => Array.from(document.querySelectorAll(selector)));
+}
+
+function highlightDocumentFiles(fileNames) {
+  const names = Array.isArray(fileNames) ? fileNames.filter(Boolean) : [];
+  names.forEach((fileName) => {
+    const row = getDocumentRowByFileName(fileName);
+    if (row) {
+      row.classList.add(AGENT_SELECTED_SURFACE_CLASS);
+    }
+  });
+}
+
+function getSelectedDocumentNamesFromRetrieval(retrieval) {
+  const selection = retrieval && retrieval.selection ? retrieval.selection : {};
+  const documentSelection = selection.document_selection || {};
+  if (Array.isArray(documentSelection.selected_files)) {
+    return documentSelection.selected_files;
+  }
+
+  return getDocumentSourceNames(retrieval && retrieval.sources);
+}
+
+function getDocumentSourceNames(sources) {
+  if (!Array.isArray(sources)) {
+    return [];
+  }
+
+  return sources
+    .filter((source) => source && normalizeAgentSurfaceKey(source.skill) === "documents")
+    .map((source) => String(source.source || "").split("/").pop())
+    .filter(Boolean);
+}
+
+function getDocumentRowByFileName(fileName) {
+  return Array.from(documentList.querySelectorAll(".document-link"))
+    .find((button) => button.dataset.name === fileName)
+    ?.closest(".document-row") || null;
+}
+
+function normalizeAgentSurfaceKey(value) {
+  return String(value || "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
 }
 
 async function loadGuideInstructions(submissionId) {
@@ -1507,18 +2542,134 @@ function getVisibleFollowUpItems() {
   return followUpItems.filter((item) => item.due_date === selectedTaskDate);
 }
 
+function handleTaskCalendarAction(action) {
+  if (action === "previous") {
+    shiftTaskCalendarMonth(-1);
+  } else if (action === "next") {
+    shiftTaskCalendarMonth(1);
+  } else if (action === "today") {
+    taskCalendarCursor = clampTaskCalendarDate(new Date());
+    clearSelectedTaskDateOutsideCalendar();
+  }
+
+  renderFollowUps();
+}
+
+function shiftTaskCalendarMonth(delta) {
+  setTaskCalendarMonth(
+    taskCalendarCursor.getFullYear(),
+    taskCalendarCursor.getMonth() + Number(delta || 0)
+  );
+}
+
+function setTaskCalendarMonth(year, monthIndex) {
+  taskCalendarCursor = clampTaskCalendarMonth(year, monthIndex);
+  clearSelectedTaskDateOutsideCalendar();
+}
+
+function setTaskCalendarFromDate(value, clearSelection = true) {
+  const parts = parseIsoDateParts(value);
+  if (!parts) {
+    return;
+  }
+
+  taskCalendarCursor = clampTaskCalendarMonth(parts.year, parts.monthIndex);
+  if (clearSelection) {
+    clearSelectedTaskDateOutsideCalendar();
+  }
+}
+
+function clearSelectedTaskDateOutsideCalendar() {
+  if (selectedTaskDate && !isDateInTaskCalendarMonth(selectedTaskDate)) {
+    selectedTaskDate = null;
+  }
+}
+
+function isDateInTaskCalendarMonth(value) {
+  const parts = parseIsoDateParts(value);
+  if (!parts) {
+    return false;
+  }
+
+  return parts.year === taskCalendarCursor.getFullYear()
+    && parts.monthIndex === taskCalendarCursor.getMonth();
+}
+
+function isTaskDateInRange(value) {
+  const parts = parseIsoDateParts(value);
+  return Boolean(parts && parts.year >= TASK_CALENDAR_MIN_YEAR && parts.year <= TASK_CALENDAR_MAX_YEAR);
+}
+
+function clampTaskCalendarDate(value) {
+  const date = value instanceof Date && !Number.isNaN(value.getTime())
+    ? value
+    : new Date();
+  return clampTaskCalendarMonth(date.getFullYear(), date.getMonth());
+}
+
+function clampTaskCalendarMonth(year, monthIndex) {
+  let normalizedYear = Number(year);
+  let normalizedMonth = Number(monthIndex);
+
+  if (!Number.isFinite(normalizedYear)) {
+    normalizedYear = new Date().getFullYear();
+  }
+  if (!Number.isFinite(normalizedMonth)) {
+    normalizedMonth = new Date().getMonth();
+  }
+
+  while (normalizedMonth < 0) {
+    normalizedYear -= 1;
+    normalizedMonth += 12;
+  }
+  while (normalizedMonth > 11) {
+    normalizedYear += 1;
+    normalizedMonth -= 12;
+  }
+
+  if (normalizedYear < TASK_CALENDAR_MIN_YEAR) {
+    return new Date(TASK_CALENDAR_MIN_YEAR, 0, 1);
+  }
+  if (normalizedYear > TASK_CALENDAR_MAX_YEAR) {
+    return new Date(TASK_CALENDAR_MAX_YEAR, 11, 1);
+  }
+
+  return new Date(normalizedYear, normalizedMonth, 1);
+}
+
+function parseIsoDateParts(value) {
+  const match = String(value || "").match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!match) {
+    return null;
+  }
+
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  if (!year || month < 1 || month > 12 || day < 1 || day > 31) {
+    return null;
+  }
+
+  return {
+    year,
+    monthIndex: month - 1,
+    day
+  };
+}
+
 function renderFollowUpCalendar() {
   if (!followUpCalendar) {
     return;
   }
 
-  const today = new Date();
-  const year = today.getFullYear();
-  const month = today.getMonth();
+  const year = taskCalendarCursor.getFullYear();
+  const month = taskCalendarCursor.getMonth();
   const firstDay = new Date(year, month, 1);
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const offset = firstDay.getDay();
   const itemsByDate = new Map();
+  const canGoPrevious = year > TASK_CALENDAR_MIN_YEAR || month > 0;
+  const canGoNext = year < TASK_CALENDAR_MAX_YEAR || month < 11;
 
   followUpItems.forEach((item) => {
     if (!itemsByDate.has(item.due_date)) {
@@ -1537,24 +2688,60 @@ function renderFollowUpCalendar() {
     const dayItems = itemsByDate.get(date) || [];
     const hasDueAlert = dayItems.some((item) => getFollowUpDueState(item) === "due-alert");
     const hasItem = dayItems.length > 0;
+    const previewItems = dayItems.slice(0, 3);
     cells.push(`
       <button
         class="calendar-day ${hasItem ? "has-task" : ""} ${hasDueAlert ? "due-alert" : ""} ${selectedTaskDate === date ? "selected" : ""}"
         type="button"
         data-task-date="${escapeHtml(date)}"
       >
-        ${day}
+        <span class="calendar-day-number">${day}</span>
+        ${hasItem ? `
+          <span class="calendar-task-count">${escapeHtml(String(dayItems.length))}</span>
+          <span class="calendar-task-preview">
+            ${previewItems.map((item) => `<em title="${escapeHtml(item.title)}">${escapeHtml(item.title)}</em>`).join("")}
+            ${dayItems.length > previewItems.length ? `<em>${escapeHtml(`+${dayItems.length - previewItems.length} more`)}</em>` : ""}
+          </span>
+        ` : ""}
       </button>
     `);
   }
 
   followUpCalendar.innerHTML = `
-    <div class="calendar-heading">${today.toLocaleString([], { month: "long", year: "numeric" })}</div>
+    <div class="calendar-heading">
+      <div class="calendar-title">${taskCalendarCursor.toLocaleString([], { month: "long", year: "numeric" })}</div>
+      <div class="calendar-controls" aria-label="Task calendar controls">
+        <button class="calendar-nav-button" type="button" data-calendar-action="previous" ${canGoPrevious ? "" : "disabled"} aria-label="Previous month">&lt;</button>
+        <select class="calendar-select" data-calendar-month aria-label="Calendar month">
+          ${buildCalendarMonthOptions(month)}
+        </select>
+        <select class="calendar-select calendar-year-select" data-calendar-year aria-label="Calendar year">
+          ${buildCalendarYearOptions(year)}
+        </select>
+        <button class="calendar-nav-button" type="button" data-calendar-action="next" ${canGoNext ? "" : "disabled"} aria-label="Next month">&gt;</button>
+        <button class="calendar-nav-button calendar-today-button" type="button" data-calendar-action="today">Today</button>
+      </div>
+    </div>
     <div class="calendar-weekdays">
       <span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span>
     </div>
     <div class="calendar-grid">${cells.join("")}</div>
   `;
+}
+
+function buildCalendarMonthOptions(activeMonth) {
+  return Array.from({ length: 12 }, (_item, index) => {
+    const label = new Date(2026, index, 1).toLocaleString([], { month: "short" });
+    return `<option value="${index}" ${index === activeMonth ? "selected" : ""}>${escapeHtml(label)}</option>`;
+  }).join("");
+}
+
+function buildCalendarYearOptions(activeYear) {
+  const options = [];
+  for (let year = TASK_CALENDAR_MIN_YEAR; year <= TASK_CALENDAR_MAX_YEAR; year += 1) {
+    options.push(`<option value="${year}" ${year === activeYear ? "selected" : ""}>${year}</option>`);
+  }
+  return options.join("");
 }
 
 function updateFollowUpDots() {
@@ -1652,13 +2839,374 @@ function addMessage(role, content, isError = false) {
 
   const bubble = document.createElement("div");
   bubble.className = isError ? "bubble error" : "bubble";
-  bubble.innerHTML = formatText(content);
+  if (role === "assistant" && !isError) {
+    renderAssistantContent(bubble, content);
+  } else {
+    bubble.innerHTML = formatText(content);
+  }
 
   article.append(avatar, bubble);
   messagesEl.append(article);
   messagesEl.scrollTop = messagesEl.scrollHeight;
 
   return article;
+}
+
+function createChatProcess(messageArticle) {
+  const bubble = messageArticle.querySelector(".bubble");
+  bubble.innerHTML = "";
+
+  const panel = document.createElement("section");
+  panel.className = "chat-process-panel";
+
+  const heading = document.createElement("div");
+  heading.className = "chat-process-heading";
+  heading.innerHTML = `
+    <span class="process-pulse" aria-hidden="true"></span>
+    <strong>Process</strong>
+  `;
+
+  const list = document.createElement("ol");
+  list.className = "chat-process-list";
+
+  const answer = document.createElement("div");
+  answer.className = "assistant-answer";
+
+  panel.append(heading, list);
+  bubble.append(panel, answer);
+
+  const process = {
+    bubble,
+    panel,
+    list,
+    answer,
+    steps: []
+  };
+  activeChatProcesses.push(process);
+  return process;
+}
+
+function addChatProcessStep(process, title, detail, status = "active") {
+  const step = {
+    title: String(title || "Working"),
+    detail: String(detail || ""),
+    status
+  };
+  process.steps.push(step);
+  renderChatProcess(process);
+  messagesEl.scrollTop = messagesEl.scrollHeight;
+  return step;
+}
+
+function updateChatProcessStep(step, updates = {}) {
+  Object.assign(step, updates);
+  const process = activeChatProcesses.find((item) => item.steps.includes(step));
+  if (process) {
+    renderChatProcess(process);
+  }
+}
+
+function renderChatProcess(process) {
+  if (!process || !process.list) {
+    return;
+  }
+
+  process.list.innerHTML = process.steps
+    .map((step) => `
+      <li class="chat-process-step ${escapeHtml(step.status || "active")}">
+        <span class="process-dot" aria-hidden="true"></span>
+        <div>
+          <strong>${escapeHtml(step.title)}</strong>
+          ${step.detail ? `<small>${escapeHtml(step.detail)}</small>` : ""}
+        </div>
+      </li>
+    `)
+    .join("");
+}
+
+function markActiveChatProcessSteps(process, status) {
+  if (!process) {
+    return;
+  }
+
+  process.steps.forEach((step) => {
+    if (step.status === "active") {
+      step.status = status;
+    }
+  });
+  renderChatProcess(process);
+}
+
+function setChatProcessAnswer(process, reply, sources = []) {
+  markActiveChatProcessSteps(process, "done");
+  process.answer.classList.remove("error");
+  renderAssistantContent(process.answer, reply, sources);
+  messagesEl.scrollTop = messagesEl.scrollHeight;
+}
+
+function setChatProcessError(process, message) {
+  process.answer.classList.add("error");
+  process.answer.textContent = message;
+  messagesEl.scrollTop = messagesEl.scrollHeight;
+}
+
+function renderAssistantContent(container, content, sources = []) {
+  const text = String(content || "");
+  const citations = window.AUCitations ? window.AUCitations.render(sources) : "";
+  const isCopyableEmail = isEmailDraftResponse(text);
+
+  container.classList.toggle("has-response-copy", isCopyableEmail);
+  if (isCopyableEmail) {
+    container.dataset.copyText = text;
+  } else {
+    delete container.dataset.copyText;
+  }
+
+  container.innerHTML = `${isCopyableEmail ? renderResponseCopyToolbar() : ""}${formatText(text)}${citations}`;
+}
+
+function renderResponseCopyToolbar() {
+  return `
+    <div class="response-copy-toolbar">
+      <span>Email draft</span>
+      <button class="response-copy-button" type="button" data-copy-assistant-response>Copy</button>
+    </div>
+  `;
+}
+
+function isEmailDraftResponse(value) {
+  const text = String(value || "").trim();
+  const lower = text.toLowerCase();
+  if (!text) {
+    return false;
+  }
+
+  if (/\bsubject\s*:/.test(lower)) {
+    return true;
+  }
+
+  const hasGreeting = /(^|\n)\s*(dear|hi|hello)\s+[^,\n]{2,80},/i.test(text);
+  const hasClosing = /(^|\n)\s*(best|regards|sincerely|thank you|thanks),?/i.test(text);
+  if (hasGreeting && hasClosing) {
+    return true;
+  }
+
+  return /\b(email draft|draft email|broker follow[- ]?up email)\b/i.test(text)
+    && /\b(please provide|attached|subject|dear|hi|hello)\b/i.test(text);
+}
+
+async function copyTextToClipboard(text) {
+  if (navigator.clipboard && window.isSecureContext) {
+    await navigator.clipboard.writeText(text);
+    return;
+  }
+
+  const textarea = document.createElement("textarea");
+  textarea.value = text;
+  textarea.setAttribute("readonly", "");
+  textarea.style.position = "fixed";
+  textarea.style.left = "-9999px";
+  document.body.append(textarea);
+  textarea.select();
+  document.execCommand("copy");
+  textarea.remove();
+}
+
+function describeManualFileSelection() {
+  if (fileSelectionMode === "none") {
+    return "No files are selected for this request.";
+  }
+
+  const selected = Array.from(selectedFiles);
+  if (fileSelectionMode === "manual") {
+    return selected.length
+      ? `Manual selection includes ${formatProcessFileList(selected)}.`
+      : "Manual selection is empty.";
+  }
+
+  return selected.length
+    ? `All selected mode has ${selected.length} checked files; the agent will use that fixed selection.`
+    : "All selected mode is active, but no files are checked.";
+}
+
+function describeCentralSelectionRequest() {
+  if (fileSelectionMode === "auto") {
+    return "Auto is on; the centralized agent will choose only the relevant workspace data for this prompt.";
+  }
+
+  return describeManualFileSelection();
+}
+
+function describeWorkflowActionCheck(data) {
+  const actions = Array.isArray(data && data.actions) ? data.actions : [];
+  if (!actions.length) {
+    return "No direct workspace action was needed; continuing with data retrieval and model response.";
+  }
+
+  return `Handled ${actions.map((action) => formatLabel(action.type || "action")).join(", ")} through the workflow router.`;
+}
+
+function describeInformationSelection(data) {
+  const actions = Array.isArray(data && data.actions) ? data.actions : [];
+  const retrieval = data && data.retrieval ? data.retrieval : {};
+  const selection = retrieval.selection || {};
+  const plan = Array.isArray(selection.selected_skills) && selection.selected_skills.length
+    ? selection.selected_skills
+    : Array.isArray(retrieval.plan)
+      ? retrieval.plan
+      : [];
+  const documentSelection = selection.document_selection || {};
+  const documentCompleteness = selection.document_completeness || {};
+  const selectedDocuments = Array.isArray(documentSelection.selected_files)
+    ? documentSelection.selected_files
+    : getDocumentSourceNames(retrieval.sources);
+
+  if (actions.length && !plan.length) {
+    return "No additional data retrieval was needed for this workflow action.";
+  }
+
+  const skillText = plan.length
+    ? `Selected ${plan.map(formatLabel).join(", ")}`
+    : "No supporting data was selected";
+  const documentText = selectedDocuments.length
+    ? `documents: ${formatProcessFileList(selectedDocuments)}`
+    : documentCompleteness.missing_count !== undefined
+      ? `document checklist: ${documentCompleteness.received_count || 0}/${documentCompleteness.required_count || 0} received, ${documentCompleteness.missing_count || 0} missing`
+    : fileSelectionMode === "none"
+      ? "documents: none by user selection"
+      : "documents: none";
+  const agentName = selection.agent ? formatLabel(selection.agent) : "Centralized Information Agent";
+
+  return `${agentName}: ${skillText}; ${documentText}.`;
+}
+
+function describeBackendResponse(data) {
+  if (Array.isArray(data.actions) && data.actions.length) {
+    return `Handled by ${data.framework || "local action router"}.`;
+  }
+
+  const model = data.model || "GPT model";
+  const framework = data.framework ? ` via ${data.framework}` : "";
+  return `Model request completed with ${model}${framework}.`;
+}
+
+function appendResponseProcessSteps(process, data) {
+  const actions = Array.isArray(data.actions) ? data.actions : [];
+  if (actions.length) {
+    actions.forEach((action) => {
+      addChatProcessStep(process, getActionProcessTitle(action), getActionProcessDetail(action), "done");
+    });
+    return;
+  }
+
+  const retrieval = data.retrieval || {};
+  const plan = Array.isArray(retrieval.plan) ? retrieval.plan : [];
+  const sources = Array.isArray(retrieval.sources) ? retrieval.sources : [];
+  if (plan.length) {
+    addChatProcessStep(
+      process,
+      "Retrieved underwriting data",
+      `Skills used: ${plan.map(formatLabel).join(", ")}.`,
+      "done"
+    );
+  }
+
+  const documentSources = sources.filter((source) => source && source.skill === "documents");
+  if (documentSources.length) {
+    addChatProcessStep(
+      process,
+      "Read document context",
+      formatProcessFileList(documentSources.map((source) => source.source.split("/").pop())),
+      "done"
+    );
+  }
+
+  const completenessSources = sources.filter((source) => source && source.skill === "document_completeness");
+  if (completenessSources.length) {
+    addChatProcessStep(
+      process,
+      "Compared document checklist",
+      "Required cyber documents were compared with submitted file metadata.",
+      "done"
+    );
+  }
+
+  const nonDocumentSources = sources.filter((source) => source && source.skill !== "documents");
+  if (nonDocumentSources.length) {
+    const grouped = Array.from(new Set(nonDocumentSources.map((source) => formatLabel(source.skill || "data"))));
+    addChatProcessStep(process, "Pulled supporting data", grouped.join(", "), "done");
+  }
+}
+
+function appendWorkspaceRefreshProcessStep(process, actions) {
+  const actionTypes = Array.isArray(actions)
+    ? Array.from(new Set(actions.map((action) => action && action.type).filter(Boolean)))
+    : [];
+  const refreshTypes = actionTypes.filter((type) => ["note", "guide", "task", "submission_update"].includes(type));
+  if (!refreshTypes.length) {
+    return;
+  }
+
+  addChatProcessStep(
+    process,
+    "Updated workspace",
+    `Refreshed ${refreshTypes.map(formatLabel).join(", ")} data after the chat action.`,
+    "done"
+  );
+}
+
+function getActionProcessTitle(action) {
+  const type = action && action.type;
+  if (type === "note") return "Added underwriter note";
+  if (type === "guide") return "Added guide instruction";
+  if (type === "task") return action.record ? "Added scheduled task" : "Checked scheduled task request";
+  if (type === "submission_update") return "Updated submission fields";
+  if (type === "broker_table") return "Queried broker table";
+  if (type === "document_completeness") return "Compared required documents";
+  if (type === "navigate") return "Navigated workspace";
+  if (type === "extract") return "Retrieved underwriting summary";
+  return "Applied chat action";
+}
+
+function getActionProcessDetail(action) {
+  const type = action && action.type;
+  if (type === "note") return "Saved to this submission's note JSON file.";
+  if (type === "guide") return "Saved to this submission's guide JSON file and future system prompts.";
+  if (type === "task") {
+    const tasks = action.record && Array.isArray(action.record.tasks) ? action.record.tasks : [];
+    const latest = tasks[tasks.length - 1];
+    return latest
+      ? `${latest.title} due ${formatDateOnly(latest.due_date)}.`
+      : "No task was saved because more information is needed.";
+  }
+  if (type === "submission_update") {
+    return `Submission status is now ${action.record && action.record.status ? action.record.status : "updated"}.`;
+  }
+  if (type === "broker_table") {
+    return "Pulled broker rows from data/brokers/brokers.json.";
+  }
+  if (type === "document_completeness") {
+    return "Compared data/document_requirements/cyber_required_documents.json against submitted document metadata.";
+  }
+  if (type === "navigate") {
+    const uiAction = action.ui_action || {};
+    return `Opened ${formatLabel(uiAction.panel || "workspace")}.`;
+  }
+  if (type === "extract") {
+    return "Used stored underwriting, broker, claim, or evidence records.";
+  }
+  return "Processed by the local workflow router.";
+}
+
+function formatProcessFileList(files, maxItems = 4) {
+  const values = files.filter(Boolean).map((file) => String(file).split("/").pop());
+  if (!values.length) {
+    return "No files";
+  }
+
+  const visible = values.slice(0, maxItems).join(", ");
+  const remaining = values.length - maxItems;
+  return remaining > 0 ? `${visible}, +${remaining} more` : visible;
 }
 
 function setLoading(isLoading) {
@@ -1723,11 +3271,11 @@ function buildAnalyticsPanel(record) {
     </div>
 
     <div class="analytics-view active" data-analytics-view="quote">
-      ${renderModelView("Quote Probability", currentAnalytics.quote, "Likelihood the account receives quotable terms")}
+      ${renderModelView("Quote Probability", currentAnalytics.quote, "Likelihood the account receives quotable terms", record, "quote")}
     </div>
 
     <div class="analytics-view" data-analytics-view="bind">
-      ${renderModelView("Bind Probability", currentAnalytics.bind, "Likelihood quoted terms bind")}
+      ${renderModelView("Bind Probability", currentAnalytics.bind, "Likelihood quoted terms bind", record, "bind")}
     </div>
 
     <div class="analytics-view" data-analytics-view="what-if">
@@ -1740,10 +3288,17 @@ function buildLogisticAnalytics(record, existingFeatureLookup) {
   const featureLookup = existingFeatureLookup || buildAnalyticsFeatureLookup(record);
   const quoteModel = analyticsModels && analyticsModels.quote ? analyticsModels.quote : getFallbackQuoteModel();
   const bindModel = analyticsModels && analyticsModels.bind ? analyticsModels.bind : getFallbackBindModel();
+  const supplementalModels = analyticsModels && analyticsModels.supplemental ? analyticsModels.supplemental : {};
 
   return {
     quote: scoreStoredModel(quoteModel, featureLookup),
-    bind: scoreStoredModel(bindModel, featureLookup)
+    bind: scoreStoredModel(bindModel, featureLookup),
+    supplemental: SUPPLEMENTAL_MODEL_KEYS.reduce((models, key) => {
+      if (supplementalModels[key]) {
+        models[key] = scoreStoredModel(supplementalModels[key], featureLookup);
+      }
+      return models;
+    }, {})
   };
 }
 
@@ -1752,35 +3307,582 @@ async function loadAnalyticsModels() {
     return analyticsModels;
   }
 
-  const [quoteResponse, bindResponse, metadataResponse] = await Promise.all([
-    fetch("/api/models/quote_prob"),
-    fetch("/api/models/bind_prob"),
-    fetch("/api/models/feature_metadata")
-  ]);
-  const [quoteData, bindData, metadataData] = await Promise.all([
-    quoteResponse.json(),
-    bindResponse.json(),
-    metadataResponse.json()
-  ]);
-
-  if (!quoteResponse.ok) {
-    throw new Error(quoteData.error || "Unable to load quote model.");
-  }
-
-  if (!bindResponse.ok) {
-    throw new Error(bindData.error || "Unable to load bind model.");
-  }
-
-  if (!metadataResponse.ok) {
-    throw new Error(metadataData.error || "Unable to load feature metadata.");
-  }
+  const modelNames = [
+    "quote_prob",
+    "bind_prob",
+    ...SUPPLEMENTAL_MODEL_KEYS,
+    "industry_propensity",
+    "feature_metadata"
+  ];
+  const responses = await Promise.all(modelNames.map((modelName) => fetch(`/api/models/${modelName}`)));
+  const payloads = await Promise.all(responses.map((response) => response.json()));
+  responses.forEach((response, index) => {
+    if (!response.ok) {
+      throw new Error(payloads[index].error || `Unable to load ${modelNames[index]} model.`);
+    }
+  });
+  const modelPayloads = modelNames.reduce((lookup, modelName, index) => {
+    lookup[modelName] = payloads[index].model;
+    return lookup;
+  }, {});
 
   analyticsModels = {
-    quote: quoteData.model,
-    bind: bindData.model
+    quote: modelPayloads.quote_prob,
+    bind: modelPayloads.bind_prob,
+    supplemental: SUPPLEMENTAL_MODEL_KEYS.reduce((lookup, key) => {
+      lookup[key] = modelPayloads[key];
+      return lookup;
+    }, {}),
+    industryPropensity: modelPayloads.industry_propensity
   };
-  analyticsFeatureMetadata = metadataData.model;
+  analyticsFeatureMetadata = modelPayloads.feature_metadata;
   return analyticsModels;
+}
+
+async function loadUnderwritingSystem(submissionId) {
+  try {
+    const data = await AUApi.get(`/api/submissions/${encodeURIComponent(submissionId)}/underwriting`);
+    underwritingSystem = data.underwriting_system || null;
+  } catch (error) {
+    console.warn(error);
+    underwritingSystem = null;
+  }
+
+  return underwritingSystem;
+}
+
+async function loadDecisionWorkflow(submissionId) {
+  try {
+    const data = await AUApi.get(`/api/submissions/${encodeURIComponent(submissionId)}/decision-workflow`);
+    decisionWorkflow = data.decision_workflow || null;
+  } catch (error) {
+    console.warn(error);
+    decisionWorkflow = null;
+  }
+
+  return decisionWorkflow;
+}
+
+function renderUnderwritingSystemView() {
+  if (!underwritingSystem) {
+    return '<p class="empty-state">Underwriting system is not available for this submission.</p>';
+  }
+
+  const appetite = underwritingSystem.appetite || {};
+  const claimSnapshot = underwritingSystem.claim_snapshot || {};
+  const ingredients = Array.isArray(underwritingSystem.ingredients) ? underwritingSystem.ingredients : [];
+  const signals = Array.isArray(underwritingSystem.signals) ? underwritingSystem.signals : [];
+  const evidence = Array.isArray(underwritingSystem.evidence_status) ? underwritingSystem.evidence_status : [];
+  const actions = Array.isArray(underwritingSystem.recommended_actions) ? underwritingSystem.recommended_actions : [];
+  const claims = Array.isArray(underwritingSystem.claims) ? underwritingSystem.claims : [];
+  const sopGuidance = underwritingSystem.sop_guidance || {};
+  const sopSuggestions = Array.isArray(sopGuidance.suggestions) ? sopGuidance.suggestions : [];
+  const components = Array.isArray(underwritingSystem.components) && underwritingSystem.components.length
+    ? underwritingSystem.components
+    : buildUnderwritingComponents(appetite, claimSnapshot, ingredients, signals, evidence, actions);
+  const claimReview = underwritingSystem.claim_review || {};
+  const broker = underwritingSystem.broker || null;
+  const record = selectedSubmission && selectedSubmission.record ? selectedSubmission.record : {};
+  const claimsUrl = selectedSubmission
+    ? `/api/submissions/${encodeURIComponent(selectedSubmission.id)}/claims`
+    : "#";
+
+  return `
+    <section class="uw-system-grid">
+      <article class="uw-card uw-card-primary">
+        <span>Appetite</span>
+        <strong>${escapeHtml(appetite.status || "TBD")}</strong>
+        <p>${escapeHtml(appetite.rationale || "No appetite rationale available.")}</p>
+        <small>Authority: ${escapeHtml(formatLabel(appetite.recommended_authority || "TBD"))}</small>
+      </article>
+
+      <article class="uw-card">
+        <span>Claim Snapshot</span>
+        <strong>${escapeHtml(String(claimSnapshot.total_claims ?? 0))} claims</strong>
+        <p>
+          ${escapeHtml(String(claimSnapshot.open_claims ?? 0))} open ·
+          ${escapeHtml(formatCurrency(Number(claimSnapshot.total_incurred || 0)))} incurred
+        </p>
+        <a class="inline-data-link" href="${escapeHtml(claimsUrl)}" target="_blank" rel="noreferrer">Open claims source</a>
+      </article>
+
+      <article class="uw-card">
+        <span>Evidence Readiness</span>
+        <strong>${evidence.filter((item) => item.status === "available").length}/${evidence.length || 0}</strong>
+        <p>${escapeHtml(evidence.filter((item) => item.status === "missing").length)} required evidence categories missing.</p>
+      </article>
+    </section>
+
+    ${renderUnderwritingWorkflowRibbon(record, appetite, evidence, actions)}
+    ${renderUnderwritingDecisionConsole(record, appetite, claimSnapshot, evidence, signals, broker)}
+    ${renderSopSuggestionPanel(sopGuidance, sopSuggestions)}
+    ${renderDecisionWorkflowPanel()}
+    ${renderSubmissionUpdateEditor(record)}
+    ${renderBrokerSection(broker)}
+
+    <section class="uw-panel uw-components-panel">
+      <div class="card-heading">
+        <h4>Underwriting Components</h4>
+        <span class="claim-system-tag">Decision workbench</span>
+      </div>
+      <div class="uw-component-grid">
+        ${components.map(renderUnderwritingComponent).join("")}
+      </div>
+    </section>
+
+    <section class="uw-workbench-grid">
+      <article class="uw-panel">
+        <h4>System Ingredients</h4>
+        <div class="ingredient-list">
+          ${ingredients.map(renderIngredientItem).join("")}
+        </div>
+      </article>
+
+      <article class="uw-panel">
+        <h4>Underwriting Signals</h4>
+        <div class="signal-list">
+          ${signals.map(renderSignalItem).join("")}
+        </div>
+      </article>
+
+      <article class="uw-panel">
+        <h4>Recommended Actions</h4>
+        <ol class="uw-action-list">
+          ${actions.map((action) => `<li>${escapeHtml(action)}</li>`).join("")}
+        </ol>
+      </article>
+
+      <article class="uw-panel">
+        <h4>Evidence Coverage</h4>
+        <div class="evidence-list">
+          ${evidence.map(renderEvidenceItem).join("")}
+        </div>
+      </article>
+    </section>
+
+    <section class="uw-panel">
+      <div class="card-heading">
+        <h4>Historical Claim Information</h4>
+        <span class="claim-system-tag">${escapeHtml(underwritingSystem.system_name || "Underwriting System")}</span>
+      </div>
+      <p class="uw-section-note">
+        ${escapeHtml(claimReview.summary || "Linked claims are pulled from the dummy claims system.")}
+        ${escapeHtml(claimReview.review_focus || "Review loss dates, claim type, status, severity, paid amounts, and reserves before quote or referral decisions.")}
+      </p>
+      ${renderClaimHistoryTable(claims)}
+    </section>
+  `;
+}
+
+function renderDecisionWorkflowPanel() {
+  if (window.AUDecisionWorkflow) {
+    return window.AUDecisionWorkflow.render(decisionWorkflow);
+  }
+
+  return '<section class="uw-panel"><h4>Underwriting Decision Workflow</h4><p class="empty-state">Decision workflow renderer is unavailable.</p></section>';
+}
+
+function renderSopSuggestionPanel(sopGuidance, suggestions) {
+  if (!suggestions.length) {
+    return `
+      <section class="uw-panel sop-panel">
+        <div class="card-heading">
+          <h4>SOP Suggestions</h4>
+          <span class="claim-system-tag">${escapeHtml(sopGuidance.version || "SOP")}</span>
+        </div>
+        <p class="uw-section-note">No SOP-triggered suggestions are currently active.</p>
+      </section>
+    `;
+  }
+
+  return `
+    <section class="uw-panel sop-panel">
+      <div class="card-heading">
+        <h4>SOP Suggestions</h4>
+        <span class="claim-system-tag">${escapeHtml(sopGuidance.version || "SOP")}</span>
+      </div>
+      <div class="sop-suggestion-list">
+        ${suggestions.map((suggestion) => `
+          <article class="sop-suggestion-item ${escapeHtml(statusClass(suggestion.priority))}">
+            <div>
+              <span>${escapeHtml(suggestion.step_label || "SOP")}</span>
+              <strong>${escapeHtml(suggestion.title || "Suggestion")}</strong>
+            </div>
+            <p>${escapeHtml(suggestion.recommendation || "")}</p>
+            <small>${escapeHtml(suggestion.rationale || "")}</small>
+          </article>
+        `).join("")}
+      </div>
+    </section>
+  `;
+}
+
+function renderUnderwritingWorkflowRibbon(record, appetite, evidence, actions) {
+  const hasMissingEvidence = evidence.some((item) => item.status === "missing");
+  const statusText = String(record.status || "").toLowerCase();
+  const appetiteText = String(appetite.status || "").toLowerCase();
+  const steps = [
+    {
+      label: "Intake",
+      detail: "Submission received",
+      state: "complete"
+    },
+    {
+      label: "Triage",
+      detail: hasMissingEvidence ? "Evidence gap" : "Ready",
+      state: hasMissingEvidence ? "watch" : "complete"
+    },
+    {
+      label: "Risk Review",
+      detail: appetite.status || "In review",
+      state: appetiteText.includes("referral") ? "alert" : "active"
+    },
+    {
+      label: "Pricing",
+      detail: "Models ready",
+      state: "active"
+    },
+    {
+      label: "Referral",
+      detail: appetiteText.includes("referral") ? "Required" : "As needed",
+      state: appetiteText.includes("referral") ? "alert" : "idle"
+    },
+    {
+      label: "Quote / Bind",
+      detail: statusText.includes("bound") ? "Bound" : actions[0] || "Pending terms",
+      state: statusText.includes("bound") ? "complete" : "idle"
+    }
+  ];
+
+  return `
+    <section class="uw-panel uw-workflow-panel">
+      <div class="card-heading">
+        <h4>Submission Workflow</h4>
+        <span class="claim-system-tag">Intake to bind</span>
+      </div>
+      <div class="uw-workflow-ribbon">
+        ${steps.map((step) => `
+          <div class="workflow-step ${escapeHtml(step.state)}">
+            <span>${escapeHtml(step.label)}</span>
+            <small>${escapeHtml(step.detail)}</small>
+          </div>
+        `).join("")}
+      </div>
+    </section>
+  `;
+}
+
+function renderUnderwritingDecisionConsole(record, appetite, claimSnapshot, evidence, signals, broker) {
+  const documents = Array.isArray(record.documents) ? record.documents : [];
+  const availableEvidence = evidence.filter((item) => item.status === "available").length;
+  const highSignals = signals.filter((signal) => signal.severity === "high");
+  const moderateSignals = signals.filter((signal) => signal.severity === "moderate");
+  const authority = formatLabel(appetite.recommended_authority || "standard_underwriter");
+  const brokerQuality = broker && broker.relationship_metrics
+    ? `${Math.round(Number(broker.relationship_metrics.data_quality_score || 0))}/100`
+    : "TBD";
+  const referralTrigger = highSignals.length
+    ? highSignals[0].label
+    : Number(claimSnapshot.open_claims || 0)
+      ? "Open claims"
+      : moderateSignals.length
+        ? moderateSignals[0].label
+        : "None";
+
+  const tiles = [
+    { label: "Priority", value: moderateSignals.length || highSignals.length ? "Medium" : "Low", detail: `${moderateSignals.length + highSignals.length} review signals` },
+    { label: "Quality", value: evidence.length ? `${availableEvidence}/${evidence.length}` : "TBD", detail: "Required evidence" },
+    { label: "Appetite", value: appetite.status || "TBD", detail: appetite.rationale || "No rationale available" },
+    { label: "Authority", value: authority, detail: `Trigger: ${referralTrigger}` },
+    { label: "Broker", value: broker ? broker.firm_name : "TBD", detail: `Data quality ${brokerQuality}` },
+    { label: "Documents", value: String(documents.length), detail: "Submission files" }
+  ];
+
+  return `
+    <section class="uw-panel uw-decision-console">
+      <div class="card-heading">
+        <h4>Decision Console</h4>
+        <span class="claim-system-tag">Account-level view</span>
+      </div>
+      <div class="decision-tile-grid">
+        ${tiles.map((tile) => `
+          <article class="decision-tile">
+            <span>${escapeHtml(tile.label)}</span>
+            <strong>${escapeHtml(tile.value)}</strong>
+            <small>${escapeHtml(tile.detail)}</small>
+          </article>
+        `).join("")}
+      </div>
+    </section>
+  `;
+}
+
+function renderBrokerSection(broker) {
+  if (!broker) {
+    return `
+      <section class="uw-panel broker-panel">
+        <div class="card-heading">
+          <h4>Broker</h4>
+          <span class="status-chip watch">Missing</span>
+        </div>
+        <p class="uw-section-note">No broker profile is linked to this submission.</p>
+      </section>
+    `;
+  }
+
+  const contact = broker.submission_contact || {};
+  const metrics = broker.relationship_metrics || {};
+  const producer = broker.contacts && broker.contacts.producer ? broker.contacts.producer : {};
+  const accountManager = broker.contacts && broker.contacts.account_manager ? broker.contacts.account_manager : {};
+
+  return `
+    <section class="uw-panel broker-panel">
+      <div class="card-heading">
+        <h4>Broker</h4>
+        <span class="status-chip good">${escapeHtml(broker.service_tier || "Linked")}</span>
+      </div>
+      <div class="broker-profile-grid">
+        <div class="broker-main">
+          <span>${escapeHtml(broker.broker_type || "Broker")}</span>
+          <strong>${escapeHtml(broker.firm_name || contact.firm_name || "Broker TBD")}</strong>
+          <p>${escapeHtml(broker.placement_notes || contact.broker_notes || "")}</p>
+        </div>
+        <div class="broker-contact-card">
+          <span>Producer</span>
+          <strong>${escapeHtml(contact.producer_name || producer.name || "TBD")}</strong>
+          <small>${escapeHtml(contact.producer_email || producer.email || "")}</small>
+          <small>${escapeHtml(contact.producer_phone || producer.phone || "")}</small>
+        </div>
+        <div class="broker-contact-card">
+          <span>Account Manager</span>
+          <strong>${escapeHtml(contact.account_manager_name || accountManager.name || "TBD")}</strong>
+          <small>${escapeHtml(contact.account_manager_email || accountManager.email || "")}</small>
+          <small>${escapeHtml(contact.account_manager_phone || accountManager.phone || "")}</small>
+        </div>
+      </div>
+      <div class="broker-metric-grid">
+        ${renderBrokerMetric("Quote Ratio", formatPercent(Number(metrics.quote_ratio_12m || 0)))}
+        ${renderBrokerMetric("Bind Ratio", formatPercent(Number(metrics.bind_ratio_12m || 0)))}
+        ${renderBrokerMetric("Data Quality", `${Math.round(Number(metrics.data_quality_score || 0))}/100`)}
+        ${renderBrokerMetric("Avg Response", `${Math.round(Number(metrics.avg_response_hours || 0))}h`)}
+      </div>
+      <p class="uw-section-note">${escapeHtml(contact.broker_notes || "")}</p>
+    </section>
+  `;
+}
+
+function renderBrokerMetric(label, value) {
+  return `
+    <div class="broker-metric">
+      <span>${escapeHtml(label)}</span>
+      <strong>${escapeHtml(value)}</strong>
+    </div>
+  `;
+}
+
+function buildUnderwritingComponents(appetite, claimSnapshot, ingredients, signals, evidence, actions) {
+  const missingEvidence = evidence.filter((item) => item.status === "missing");
+  const highSignals = signals.filter((signal) => signal.severity === "high");
+  const moderateSignals = signals.filter((signal) => signal.severity === "moderate");
+  const availableIngredients = ingredients.filter((item) => item.status === "available").length;
+  const openClaims = Number(claimSnapshot.open_claims || 0);
+  const totalIncurred = Number(claimSnapshot.total_incurred || 0);
+  const recommendedAction = actions[0] || "Prepare terms after document review.";
+
+  return [
+    {
+      name: "Intake & Eligibility",
+      status: appetite.status || "TBD",
+      tone: highSignals.length ? "alert" : "watch",
+      detail: appetite.rationale || "Review account appetite, authority path, and requested coverage fit."
+    },
+    {
+      name: "Evidence Review",
+      status: missingEvidence.length ? `${missingEvidence.length} missing` : "Complete",
+      tone: missingEvidence.length ? "watch" : "good",
+      detail: missingEvidence.length
+        ? `Missing evidence includes ${missingEvidence.slice(0, 3).map((item) => item.label).join(", ")}.`
+        : "Core cyber underwriting evidence is available for review."
+    },
+    {
+      name: "Controls Review",
+      status: moderateSignals.length || highSignals.length ? "Review" : "Stable",
+      tone: highSignals.length ? "alert" : moderateSignals.length ? "watch" : "good",
+      detail: signals.map((signal) => signal.label).slice(0, 3).join(", ") || "No control signals available."
+    },
+    {
+      name: "Claim Review",
+      status: `${claimSnapshot.total_claims ?? 0} claims`,
+      tone: openClaims || totalIncurred >= 75000 ? "alert" : totalIncurred > 0 ? "watch" : "good",
+      detail: `${openClaims} open and ${formatCurrency(totalIncurred)} total incurred in linked historical claims.`
+    },
+    {
+      name: "Pricing & Terms",
+      status: "Model-ready",
+      tone: "good",
+      detail: "Quote and bind probability models are available in the Analytic Dashboard."
+    },
+    {
+      name: "Authority & Next Action",
+      status: formatLabel(appetite.recommended_authority || "TBD"),
+      tone: highSignals.length ? "alert" : "watch",
+      detail: recommendedAction
+    },
+    {
+      name: "System Coverage",
+      status: `${availableIngredients}/${ingredients.length || 0} inputs`,
+      tone: availableIngredients === ingredients.length ? "good" : "watch",
+      detail: "Submission documents, metadata, notes, guides, models, and claims are connected for review."
+    }
+  ];
+}
+
+function renderUnderwritingComponent(component) {
+  const sources = Array.isArray(component.data_sources) && component.data_sources.length
+    ? component.data_sources.join(", ")
+    : "";
+
+  return `
+    <article class="uw-component-card ${escapeHtml(component.tone || "neutral")}">
+      <div>
+        <strong>${escapeHtml(component.name || "Underwriting Component")}</strong>
+        <span class="status-chip ${escapeHtml(component.tone || "neutral")}">${escapeHtml(component.status || "TBD")}</span>
+      </div>
+      <small>${escapeHtml([component.stage, component.owner].filter(Boolean).join(" · "))}</small>
+      <p>${escapeHtml(component.detail || "")}</p>
+      ${sources ? `<small>Sources: ${escapeHtml(sources)}</small>` : ""}
+    </article>
+  `;
+}
+
+function renderUnderwritingDetails() {
+  if (!underwritingSummaryPanel || !underwritingWorkbenchPanel || !underwritingExpandButton) {
+    return;
+  }
+
+  if (!underwritingSystem) {
+    underwritingSummaryPanel.innerHTML = "<p>Underwriting system signals are not available.</p>";
+    underwritingWorkbenchPanel.innerHTML = "";
+    underwritingWorkbenchPanel.classList.remove("open");
+    underwritingExpandButton.textContent = "Open";
+    return;
+  }
+
+  const appetite = underwritingSystem.appetite || {};
+  const claimSnapshot = underwritingSystem.claim_snapshot || {};
+  const evidence = Array.isArray(underwritingSystem.evidence_status)
+    ? underwritingSystem.evidence_status
+    : [];
+  const availableEvidence = evidence.filter((item) => item.status === "available").length;
+
+  underwritingSummaryPanel.innerHTML = `
+    <div class="underwriting-summary-grid">
+      <div>
+        <span>Appetite</span>
+        <strong>${escapeHtml(appetite.status || "TBD")}</strong>
+      </div>
+      <div>
+        <span>Claims</span>
+        <strong>${escapeHtml(String(claimSnapshot.total_claims ?? 0))}</strong>
+      </div>
+      <div>
+        <span>Evidence</span>
+        <strong>${availableEvidence}/${evidence.length || 0}</strong>
+      </div>
+    </div>
+    <p>${escapeHtml(appetite.rationale || "Open the underwriting system to view appetite, claims, evidence, and recommended actions.")}</p>
+  `;
+
+  underwritingWorkbenchPanel.classList.toggle("open", underwritingDetailsOpen);
+  underwritingWorkbenchPanel.innerHTML = underwritingDetailsOpen ? renderUnderwritingSystemView() : "";
+  underwritingExpandButton.textContent = underwritingDetailsOpen ? "Close" : "Open";
+}
+
+function renderIngredientItem(item) {
+  return `
+    <div class="ingredient-item">
+      <strong>${escapeHtml(item.name || "Ingredient")}</strong>
+      <span class="status-chip ${escapeHtml(statusClass(item.status))}">${escapeHtml(formatLabel(item.status || "unknown"))}</span>
+      <p>${escapeHtml(item.detail || "")}</p>
+    </div>
+  `;
+}
+
+function renderSignalItem(signal) {
+  return `
+    <div class="signal-item ${escapeHtml(statusClass(signal.severity))}">
+      <strong>${escapeHtml(signal.label || "Signal")}</strong>
+      <span>${escapeHtml(formatLabel(signal.severity || "unknown"))}</span>
+      <p>${escapeHtml(signal.detail || "")}</p>
+    </div>
+  `;
+}
+
+function renderEvidenceItem(item) {
+  const files = Array.isArray(item.source_files) && item.source_files.length
+    ? item.source_files.join(", ")
+    : "No linked file";
+  return `
+    <div class="evidence-item">
+      <strong>${escapeHtml(item.label || "Evidence")}</strong>
+      <span class="status-chip ${escapeHtml(statusClass(item.status))}">${escapeHtml(formatLabel(item.status || "unknown"))}</span>
+      <small>${escapeHtml(files)}</small>
+    </div>
+  `;
+}
+
+function renderClaimHistoryTable(claims) {
+  if (!claims.length) {
+    return '<p class="empty-state">No linked claim history.</p>';
+  }
+
+  return `
+    <div class="claims-table-wrap">
+      <table class="claims-table">
+        <thead>
+          <tr>
+            <th>Claim</th>
+            <th>Loss Date</th>
+            <th>Type</th>
+            <th>Status</th>
+            <th>Severity</th>
+            <th>Paid</th>
+            <th>Reserve</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${claims.map((claim) => `
+            <tr>
+              <td>
+                <strong>${escapeHtml(claim.claim_id)}</strong>
+                <small>${escapeHtml(claim.description || claim.cause || "")}</small>
+              </td>
+              <td>${escapeHtml(formatDateOnly(claim.loss_date))}</td>
+              <td>${escapeHtml(formatLabel(claim.claim_type))}</td>
+              <td>${escapeHtml(formatLabel(claim.status))}</td>
+              <td><span class="status-chip ${escapeHtml(statusClass(claim.severity))}">${escapeHtml(formatLabel(claim.severity))}</span></td>
+              <td>${escapeHtml(formatCurrency(Number(claim.amount_paid || 0)))}</td>
+              <td>${escapeHtml(formatCurrency(Number(claim.amount_reserved || 0)))}</td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+function statusClass(value) {
+  const normalized = String(value || "").toLowerCase();
+  if (["available", "low", "closed"].includes(normalized)) {
+    return "good";
+  }
+  if (["partial", "moderate", "open"].includes(normalized)) {
+    return "watch";
+  }
+  if (["missing", "high"].includes(normalized)) {
+    return "alert";
+  }
+  return "neutral";
 }
 
 function scoreStoredModel(model, featureLookup) {
@@ -1841,6 +3943,26 @@ function buildAnalyticsFeatureLookup(record) {
   const patchingText = String(controls.patching || "").toLowerCase();
   const trainingText = String(controls.security_training || "").toLowerCase();
   const techText = String(applicant.technology_profile || "").toLowerCase();
+  const industryText = String(applicant.industry || "").toLowerCase();
+  const industryBucket = getApplicantIndustryBucket(applicant);
+  const claimSnapshot = underwritingSystem && underwritingSystem.claim_snapshot ? underwritingSystem.claim_snapshot : {};
+  const brokerMetrics = underwritingSystem && underwritingSystem.broker && underwritingSystem.broker.relationship_metrics
+    ? underwritingSystem.broker.relationship_metrics
+    : {};
+  const evidence = underwritingSystem && Array.isArray(underwritingSystem.evidence_status)
+    ? underwritingSystem.evidence_status
+    : [];
+  const availableEvidence = evidence.filter((item) => item.status === "available").length;
+  const evidenceRatio = evidence.length ? availableEvidence / evidence.length : 0.75;
+  const totalIncurred = Number(claimSnapshot.total_incurred || 0);
+  const openClaims = Number(claimSnapshot.open_claims || 0);
+  const brokerQuality = clamp(Number(brokerMetrics.data_quality_score || 70) / 100, 0, 1);
+  const brokerResponseQuality = clamp(1 - Number(brokerMetrics.avg_response_hours || 18) / 48, 0, 1);
+  const operationalDependency = /edi|portal|payment|reservation|warehouse|telematics|property management|ot|remote access|api/.test(techText)
+    ? 0.78
+    : 0.32;
+  const industryPropensity = getIndustryPropensityScore(industryText, techText, industryBucket);
+  const riskFlagLoad = clamp(riskFlags.length / 5, 0, 1);
 
   const featureInputs = [
     {
@@ -1905,6 +4027,54 @@ function buildAnalyticsFeatureLookup(record) {
       value: maxLimit && revenue ? clamp(1 - Math.abs(maxLimit / revenue - 0.1) * 2, 0.18, 0.86) : 0.5,
       displayValue: maxLimit ? `${formatCurrency(maxLimit)} max requested` : "TBD",
       rawValue: maxLimit
+    },
+    {
+      key: "industry_propensity",
+      label: "Industry Propensity",
+      value: industryPropensity,
+      displayValue: industryBucket
+    },
+    {
+      key: "risk_flag_load",
+      label: "Risk Flag Load",
+      value: riskFlagLoad,
+      displayValue: `${riskFlags.length} flags`
+    },
+    {
+      key: "operational_dependency",
+      label: "Operational Dependency",
+      value: operationalDependency,
+      displayValue: operationalDependency >= 0.7 ? "High dependency" : "Lower dependency"
+    },
+    {
+      key: "claim_load",
+      label: "Historical Claim Load",
+      value: clamp(totalIncurred / 125000, 0, 1),
+      displayValue: formatCurrency(totalIncurred)
+    },
+    {
+      key: "open_claim_signal",
+      label: "Open Claim Signal",
+      value: openClaims ? 0.82 : 0.2,
+      displayValue: openClaims ? `${openClaims} open` : "None open"
+    },
+    {
+      key: "evidence_ratio",
+      label: "Evidence Confidence",
+      value: evidenceRatio,
+      displayValue: evidence.length ? `${availableEvidence}/${evidence.length} available` : "Evidence TBD"
+    },
+    {
+      key: "broker_quality",
+      label: "Broker Data Quality",
+      value: brokerQuality,
+      displayValue: `${Math.round(brokerQuality * 100)}/100`
+    },
+    {
+      key: "broker_response_quality",
+      label: "Broker Response Quality",
+      value: brokerResponseQuality,
+      displayValue: `${Math.round(brokerResponseQuality * 100)}% response score`
     }
   ];
 
@@ -2470,9 +4640,10 @@ function hideFeatureTooltip() {
   activeFeatureTooltip.classList.remove("visible");
 }
 
-function renderModelView(label, model, description) {
+function renderModelView(label, model, description, record = null, modelKey = "quote") {
   return `
     ${renderScoreCard(label, model, description)}
+    ${renderSupplementalModelResults(record, modelKey)}
     <div class="model-section">
       <h4>${escapeHtml(model.modelName || "Logistic Regression")}</h4>
       <div class="model-caption">
@@ -2482,6 +4653,253 @@ function renderModelView(label, model, description) {
       ${renderModelInterpretationSummary(model)}
     </div>
   `;
+}
+
+function renderSupplementalModelResults(record, modelKey) {
+  const results = buildSupplementalModelResults(record, modelKey);
+  return `
+    <section class="supplemental-model-section">
+      <div class="card-heading">
+        <h4>Supplemental Modeling Results</h4>
+        <span class="claim-system-tag">${escapeHtml(modelKey === "bind" ? "Bind support" : "Quote support")}</span>
+      </div>
+      <div class="supplemental-model-list">
+        ${results.map((result) => `
+          <button
+            class="model-result-row ${escapeHtml(result.tone)} ${result.modelKey === activeSupplementalModelKey ? "active" : ""}"
+            type="button"
+            data-supplemental-model="${escapeHtml(result.modelKey)}"
+          >
+            <div>
+              <strong>${escapeHtml(result.label)}</strong>
+              <small>${escapeHtml(result.detail)}</small>
+            </div>
+            <div class="model-result-score">
+              <span>${escapeHtml(result.value)}</span>
+              <i style="width: ${Math.round(result.score * 100)}%"></i>
+            </div>
+          </button>
+        `).join("")}
+      </div>
+      <div class="supplemental-model-detail" id="supplementalModelDetail">
+        ${renderSupplementalModelDetail(activeSupplementalModelKey)}
+      </div>
+    </section>
+  `;
+}
+
+function buildSupplementalModelResults(record, modelKey) {
+  const supplementalScores = currentAnalytics && currentAnalytics.supplemental
+    ? currentAnalytics.supplemental
+    : {};
+  const brokerMetrics = underwritingSystem && underwritingSystem.broker && underwritingSystem.broker.relationship_metrics
+    ? underwritingSystem.broker.relationship_metrics
+    : {};
+  const evidence = underwritingSystem && Array.isArray(underwritingSystem.evidence_status)
+    ? underwritingSystem.evidence_status
+    : [];
+  const brokerQuality = clamp(Number(brokerMetrics.data_quality_score || 70) / 100, 0, 1);
+  const brokerResponse = clamp(1 - Number(brokerMetrics.avg_response_hours || 18) / 48, 0, 1);
+  const evidenceRatio = evidence.length
+    ? evidence.filter((item) => item.status === "available").length / evidence.length
+    : 0.7;
+  const industryScore = currentAnalyticsFeatureLookup && currentAnalyticsFeatureLookup.industry_propensity
+    ? Number(currentAnalyticsFeatureLookup.industry_propensity.value || 0)
+    : 0.5;
+  const placementConfidence = clamp(
+    (currentAnalytics && currentAnalytics[modelKey] ? currentAnalytics[modelKey].probability : 0.5) * 0.5
+      + brokerQuality * 0.25 + brokerResponse * 0.15 + evidenceRatio * 0.1,
+    0,
+    1
+  );
+
+  return [
+    ...SUPPLEMENTAL_MODEL_KEYS
+      .filter((key) => supplementalScores[key])
+      .map((key) => makeSupplementalResult(key, supplementalScores[key].probability)),
+    makeSupplementalResult("industry_propensity", industryScore),
+    makeSupplementalResult("broker_placement_confidence", placementConfidence),
+    makeSupplementalResult("evidence_confidence", evidenceRatio)
+  ];
+}
+
+function makeSupplementalResult(modelKey, score) {
+  const definition = SUPPLEMENTAL_RESULT_DEFINITIONS[modelKey] || {
+    label: formatLabel(modelKey),
+    detail: "Supplemental underwriting model result",
+    higherIsRisk: true
+  };
+  const value = formatPercent(score);
+  let tone = "watch";
+  if (definition.higherIsRisk) {
+    tone = score >= 0.62 ? "alert" : score >= 0.38 ? "watch" : "good";
+  } else {
+    tone = score >= 0.72 ? "good" : score >= 0.48 ? "watch" : "alert";
+  }
+
+  return {
+    modelKey,
+    label: definition.label,
+    value,
+    detail: definition.detail,
+    score: clamp(score, 0, 1),
+    tone
+  };
+}
+
+function updateSupplementalModelDetail() {
+  if (!analyticsPanel) {
+    return;
+  }
+
+  analyticsPanel.querySelectorAll("[data-supplemental-model]").forEach((button) => {
+    button.classList.toggle("active", button.dataset.supplementalModel === activeSupplementalModelKey);
+  });
+
+  const detail = analyticsPanel.querySelector("#supplementalModelDetail");
+  if (detail) {
+    detail.innerHTML = renderSupplementalModelDetail(activeSupplementalModelKey);
+  }
+}
+
+function renderSupplementalModelDetail(modelKey) {
+  if (modelKey === "industry_propensity") {
+    return renderIndustryPropensityDetail();
+  }
+
+  if (["broker_placement_confidence", "evidence_confidence"].includes(modelKey)) {
+    return renderSupportMetricDetail(modelKey);
+  }
+
+  const model = currentAnalytics && currentAnalytics.supplemental
+    ? currentAnalytics.supplemental[modelKey]
+    : null;
+  const definition = SUPPLEMENTAL_RESULT_DEFINITIONS[modelKey] || {};
+
+  if (!model) {
+    return '<p class="empty-state">Select a model result to view details.</p>';
+  }
+
+  return `
+    <div class="model-section supplemental-waterfall-section">
+      <h4>${escapeHtml(definition.label || model.modelName || "Supplemental GLM")}</h4>
+      <div class="model-caption">
+        Stored GLM result. Starts at average probability, applies the feature coefficients, and ends at current probability.
+      </div>
+      ${renderProbabilityWaterfall(model)}
+      ${renderModelInterpretationSummary(model)}
+    </div>
+  `;
+}
+
+function renderSupportMetricDetail(modelKey) {
+  const definition = SUPPLEMENTAL_RESULT_DEFINITIONS[modelKey] || {};
+  const featureKey = modelKey === "evidence_confidence" ? "evidence_ratio" : "broker_quality";
+  const feature = currentAnalyticsFeatureLookup && currentAnalyticsFeatureLookup[featureKey];
+
+  return `
+    <div class="support-metric-detail">
+      <h4>${escapeHtml(definition.label || "Support Metric")}</h4>
+      <p>${escapeHtml(definition.detail || "")}</p>
+      <strong>${escapeHtml(feature ? feature.displayValue : "TBD")}</strong>
+      <small>This is a decision-support metric rather than a stored GLM model.</small>
+    </div>
+  `;
+}
+
+function renderIndustryPropensityDetail() {
+  const model = analyticsModels && analyticsModels.industryPropensity ? analyticsModels.industryPropensity : {};
+  const history = Array.isArray(model.industry_history) ? model.industry_history : [];
+  const applicant = selectedSubmission && selectedSubmission.record && selectedSubmission.record.applicant
+    ? selectedSubmission.record.applicant
+    : {};
+  const currentBucket = getApplicantIndustryBucket(applicant);
+  const maxScore = Math.max(...history.map((item) => Number(item.score || 0)), 0.01);
+  const portfolio = model.portfolio || {};
+
+  return `
+    <div class="industry-propensity-detail">
+      <div class="card-heading">
+        <h4>Industry Propensity Benchmark</h4>
+        <span class="claim-system-tag">${escapeHtml(currentBucket)}</span>
+      </div>
+      <p class="model-caption">
+        Calculated from ${escapeHtml(String(portfolio.submission_count || history.reduce((sum, item) => sum + Number(item.submission_count || 0), 0)))} submissions and linked claims in the dummy claim system.
+      </p>
+      <div class="industry-bar-chart">
+        ${history.map((item) => {
+          const score = Number(item.score || 0);
+          const isCurrent = item.industry === currentBucket;
+          const claimCompanyCount = Number(item.claim_company_count || 0);
+          const submissionCount = Number(item.submission_count || 0);
+          const claimRate = submissionCount ? claimCompanyCount / submissionCount : 0;
+          return `
+            <div class="industry-bar-row ${isCurrent ? "current" : ""}">
+              <span>${escapeHtml(item.industry)}</span>
+              <div class="industry-bar-track">
+                <i style="width: ${Math.max(score / maxScore * 100, 4)}%"></i>
+              </div>
+              <strong>${formatPercent(score)}</strong>
+              <small>${escapeHtml(String(submissionCount))} submissions · ${escapeHtml(String(claimCompanyCount))} with claims · ${formatPercent(claimRate)} claim rate · ${formatCurrency(Number(item.average_claim_severity || 0))} avg severity</small>
+            </div>
+          `;
+        }).join("")}
+      </div>
+    </div>
+  `;
+}
+
+function getIndustryPropensityScore(industryText, techText, industryBucket = "") {
+  const bucket = industryBucket || resolveIndustryBucket(industryText, techText);
+  const history = analyticsModels && analyticsModels.industryPropensity && Array.isArray(analyticsModels.industryPropensity.industry_history)
+    ? analyticsModels.industryPropensity.industry_history
+    : [];
+  const match = history.find((item) => item.industry === bucket);
+  return match ? Number(match.score || 0.5) : 0.5;
+}
+
+function getApplicantIndustryBucket(applicant = {}) {
+  return applicant.industry_bucket
+    || applicant.industry_group
+    || resolveIndustryBucket(
+      String(applicant.industry || "").toLowerCase(),
+      String(applicant.technology_profile || "").toLowerCase()
+    );
+}
+
+function resolveIndustryBucket(industryText, techText = "") {
+  const combined = `${industryText} ${techText}`.toLowerCase();
+  if (/fintech|payment/.test(combined)) {
+    return "Fintech / Payments";
+  }
+  if (/saas|software|api|technology/.test(combined)) {
+    return "SaaS / Software";
+  }
+  if (/health|senior|pharmacy|phi|hipaa/.test(combined)) {
+    return "Healthcare / Pharmacy";
+  }
+  if (/university|education/.test(combined)) {
+    return "Education";
+  }
+  if (/manufacturing|industrial|ot|remote access/.test(combined)) {
+    return "Manufacturing / OT";
+  }
+  if (/food distribution|warehouse|edi|logistics/.test(combined)) {
+    return "Food Distribution / Logistics";
+  }
+  if (/hospitality|hotel|retail|pci/.test(combined)) {
+    return "Hospitality / Retail";
+  }
+  if (/marina|recreation/.test(combined)) {
+    return "Marina / Recreation";
+  }
+  if (/construction|contracting/.test(combined)) {
+    return "Construction";
+  }
+  if (/professional|law|consulting|accounting|managed service|architecture/.test(combined)) {
+    return "Professional Services";
+  }
+  return "Professional Services";
 }
 
 function renderScoreCard(label, model, description) {
@@ -3005,6 +5423,29 @@ function getCurrentDocumentNames() {
   return documents.map((document) => document.file_name);
 }
 
+function reconcileSelectionAfterFileChange(options = {}) {
+  const currentNames = getCurrentDocumentNames();
+  const currentNameSet = new Set(currentNames);
+
+  if (fileSelectionMode === "auto" || fileSelectionMode === "none") {
+    selectedFiles.clear();
+  } else if (fileSelectionMode === "all") {
+    selectedFiles = new Set(currentNames);
+  } else {
+    selectedFiles = new Set(
+      Array.from(selectedFiles).filter((fileName) => currentNameSet.has(fileName))
+    );
+
+    if (options.addedFileName && currentNameSet.has(options.addedFileName)) {
+      selectedFiles.add(options.addedFileName);
+    }
+  }
+
+  autoSelectEnabled = fileSelectionMode === "auto";
+  syncFileSelectionControls();
+  updateSelectionMode(fileSelectionMode);
+}
+
 function syncFileSelectionControls() {
   document.querySelectorAll(".file-selection-checkbox").forEach((checkbox) => {
     checkbox.checked = selectedFiles.has(checkbox.value);
@@ -3124,6 +5565,14 @@ function formatMetadataList(value) {
   }
 
   return value || "";
+}
+
+function formatLabel(value) {
+  return String(value || "")
+    .replace(/[_-]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/\b\w/g, (letter) => letter.toUpperCase()) || "TBD";
 }
 
 function formatDateTime(value) {

@@ -1,0 +1,21 @@
+{
+  "submission_id": "001-acme-foods",
+  "claim_system": "dummy_claims_core",
+  "updated_at": "2026-05-19T09:00:00-04:00",
+  "claims": [
+    {
+      "claim_id": "CLM-ACME-2023-001",
+      "loss_date": "2023-08-19",
+      "reported_date": "2023-08-21",
+      "status": "closed",
+      "claim_type": "business_email_compromise",
+      "coverage_area": "cyber_crime",
+      "severity": "moderate",
+      "amount_paid": 18500,
+      "amount_reserved": 0,
+      "cause": "Compromised employee mailbox used in fraudulent vendor payment attempt.",
+      "description": "Investigation and legal costs were paid after most funds were recovered.",
+      "recovery_status": "funds_recovered_except_expenses"
+    }
+  ]
+}

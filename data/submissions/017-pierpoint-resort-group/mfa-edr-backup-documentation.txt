@@ -1,0 +1,28 @@
+MFA, EDR, and backup control documentation
+
+Insured: Pierpoint Resort Group LLC
+Submission ID: 017-pierpoint-resort-group
+Industry: Regional resort and hotel operator
+Industry benchmark bucket: Hospitality / Retail
+Revenue: $74,200,000
+Employees: 630
+Records: 410,000
+Technology profile: Property management system, booking engine, guest Wi-Fi, POS terminals, loyalty platform
+
+Security controls:
+- mfa: Enabled for email, VPN, and privileged users
+- edr: Microsoft Defender for Endpoint deployed on managed endpoints
+- backup: Daily backups with quarterly restore testing
+- patching: Critical patches within 14 days
+- security_training: Annual employee training plus phishing simulations
+
+Claims history:
+No cyber claims reported in the linked loss period.
+
+Risk flags:
+- PCI and payment card exposure
+
+Open questions:
+- Confirm most recent backup restore test date.
+- Provide latest vulnerability scan executive summary.
+- Clarify critical vendor incident notification obligations.

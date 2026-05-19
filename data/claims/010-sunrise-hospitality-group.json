@@ -1,0 +1,21 @@
+{
+  "submission_id": "010-sunrise-hospitality-group",
+  "claim_system": "dummy_claims_core",
+  "updated_at": "2026-05-19T09:00:00-04:00",
+  "claims": [
+    {
+      "claim_id": "CLM-SUNRISE-2024-001",
+      "loss_date": "2024-12-11",
+      "reported_date": "2024-12-12",
+      "status": "closed",
+      "claim_type": "payment_card_incident",
+      "coverage_area": "pci_assessment",
+      "severity": "moderate",
+      "amount_paid": 39000,
+      "amount_reserved": 0,
+      "cause": "POS malware alert at one property required PCI forensic review.",
+      "description": "No broad card compromise confirmed, but forensic and legal costs were paid.",
+      "recovery_status": "remediated"
+    }
+  ]
+}

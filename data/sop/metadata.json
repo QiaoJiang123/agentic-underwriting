@@ -1,0 +1,235 @@
+{
+  "metadata_id": "cyber-commercial-underwriting-sop-metadata",
+  "sop_id": "cyber-commercial-underwriting-sop",
+  "source_file": "data/sop/cyber_underwriting_sop.json",
+  "version": "0.1-demo",
+  "updated_at": "2026-05-19T00:00:00Z",
+  "description": "Search metadata used by the centralized information agent to select relevant commercial cyber underwriting SOP steps.",
+  "selection_rules": {
+    "match_fields": [
+      "label",
+      "keywords",
+      "intents",
+      "related_data"
+    ],
+    "default_step_ids": [
+      "required_evidence_review",
+      "broker_follow_up"
+    ],
+    "max_selected_steps": 4
+  },
+  "steps": [
+    {
+      "step_id": "intake_validation",
+      "label": "Intake Validation",
+      "priority": "high",
+      "keywords": [
+        "intake",
+        "new submission",
+        "submission form",
+        "application form",
+        "insured name",
+        "revenue",
+        "records",
+        "effective date",
+        "coverage request",
+        "broker"
+      ],
+      "intents": [
+        "validate intake",
+        "check required fields",
+        "fill submission fields",
+        "confirm account basics"
+      ],
+      "related_data": [
+        "submission_metadata",
+        "broker_profile",
+        "intake_status"
+      ]
+    },
+    {
+      "step_id": "required_evidence_review",
+      "label": "Required Evidence Review",
+      "priority": "high",
+      "keywords": [
+        "missing",
+        "evidence",
+        "document",
+        "file",
+        "cyber application",
+        "ransomware supplement",
+        "loss runs",
+        "prior policy",
+        "financials",
+        "controls questionnaire",
+        "mfa evidence",
+        "edr evidence",
+        "backup evidence",
+        "incident response",
+        "vendor assessment",
+        "compliance"
+      ],
+      "intents": [
+        "find missing evidence",
+        "review required documents",
+        "draft evidence request",
+        "decide if file is complete"
+      ],
+      "related_data": [
+        "document_metadata",
+        "submission_files",
+        "underwriting_evidence_status"
+      ]
+    },
+    {
+      "step_id": "control_baseline",
+      "label": "Control Baseline",
+      "priority": "high",
+      "keywords": [
+        "control",
+        "controls",
+        "mfa",
+        "edr",
+        "backup",
+        "restore test",
+        "patching",
+        "security training",
+        "privileged access",
+        "remote access",
+        "vendor dependency",
+        "operational dependency"
+      ],
+      "intents": [
+        "evaluate controls",
+        "review control gaps",
+        "draft subjectivities",
+        "assess ransomware controls"
+      ],
+      "related_data": [
+        "security_controls",
+        "documents",
+        "risk_flags",
+        "analytics_model_features"
+      ]
+    },
+    {
+      "step_id": "claims_review",
+      "label": "Claims Review",
+      "priority": "high",
+      "keywords": [
+        "claim",
+        "claims",
+        "loss",
+        "loss runs",
+        "prior loss",
+        "open claim",
+        "severity",
+        "paid",
+        "reserve",
+        "incurred",
+        "remediation"
+      ],
+      "intents": [
+        "review claim history",
+        "evaluate prior loss",
+        "confirm claim remediation",
+        "summarize loss runs"
+      ],
+      "related_data": [
+        "claim_system",
+        "loss_run_documents",
+        "underwriting_claim_snapshot"
+      ]
+    },
+    {
+      "step_id": "broker_follow_up",
+      "label": "Broker Follow-Up",
+      "priority": "medium",
+      "keywords": [
+        "broker",
+        "follow up",
+        "follow-up",
+        "question",
+        "questions",
+        "request",
+        "missing information",
+        "open question",
+        "email",
+        "producer",
+        "account manager"
+      ],
+      "intents": [
+        "draft broker questions",
+        "prepare follow up",
+        "ask for missing information",
+        "structure broker request"
+      ],
+      "related_data": [
+        "broker_profile",
+        "open_questions",
+        "missing_evidence",
+        "notes"
+      ]
+    },
+    {
+      "step_id": "referral_authority",
+      "label": "Referral Authority",
+      "priority": "high",
+      "keywords": [
+        "referral",
+        "authority",
+        "approval",
+        "escalate",
+        "senior review",
+        "high records",
+        "open claim",
+        "severe control gap",
+        "appetite",
+        "exception"
+      ],
+      "intents": [
+        "check referral trigger",
+        "prepare approval rationale",
+        "decide authority level",
+        "escalate submission"
+      ],
+      "related_data": [
+        "appetite",
+        "claims",
+        "risk_flags",
+        "records_exposure",
+        "controls"
+      ]
+    },
+    {
+      "step_id": "pricing_terms",
+      "label": "Pricing & Terms",
+      "priority": "medium",
+      "keywords": [
+        "quote",
+        "bind",
+        "pricing",
+        "terms",
+        "subjectivity",
+        "condition",
+        "endorsement",
+        "retention",
+        "limit",
+        "model driver",
+        "analytics"
+      ],
+      "intents": [
+        "prepare terms",
+        "review quote readiness",
+        "draft subjectivities",
+        "connect model drivers to terms"
+      ],
+      "related_data": [
+        "analytics_models",
+        "coverage",
+        "security_controls",
+        "evidence_status"
+      ]
+    }
+  ]
+}

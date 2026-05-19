@@ -1,0 +1,30 @@
+Vendor and third-party security assessment
+
+Insured: Metroline Freight Inc.
+Submission ID: 032-metroline-freight
+Industry: Regional freight brokerage and logistics
+Industry benchmark bucket: Food Distribution / Logistics
+Revenue: $132,000,000
+Employees: 520
+Records: 150,000
+Technology profile: Transportation management system, EDI, carrier portal, fleet telematics, Microsoft 365
+
+Security controls:
+- mfa: Enabled for email, VPN, and privileged users
+- edr: EDR deployed on corporate endpoints; server coverage in progress
+- backup: Daily backups with quarterly restore testing
+- patching: Critical patches within 14 days
+- security_training: Annual employee training
+
+Claims history:
+2023-01-01 | service_outage | closed | paid $46,000 | reserve $0
+
+Risk flags:
+- Material third-party or portal dependency
+
+Open questions:
+- Confirm most recent backup restore test date.
+- Provide latest vulnerability scan executive summary.
+- Clarify critical vendor incident notification obligations.
+
+Critical vendors should be reviewed for incident notification, recovery time, and data access controls.

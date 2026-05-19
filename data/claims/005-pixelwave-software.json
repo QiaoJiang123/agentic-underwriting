@@ -1,0 +1,35 @@
+{
+  "submission_id": "005-pixelwave-software",
+  "claim_system": "dummy_claims_core",
+  "updated_at": "2026-05-19T09:00:00-04:00",
+  "claims": [
+    {
+      "claim_id": "CLM-PIXEL-2025-001",
+      "loss_date": "2025-02-17",
+      "reported_date": "2025-02-18",
+      "status": "closed",
+      "claim_type": "service_outage",
+      "coverage_area": "technology_errors_omissions",
+      "severity": "low",
+      "amount_paid": 12000,
+      "amount_reserved": 0,
+      "cause": "Configuration deployment caused dashboard downtime for several enterprise customers.",
+      "description": "Defense expense and customer credit review were paid under the technology E&O insuring agreement.",
+      "recovery_status": "resolved"
+    },
+    {
+      "claim_id": "CLM-PIXEL-2025-002",
+      "loss_date": "2025-09-04",
+      "reported_date": "2025-09-05",
+      "status": "closed",
+      "claim_type": "security_event",
+      "coverage_area": "incident_response",
+      "severity": "moderate",
+      "amount_paid": 34000,
+      "amount_reserved": 0,
+      "cause": "Third-party integration token was exposed in a misconfigured repository.",
+      "description": "Forensic review found no confirmed data exfiltration, but token rotation and customer notices were completed.",
+      "recovery_status": "remediated"
+    }
+  ]
+}

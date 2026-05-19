@@ -4,7 +4,7 @@
   "line_of_business": "Cyber liability",
   "file_created_at": "2026-04-21T09:18:00-04:00",
   "received_at": "2026-04-21T10:42:00-04:00",
-  "updated_at": "2026-05-12T03:55:33.374320Z",
+  "updated_at": "2026-05-19T12:00:00-04:00",
   "status": "New",
   "applicant": {
     "insured_name": "Acme Foods Distribution LLC",
@@ -13,7 +13,9 @@
     "annual_revenue": 28400000,
     "employee_count": 146,
     "records_count": 82000,
-    "technology_profile": "Warehouse management system, EDI ordering, fleet telematics, customer portal, Microsoft 365"
+    "technology_profile": "Warehouse management system, EDI ordering, fleet telematics, customer portal, Microsoft 365",
+    "industry_bucket": "Food Distribution / Logistics",
+    "industry_group": "Food Distribution / Logistics"
   },
   "coverage": {
     "lines_requested": [
@@ -334,5 +336,20 @@
       "Missing underwriting inputs noted in open questions: latest vulnerability scan summary and clarification on business interruption dependency on the third-party EDI provider."
     ],
     "recommended_next_action": "Obtain and review evidence confirming MFA implementation for the warehouse handheld admin portal (requested screenshot/policy and updated access control export), and follow up with the latest vulnerability scan summary plus clarification/assessment of dependent business interruption dependency language for the EDI/third-party outage scenario."
+  },
+  "broker": {
+    "broker_id": "brk-atlantic-risk-partners",
+    "firm_name": "Atlantic Risk Partners",
+    "producer_name": "Maya Chen",
+    "producer_email": "maya.chen@atlanticrisk.example",
+    "producer_phone": "212-555-0184",
+    "account_manager_name": "Jordan Patel",
+    "account_manager_email": "jordan.patel@atlanticrisk.example",
+    "account_manager_phone": "212-555-0149",
+    "relationship_type": "Broker submission",
+    "submission_channel": "Broker portal",
+    "target_quote_date": "2026-05-15",
+    "broker_priority": "Strategic",
+    "broker_notes": "Atlantic Risk Partners assigned based on Food Distribution / Logistics appetite and market focus."
   }
 }

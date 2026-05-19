@@ -1,0 +1,30 @@
+Incident response plan and escalation workflow
+
+Insured: Urban Market Collective LLC
+Submission ID: 037-urban-market-collective
+Industry: Specialty retail and ecommerce
+Industry benchmark bucket: Hospitality / Retail
+Revenue: $44,700,000
+Employees: 285
+Records: 620,000
+Technology profile: Ecommerce platform, POS terminals, loyalty platform, customer support portal, Microsoft 365
+
+Security controls:
+- mfa: Enabled for email, VPN, and privileged users
+- edr: Microsoft Defender for Endpoint deployed on managed endpoints
+- backup: Daily backups with quarterly restore testing
+- patching: Critical patches within 14 days
+- security_training: Annual employee training plus phishing simulations
+
+Claims history:
+No cyber claims reported in the linked loss period.
+
+Risk flags:
+- Large privacy record count
+- Material third-party or portal dependency
+- PCI and payment card exposure
+
+Open questions:
+- Confirm most recent backup restore test date.
+- Provide latest vulnerability scan executive summary.
+- Clarify critical vendor incident notification obligations.

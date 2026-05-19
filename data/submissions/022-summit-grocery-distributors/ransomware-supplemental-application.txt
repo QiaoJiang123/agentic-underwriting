@@ -1,0 +1,28 @@
+Ransomware supplemental application
+
+Insured: Summit Grocery Distributors LLC
+Submission ID: 022-summit-grocery-distributors
+Industry: Regional grocery distribution
+Industry benchmark bucket: Food Distribution / Logistics
+Revenue: $67,500,000
+Employees: 340
+Records: 120,000
+Technology profile: Warehouse management system, EDI, fleet routing, vendor portal, Microsoft 365
+
+Security controls:
+- mfa: Enabled for email, VPN, and privileged users
+- edr: Microsoft Defender for Endpoint deployed on managed endpoints
+- backup: Daily backups with quarterly restore testing
+- patching: Critical patches within 14 days
+- security_training: Annual employee training plus phishing simulations
+
+Claims history:
+No cyber claims reported in the linked loss period.
+
+Risk flags:
+- Material third-party or portal dependency
+
+Open questions:
+- Confirm most recent backup restore test date.
+- Provide latest vulnerability scan executive summary.
+- Clarify critical vendor incident notification obligations.

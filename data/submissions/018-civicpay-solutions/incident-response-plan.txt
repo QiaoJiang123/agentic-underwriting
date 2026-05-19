@@ -1,0 +1,32 @@
+Incident response plan and escalation workflow
+
+Insured: CivicPay Solutions Inc.
+Submission ID: 018-civicpay-solutions
+Industry: Municipal payment processing platform
+Industry benchmark bucket: Fintech / Payments
+Revenue: $84,500,000
+Employees: 355
+Records: 1,850,000
+Technology profile: Payment gateway, ACH processing, API platform, fraud analytics, AWS
+
+Security controls:
+- mfa: Partial; enabled for email and VPN with rollout pending for privileged application admins
+- edr: CrowdStrike with 24/7 MDR coverage
+- backup: Immutable backups with monthly restore testing
+- patching: Critical patches within 7 days
+- security_training: Annual employee training plus phishing simulations
+
+Claims history:
+No cyber claims reported in the linked loss period.
+
+Risk flags:
+- Large privacy record count
+- Material third-party or portal dependency
+- PCI and payment card exposure
+- MFA rollout gap
+
+Open questions:
+- Confirm most recent backup restore test date.
+- Provide latest vulnerability scan executive summary.
+- Request PCI ROC or most recent attestation summary.
+- Confirm privileged application MFA completion timeline.

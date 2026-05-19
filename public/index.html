@@ -8,6 +8,10 @@
     <link rel="stylesheet" href="/styles.css" />
   </head>
   <body class="search-body">
+    <a class="ghost-button dev-nav-button" href="/dev.html">Dev</a>
+    <button class="ghost-button search-add-button" id="addSubmissionToggle" type="button">
+      Add Submission
+    </button>
     <main class="search-shell">
       <section class="search-panel" aria-label="Submission search">
         <header class="search-header">
@@ -32,9 +36,181 @@
         <section class="search-results examples-results" id="exampleResults" aria-label="Submission examples">
           <p class="empty-state">Loading examples...</p>
         </section>
+
+        <section class="intake-panel" id="addSubmissionPanel" hidden>
+          <div class="intake-panel-heading">
+            <div>
+              <p class="eyebrow">New Submission</p>
+              <h2>Add Submission</h2>
+            </div>
+            <span id="intakeStatus"></span>
+          </div>
+
+          <div class="intake-mode-control" aria-label="Submission intake method">
+            <button class="intake-mode-button active" type="button" data-intake-mode="manual">
+              Manual Entry
+            </button>
+            <button class="intake-mode-button" type="button" data-intake-mode="submission_form">
+              Retrieve From Submission Form
+            </button>
+          </div>
+
+          <section class="intake-source-panel" id="submissionFormPanel" hidden>
+            <div class="application-upload-row">
+              <input id="applicationFormUploadInput" type="file" accept=".txt,.pdf,text/plain,application/pdf" multiple hidden />
+              <button class="selection-action light-action" id="applicationFormUploadButton" type="button">
+                Upload Documents
+              </button>
+              <button class="selection-action light-action" id="fillFromDocumentsButton" type="button">
+                Fill Out Information
+              </button>
+              <span id="applicationFormUploadStatus"></span>
+            </div>
+            <div class="staged-document-list" id="stagedDocumentList"></div>
+            <label class="intake-field wide-field">
+              <span>Combined Intake Text</span>
+              <textarea id="intakeText" rows="8" placeholder="Paste broker email, cyber application excerpt, or intake notes..."></textarea>
+            </label>
+            <div class="intake-actions">
+              <button class="selection-action light-action" id="autoPopulateSubmission" type="button">
+                Auto Populate
+              </button>
+            </div>
+          </section>
+
+          <form class="intake-form" id="addSubmissionForm">
+            <label class="intake-field">
+              <span>Intake Status</span>
+              <select id="newOverallStatus">
+                <option value="draft">Draft</option>
+                <option value="waiting_documents">Waiting Documents</option>
+                <option value="ready_for_review">Ready For Review</option>
+                <option value="submitted">Submitted</option>
+              </select>
+            </label>
+            <label class="intake-field">
+              <span>Submission Title</span>
+              <input id="newTitle" type="text" required />
+            </label>
+            <label class="intake-field">
+              <span>Insured Name</span>
+              <input id="newInsuredName" type="text" required />
+            </label>
+            <label class="intake-field">
+              <span>Industry</span>
+              <input id="newIndustry" type="text" />
+            </label>
+            <label class="intake-field">
+              <span>Industry Bucket</span>
+              <input id="newIndustryBucket" type="text" />
+            </label>
+            <label class="intake-field">
+              <span>Location</span>
+              <input id="newLocation" type="text" />
+            </label>
+            <label class="intake-field">
+              <span>Annual Revenue</span>
+              <input id="newRevenue" type="number" min="0" step="1000" />
+            </label>
+            <label class="intake-field">
+              <span>Employees</span>
+              <input id="newEmployees" type="number" min="0" step="1" />
+            </label>
+            <label class="intake-field">
+              <span>Records</span>
+              <input id="newRecords" type="number" min="0" step="100" />
+            </label>
+            <label class="intake-field">
+              <span>Effective Date</span>
+              <input id="newEffectiveDate" type="date" />
+            </label>
+            <label class="intake-field">
+              <span>Coverage Limit</span>
+              <input id="newCoverageLimit" type="text" placeholder="$1,000,000" />
+            </label>
+            <label class="intake-field">
+              <span>Retention</span>
+              <input id="newRetention" type="text" placeholder="$10,000" />
+            </label>
+            <label class="intake-field">
+              <span>Broker</span>
+              <select id="newBrokerId">
+                <option value="">No linked broker</option>
+              </select>
+            </label>
+            <label class="intake-field wide-field">
+              <span>Technology Profile</span>
+              <textarea id="newTechnologyProfile" rows="3"></textarea>
+            </label>
+            <label class="intake-field">
+              <span>MFA</span>
+              <input id="newMfa" type="text" />
+            </label>
+            <label class="intake-field">
+              <span>EDR</span>
+              <input id="newEdr" type="text" />
+            </label>
+            <label class="intake-field">
+              <span>Backups</span>
+              <input id="newBackup" type="text" />
+            </label>
+            <label class="intake-field">
+              <span>Patching</span>
+              <input id="newPatching" type="text" />
+            </label>
+            <label class="intake-field wide-field">
+              <span>Security Training</span>
+              <input id="newSecurityTraining" type="text" />
+            </label>
+            <label class="intake-field wide-field">
+              <span>Risk Flags</span>
+              <textarea id="newRiskFlags" rows="3"></textarea>
+            </label>
+            <label class="intake-field wide-field">
+              <span>Open Questions</span>
+              <textarea id="newOpenQuestions" rows="3"></textarea>
+            </label>
+            <section class="intake-documents-panel wide-field">
+              <div class="intake-documents-heading">
+                <div>
+                  <span>Documents To Upload</span>
+                  <strong>Cyber underwriting checklist</strong>
+                </div>
+                <button class="selection-action light-action" id="saveIntakeStatusButton" type="button">
+                  Save Status
+                </button>
+              </div>
+              <div class="intake-document-list" id="intakeDocumentList"></div>
+            </section>
+            <div class="intake-submit-row">
+              <button class="send-button" type="submit">Create Submission</button>
+            </div>
+          </form>
+
+          <section class="intake-review-panel" id="intakeReviewPanel" hidden>
+            <div class="intake-review-heading">
+              <div>
+                <p class="eyebrow">Intake Confirmation</p>
+                <h3>Review Auto-Populated Information</h3>
+              </div>
+              <span id="intakeReviewStatus">Awaiting underwriter confirmation</span>
+            </div>
+            <p class="intake-review-policy" id="intakeReviewPolicy"></p>
+            <div class="intake-review-list" id="intakeReviewSteps"></div>
+            <div class="intake-review-actions">
+              <button class="ghost-button" id="reviseIntakeButton" type="button">
+                Revise the Submission Intake Form
+              </button>
+              <button class="send-button" id="moveToUnderwritingButton" type="button">
+                Move to Underwriting Agent
+              </button>
+            </div>
+          </section>
+        </section>
       </section>
     </main>
 
+    <script src="/js/api.js"></script>
     <script src="/search.js"></script>
   </body>
 </html>

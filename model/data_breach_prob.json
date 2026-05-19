@@ -1,0 +1,17 @@
+{
+  "model_name": "data_breach_prob",
+  "model_type": "glm_logistic",
+  "target": "data_breach_probability",
+  "version": "0.1.0-demo",
+  "average_probability": 0.28,
+  "description": "Demo GLM for data breach probability using records exposure, industry, vendor, and control maturity.",
+  "features": [
+    { "key": "records_exposure", "label": "Records Exposure", "coefficient": 1.05, "baseline_value": 0.5 },
+    { "key": "industry_propensity", "label": "Industry Propensity", "coefficient": 0.7, "baseline_value": 0.5 },
+    { "key": "vendor_dependency", "label": "Vendor Dependency", "coefficient": 0.36, "baseline_value": 0.5 },
+    { "key": "risk_flag_load", "label": "Risk Flag Load", "coefficient": 0.34, "baseline_value": 0.35 },
+    { "key": "mfa_maturity", "label": "MFA Maturity", "coefficient": -0.55, "baseline_value": 0.5 },
+    { "key": "security_training", "label": "Security Training", "coefficient": -0.44, "baseline_value": 0.5 },
+    { "key": "edr_coverage", "label": "EDR Coverage", "coefficient": -0.24, "baseline_value": 0.5 }
+  ]
+}

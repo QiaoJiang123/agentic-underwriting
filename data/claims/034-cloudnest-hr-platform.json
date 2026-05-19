@@ -1,0 +1,49 @@
+{
+  "submission_id": "034-cloudnest-hr-platform",
+  "claim_system": "dummy_claims_core",
+  "updated_at": "2026-05-19T12:00:00-04:00",
+  "claims": [
+    {
+      "claim_id": "CLM-CLOUDNES-2022-001",
+      "loss_date": "2022-12-19",
+      "reported_date": "2022-12-22",
+      "status": "open",
+      "claim_type": "privacy_incident",
+      "coverage_area": "privacy_liability",
+      "severity": "low",
+      "amount_paid": 19600,
+      "amount_reserved": 30900,
+      "cause": "Limited customer information was disclosed to an unauthorized recipient.",
+      "description": "Privacy Incident remains under review; costs include forensic, legal, notification, recovery, or customer credit expenses as applicable.",
+      "recovery_status": "active_review"
+    },
+    {
+      "claim_id": "CLM-CLOUDNES-2025-002",
+      "loss_date": "2025-08-03",
+      "reported_date": "2025-08-04",
+      "status": "closed",
+      "claim_type": "privacy_incident",
+      "coverage_area": "privacy_liability",
+      "severity": "low",
+      "amount_paid": 19000,
+      "amount_reserved": 0,
+      "cause": "Limited customer information was disclosed to an unauthorized recipient.",
+      "description": "Privacy Incident was closed after remediation was documented; costs include forensic, legal, notification, recovery, or customer credit expenses as applicable.",
+      "recovery_status": "partial_recovery"
+    },
+    {
+      "claim_id": "CLM-CLOUDNES-2024-003",
+      "loss_date": "2024-02-11",
+      "reported_date": "2024-02-14",
+      "status": "closed",
+      "claim_type": "payment_card_incident",
+      "coverage_area": "pci_assessment",
+      "severity": "low",
+      "amount_paid": 25100,
+      "amount_reserved": 0,
+      "cause": "Suspicious POS activity required PCI forensic review.",
+      "description": "Payment Card Incident was closed after remediation was documented; costs include forensic, legal, notification, recovery, or customer credit expenses as applicable.",
+      "recovery_status": "partial_recovery"
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+Financial information and revenue breakdown
+
+Insured: Courtney Architecture Studio PC
+Submission ID: 040-courtney-architecture-studio
+Industry: Architecture and design services
+Industry benchmark bucket: Professional Services
+Revenue: $41,500,000
+Employees: 160
+Records: 122,000
+Technology profile: Design file platform, client portal, project management system, Microsoft 365
+
+Security controls:
+- mfa: Enabled for email, VPN, and privileged users
+- edr: EDR deployed on corporate endpoints; server coverage in progress
+- backup: Daily backups with quarterly restore testing
+- patching: Critical patches within 30 days with exception tracking
+- security_training: Annual employee training
+
+Claims history:
+2023-09-21 | business_email_compromise | open | paid $33,300 | reserve $62,100
+2024-02-18 | privacy_incident | closed | paid $87,400 | reserve $0
+
+Risk flags:
+- Material third-party or portal dependency
+
+Open questions:
+- Confirm most recent backup restore test date.
+- Provide latest vulnerability scan executive summary.
+- Clarify critical vendor incident notification obligations.
+
+Revenue breakdown:
+- Core operations are the primary revenue source unless otherwise stated.
+- Annual revenue: $41,500,000

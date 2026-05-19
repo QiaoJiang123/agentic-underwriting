@@ -1,0 +1,29 @@
+Loss runs and cyber claims history
+
+Insured: Quantum Retail Pharmacy Inc.
+Submission ID: 006-quantum-retail-pharmacy
+Industry: Regional retail pharmacy chain
+Revenue: $41,200,000
+Employees: 238
+Records: 640,000
+Technology profile: Pharmacy management system, e-prescribing, POS terminals, loyalty platform, Microsoft 365
+
+Security controls:
+- mfa: Enabled for email, VPN, pharmacy system admins, and privileged users
+- edr: SentinelOne on corporate endpoints and pharmacy workstations
+- backup: Daily backups with monthly restore tests
+- patching: Critical patches within 10 days
+- security_training: Quarterly training for store managers and annual training for all employees
+
+Claims history:
+2024-03-14 | privacy_incident | closed | paid $28,500 | reserve $0
+
+Risk flags:
+- PHI and payment card exposure
+- Distributed retail locations
+- Vendor-hosted pharmacy platform
+
+Open questions:
+- Confirm PCI scan cadence.
+- Request most recent HIPAA risk assessment.
+- Clarify e-prescribing vendor incident notification obligations.

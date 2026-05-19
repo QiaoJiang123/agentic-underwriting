@@ -109,6 +109,46 @@
         "min": 0.18,
         "max": 0.86
       }
+    },
+    "industry_propensity": {
+      "label": "Industry Propensity",
+      "definition": "Industry-level baseline cyber risk based on the demo historical benchmark table.",
+      "control_type": "derived"
+    },
+    "risk_flag_load": {
+      "label": "Risk Flag Load",
+      "definition": "Normalized count of underwriting risk flags listed for the submission.",
+      "control_type": "derived"
+    },
+    "operational_dependency": {
+      "label": "Operational Dependency",
+      "definition": "Degree to which the insured depends on operational technology, portals, EDI, payments, APIs, reservation systems, or similar critical systems.",
+      "control_type": "derived"
+    },
+    "claim_load": {
+      "label": "Historical Claim Load",
+      "definition": "Normalized incurred value from linked historical cyber claims.",
+      "control_type": "derived"
+    },
+    "open_claim_signal": {
+      "label": "Open Claim Signal",
+      "definition": "Whether linked claim history contains open claims that may affect severity or authority review.",
+      "control_type": "derived"
+    },
+    "evidence_ratio": {
+      "label": "Evidence Confidence",
+      "definition": "Share of required cyber evidence categories available in the submission.",
+      "control_type": "derived"
+    },
+    "broker_quality": {
+      "label": "Broker Data Quality",
+      "definition": "Broker relationship data quality score from the broker database.",
+      "control_type": "derived"
+    },
+    "broker_response_quality": {
+      "label": "Broker Response Quality",
+      "definition": "Normalized broker responsiveness based on average response hours.",
+      "control_type": "derived"
     }
   }
 }

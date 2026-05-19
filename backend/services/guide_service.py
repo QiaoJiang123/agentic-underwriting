@@ -3,6 +3,7 @@ import time
 from datetime import datetime, timezone
 
 from backend.config import GUIDE_DIR
+from backend.services.schema_service import validate_named_schema
 from backend.services.submission_service import is_valid_submission_id, submission_exists
 
 
@@ -34,6 +35,7 @@ def save_guide_record(submission_id, guides):
         "updated_at": now,
         "guides": sanitize_guides(guides, previous_record.get("guides", []), now),
     }
+    validate_named_schema("guide_record", record)
 
     GUIDE_DIR.mkdir(parents=True, exist_ok=True)
     get_guide_path(submission_id).write_text(
@@ -95,4 +97,3 @@ def is_safe_id(value):
 
 def utc_now():
     return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
-

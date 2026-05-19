@@ -2,6 +2,7 @@ import json
 from datetime import datetime, timezone
 
 from backend.config import STATES_DIR
+from backend.services.schema_service import validate_named_schema
 from backend.services.submission_service import is_valid_submission_id, submission_exists
 
 
@@ -37,6 +38,7 @@ def save_stage_state_record(submission_id, stages):
         "submitted_at": previous_record.get("submitted_at"),
         "stages": merged_stages,
     }
+    validate_named_schema("stage_state_record", record)
 
     STATES_DIR.mkdir(parents=True, exist_ok=True)
     get_stage_state_path(submission_id).write_text(
@@ -58,6 +60,7 @@ def submit_stage_state_record(submission_id, stages):
         "submitted_at": now,
         "stages": merged_stages,
     }
+    validate_named_schema("stage_state_record", record)
 
     STATES_DIR.mkdir(parents=True, exist_ok=True)
     get_stage_state_path(submission_id).write_text(
