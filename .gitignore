@@ -6,3 +6,4 @@ node_modules/
 __pycache__/
 *.pyc
 data/intake_uploads/
+data/agent_traces/

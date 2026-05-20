@@ -15,6 +15,9 @@ const workspaceMenu = document.querySelector("#workspaceMenu");
 const sopReviewModal = document.querySelector("#sopReviewModal");
 const sopReviewContent = document.querySelector("#sopReviewContent");
 const sopReviewCloseButton = document.querySelector("#sopReviewCloseButton");
+const websiteDemoModal = document.querySelector("#websiteDemoModal");
+const websiteDemoContent = document.querySelector("#websiteDemoContent");
+const websiteDemoCloseButton = document.querySelector("#websiteDemoCloseButton");
 const workSurface = document.querySelector(".work-surface");
 const submissionList = document.querySelector("#submissionList");
 const submissionCount = document.querySelector("#submissionCount");
@@ -31,6 +34,7 @@ const submitWorkflowButton = document.querySelector("#submitWorkflowButton");
 const workflowSubmitStatus = document.querySelector("#workflowSubmitStatus");
 const keyInfoList = document.querySelector("#keyInfoList");
 const timelineList = document.querySelector("#timelineList");
+const generateSummaryButton = document.querySelector("#generateSummaryButton");
 const refreshInsightsButton = document.querySelector("#refreshInsightsButton");
 const analyticsPanel = document.querySelector("#analyticsPanel");
 const panelExpandRailButton = document.querySelector("#panelExpandRailButton");
@@ -71,6 +75,7 @@ const AGENT_SKILL_SURFACE_MAP = {
   account: ["details_summary", "key_info"],
   account_summary: ["details_summary", "key_info"],
   analytics: ["analytics"],
+  analytics_db: ["analytics", "underwriting"],
   bind: ["analytics"],
   bind_model: ["analytics"],
   bind_probability: ["analytics"],
@@ -78,6 +83,7 @@ const AGENT_SKILL_SURFACE_MAP = {
   broker_table: ["underwriting"],
   claims: ["underwriting"],
   claim: ["underwriting"],
+  clearance: ["underwriting"],
   decision_workflow: ["underwriting"],
   details: ["details_summary", "underwriting"],
   documents: ["documents"],
@@ -86,11 +92,14 @@ const AGENT_SKILL_SURFACE_MAP = {
   evidence: ["documents", "underwriting"],
   guide: ["guide"],
   guides: ["guide"],
+  external_research: ["underwriting"],
   notes: ["notes"],
   note: ["notes"],
   quote: ["analytics"],
   quote_model: ["analytics"],
   quote_probability: ["analytics"],
+  portfolio: ["analytics"],
+  rating_quote: ["underwriting"],
   sop: ["underwriting"],
   sop_guidance: ["underwriting"],
   stages: ["stages"],
@@ -146,6 +155,10 @@ let analyticsFeatureMetadata = null;
 let sopReviewRecord = null;
 let underwritingSystem = null;
 let decisionWorkflow = null;
+let clearanceReview = null;
+let externalResearch = null;
+let ratingQuote = null;
+let portfolioDashboard = null;
 let currentAnalytics = null;
 let currentAnalyticsFeatureLookup = null;
 let activeWhatIfModel = "quote";
@@ -326,6 +339,10 @@ async function selectSubmission(submission, button) {
     workflowSubmittedAt = null;
     underwritingSystem = null;
     decisionWorkflow = null;
+    clearanceReview = null;
+    externalResearch = null;
+    ratingQuote = null;
+    portfolioDashboard = null;
     currentAnalytics = null;
     currentAnalyticsFeatureLookup = null;
     activeWhatIfModel = "quote";
@@ -345,7 +362,11 @@ async function selectSubmission(submission, button) {
     await Promise.all([
       loadAnalyticsModels(),
       loadUnderwritingSystem(submission.id),
-      loadDecisionWorkflow(submission.id)
+      loadDecisionWorkflow(submission.id),
+      loadClearanceReview(submission.id),
+      loadExternalResearch(submission.id),
+      loadRatingQuote(submission.id),
+      loadPortfolioDashboard()
     ]);
     analyticsPanel.innerHTML = buildAnalyticsPanel(selectedSubmission.record);
     renderUnderwritingDetails();
@@ -574,6 +595,9 @@ if (workspaceMenuButton && workspaceMenu) {
     if (actionButton.dataset.workspaceMenuAction === "sop") {
       openSopReview();
     }
+    if (actionButton.dataset.workspaceMenuAction === "demo") {
+      openWebsiteDemo();
+    }
   });
 }
 
@@ -586,6 +610,30 @@ if (sopReviewModal) {
     if (event.target.matches("[data-close-sop-review]")) {
       closeSopReview();
     }
+  });
+}
+
+if (websiteDemoCloseButton) {
+  websiteDemoCloseButton.addEventListener("click", closeWebsiteDemo);
+}
+
+if (websiteDemoModal) {
+  websiteDemoModal.addEventListener("click", (event) => {
+    if (event.target.matches("[data-close-website-demo]")) {
+      closeWebsiteDemo();
+    }
+  });
+}
+
+if (websiteDemoContent) {
+  websiteDemoContent.addEventListener("click", (event) => {
+    const promptButton = event.target.closest("[data-demo-prompt]");
+    if (!promptButton || !input) {
+      return;
+    }
+    input.value = promptButton.dataset.demoPrompt || "";
+    closeWebsiteDemo();
+    input.focus();
   });
 }
 
@@ -660,7 +708,13 @@ if (documentUploadButton && documentUploadInput) {
 
 if (refreshInsightsButton) {
   refreshInsightsButton.addEventListener("click", () => {
-    refreshSubmissionInsights();
+    refreshSubmissionInsights({ source: "timeline" });
+  });
+}
+
+if (generateSummaryButton) {
+  generateSummaryButton.addEventListener("click", () => {
+    refreshSubmissionInsights({ source: "summary" });
   });
 }
 
@@ -1251,6 +1305,72 @@ function closeSopReview() {
   sopReviewModal.setAttribute("aria-hidden", "true");
 }
 
+function openWebsiteDemo() {
+  if (!websiteDemoModal || !websiteDemoContent) {
+    return;
+  }
+
+  websiteDemoModal.classList.add("open");
+  websiteDemoModal.setAttribute("aria-hidden", "false");
+  websiteDemoContent.innerHTML = renderWebsiteDemoContent();
+}
+
+function closeWebsiteDemo() {
+  if (!websiteDemoModal) {
+    return;
+  }
+  websiteDemoModal.classList.remove("open");
+  websiteDemoModal.setAttribute("aria-hidden", "true");
+}
+
+function renderWebsiteDemoContent() {
+  return `
+    <section class="website-demo-hero">
+      <div>
+        <span>Demo Goal</span>
+        <strong>Agentic cyber underwriting workspace</strong>
+        <p>Use this local app to search submissions, review evidence, chat with an information agent, inspect analytics, and manage underwriting workflow tasks.</p>
+      </div>
+      <div>
+        <span>Data Backbone</span>
+        <strong>Files + JSON + SQLite</strong>
+        <p>The SQLite analytics mart keeps submission and claim rows in separate tables, then joins them by company ID for portfolio-level questions.</p>
+      </div>
+    </section>
+    <section class="website-demo-section">
+      <h3>How To Use The Demo</h3>
+      <ol>
+        <li><strong>Search a submission:</strong> use the search page to open an account or preview the portfolio queue.</li>
+        <li><strong>Review documents:</strong> select files manually or use Auto so the information agent picks relevant evidence.</li>
+        <li><strong>Ask underwriting questions:</strong> ask about missing evidence, claims, broker quality, rating, quote readiness, tasks, SOP, or portfolio statistics.</li>
+        <li><strong>Open Details:</strong> expand the underwriting system for account signals, broker data, claims, clearance, rating, and research checks.</li>
+        <li><strong>Open Analytics:</strong> inspect quote/bind models, What If scenarios, portfolio metrics, and model interpretations.</li>
+        <li><strong>Use Tasks and Notes:</strong> save underwriter notes, schedule tasks, and lock completed underwriting stages.</li>
+      </ol>
+    </section>
+    <section class="website-demo-section">
+      <h3>Example Chat Prompts</h3>
+      <div class="website-demo-prompt-grid">
+        ${[
+          "Show claim statistics for this broker and associated underwriting decisions.",
+          "Which companies have the highest incurred losses and are they referrals?",
+          "Compare average quote readiness by broker.",
+          "What documents are missing for this submission?",
+          "Draft broker follow-up questions based on SOP and evidence gaps.",
+          "Show the rating calculation and explain the premium range."
+        ].map((prompt) => `<button class="website-demo-prompt" type="button" data-demo-prompt="${escapeHtml(prompt)}">${escapeHtml(prompt)}</button>`).join("")}
+      </div>
+    </section>
+    <section class="website-demo-section">
+      <h3>Analytics DB</h3>
+      <p><strong>Tables:</strong> underwriting_submission_analytics + claim_analytics</p>
+      <p><strong>Join key:</strong> company_id · <strong>Claim key:</strong> CLM_CLMT_ID</p>
+      <p><strong>Path:</strong> data/analytics/underwriting_claim_analytics.db</p>
+      <p>It is refreshed when submissions, documents, or editable metadata change, and it is used by the chat retrieval layer for claim and underwriting decision statistics.</p>
+    </section>
+  `;
+}
+
 function renderSopReview(record) {
   if (!sopReviewContent) {
     return;
@@ -1393,7 +1513,11 @@ async function uploadSubmissionDocuments(files) {
       : `Uploaded ${uploadedNames.length} files.${skippedText}${failedText}`
   );
   if (uploadedNames.length) {
-    askToRefreshInsights("The files were added and metadata was updated.");
+    await refreshAfterSubmissionFilesChanged(
+      uploadedNames.length === 1
+        ? `${uploadedNames[0]} uploaded. Summary, assessment, and model inputs refreshed.`
+        : `${uploadedNames.length} files uploaded. Summary, assessment, and model inputs refreshed.`
+    );
   }
 }
 
@@ -1433,7 +1557,11 @@ async function uploadSubmissionDocument(file, options = {}) {
 
     if (!options.skipRefreshPrompt) {
       setDocumentUploadStatus(uploadedDocument ? `Uploaded ${uploadedDocument.file_name}` : "Uploaded.");
-      askToRefreshInsights("The file was added and metadata was updated.");
+      await refreshAfterSubmissionFilesChanged(
+        uploadedDocument
+          ? `${uploadedDocument.file_name} uploaded. Summary, assessment, and model inputs refreshed.`
+          : "File uploaded. Summary, assessment, and model inputs refreshed."
+      );
     }
     return uploadedDocument || null;
   } catch (error) {
@@ -1476,38 +1604,66 @@ async function deleteSubmissionDocument(fileName) {
       reconcileSelectionAfterFileChange();
     }
 
-    setDocumentUploadStatus(`Deleted ${fileName}`);
-    askToRefreshInsights("The file was deleted and metadata was updated.");
+    await refreshAfterSubmissionFilesChanged(
+      `${fileName} deleted. Summary, assessment, and model inputs refreshed.`
+    );
   } catch (error) {
     console.warn(error);
     setDocumentUploadStatus(error.message || "Unable to delete file.");
   }
 }
 
-function askToRefreshInsights(message) {
+async function refreshAfterSubmissionFilesChanged(successMessage) {
   if (!selectedSubmission) {
     return;
   }
 
-  const shouldRefresh = window.confirm(
-    `${message}\n\nRefresh the submission summary and timeline now?`
-  );
-  if (shouldRefresh) {
-    refreshSubmissionInsights();
-  }
+  setDocumentUploadStatus("Refreshing summary, assessment, and model inputs...");
+  await refreshSubmissionInsights({ silent: true });
+  await refreshDerivedWorkspaceData();
+  setDocumentUploadStatus(successMessage || "Submission summary, assessment, and model inputs refreshed.");
 }
 
-async function refreshSubmissionInsights() {
+async function refreshDerivedWorkspaceData() {
+  if (!selectedSubmission) {
+    return;
+  }
+
+  const submissionId = selectedSubmission.id;
+  await Promise.all([
+    loadUnderwritingSystem(submissionId),
+    loadDecisionWorkflow(submissionId),
+    loadClearanceReview(submissionId),
+    loadExternalResearch(submissionId),
+    loadRatingQuote(submissionId),
+    loadPortfolioDashboard()
+  ]);
+
+  analyticsPanel.innerHTML = buildAnalyticsPanel(selectedSubmission.record);
+  renderUnderwritingDetails();
+}
+
+async function refreshSubmissionInsights(options = {}) {
   if (!selectedSubmission) {
     setDocumentUploadStatus("Select a submission before refreshing.");
     return;
   }
 
-  if (refreshInsightsButton) {
-    refreshInsightsButton.disabled = true;
-    refreshInsightsButton.textContent = "Refreshing...";
+  const silent = Boolean(options.silent);
+  const activeButton = options.source === "summary" ? generateSummaryButton : refreshInsightsButton;
+  const originalLabel = activeButton ? activeButton.textContent.trim() : "";
+
+  if (!silent && activeButton) {
+    activeButton.disabled = true;
+    activeButton.textContent = options.source === "summary" ? "Generating..." : "Refreshing...";
   }
-  setDocumentUploadStatus("Refreshing summary and timeline...");
+  if (!silent) {
+    setDocumentUploadStatus(
+      options.source === "summary"
+        ? "Generating submission summary..."
+        : "Refreshing summary and timeline..."
+    );
+  }
 
   try {
     const response = await fetch(
@@ -1530,14 +1686,23 @@ async function refreshSubmissionInsights() {
     if (updatedSubmission) {
       applyUpdatedSubmissionRecord(updatedSubmission);
     }
-    setDocumentUploadStatus("Summary and timeline refreshed.");
+    if (!silent) {
+      setDocumentUploadStatus(
+        options.source === "summary"
+          ? "Submission summary regenerated."
+          : "Summary and timeline refreshed."
+      );
+      await refreshDerivedWorkspaceData();
+    }
   } catch (error) {
     console.warn(error);
-    setDocumentUploadStatus(error.message || "Unable to refresh summary and timeline.");
+    if (!silent) {
+      setDocumentUploadStatus(error.message || "Unable to refresh summary and timeline.");
+    }
   } finally {
-    if (refreshInsightsButton) {
-      refreshInsightsButton.disabled = false;
-      refreshInsightsButton.textContent = "Refresh";
+    if (!silent && activeButton) {
+      activeButton.disabled = false;
+      activeButton.textContent = originalLabel || (options.source === "summary" ? "Generate" : "Refresh");
     }
   }
 }
@@ -1839,7 +2004,14 @@ async function saveSubmissionUpdates() {
 
     if (data.submission) {
       submissionUpdateEditingFields = new Set();
-      await loadUnderwritingSystem(selectedSubmission.id);
+      await Promise.all([
+        loadUnderwritingSystem(selectedSubmission.id),
+        loadDecisionWorkflow(selectedSubmission.id),
+        loadClearanceReview(selectedSubmission.id),
+        loadExternalResearch(selectedSubmission.id),
+        loadRatingQuote(selectedSubmission.id),
+        loadPortfolioDashboard()
+      ]);
       applyUpdatedSubmissionRecord(data.submission);
     }
     setSubmissionUpdateStatus("Saved.");
@@ -1958,7 +2130,7 @@ function updateExpandedPageHeader() {
   const activeTab = getActivePanelTab();
   const isExpanded = workSurface.classList.contains("insight-expanded");
   const title = activeTab === "analytics"
-    ? "Analytic Dashboard"
+    ? "Analytics Dashboard"
     : activeTab === "tasks"
       ? "Task Calendar"
       : "Underwriting System";
@@ -2025,8 +2197,14 @@ async function refreshAfterChatActions(actions) {
   }
   const submissionUpdateAction = actions.find((action) => action && action.type === "submission_update" && action.record);
   if (submissionUpdateAction) {
-    await loadUnderwritingSystem(selectedSubmission.id);
-    await loadDecisionWorkflow(selectedSubmission.id);
+    await Promise.all([
+      loadUnderwritingSystem(selectedSubmission.id),
+      loadDecisionWorkflow(selectedSubmission.id),
+      loadClearanceReview(selectedSubmission.id),
+      loadExternalResearch(selectedSubmission.id),
+      loadRatingQuote(selectedSubmission.id),
+      loadPortfolioDashboard()
+    ]);
     applyUpdatedSubmissionRecord(submissionUpdateAction.record);
   }
 
@@ -3081,6 +3259,15 @@ function describeInformationSelection(data) {
 }
 
 function describeBackendResponse(data) {
+  const trace = getAgentTrace(data);
+  if (trace && trace.trace_id) {
+    const confidence = trace.confidence || {};
+    const confidenceText = confidence.label
+      ? `${formatLabel(confidence.label)} confidence${confidence.score !== undefined ? ` (${Math.round(Number(confidence.score) * 100)}%)` : ""}`
+      : "confidence checked";
+    return `Agent trace ${trace.trace_id} persisted; ${confidenceText}; ${trace.attempt_count || 1} attempt(s).`;
+  }
+
   if (Array.isArray(data.actions) && data.actions.length) {
     return `Handled by ${data.framework || "local action router"}.`;
   }
@@ -3091,6 +3278,8 @@ function describeBackendResponse(data) {
 }
 
 function appendResponseProcessSteps(process, data) {
+  appendAgentTraceProcessSteps(process, getAgentTrace(data));
+
   const actions = Array.isArray(data.actions) ? data.actions : [];
   if (actions.length) {
     actions.forEach((action) => {
@@ -3136,6 +3325,37 @@ function appendResponseProcessSteps(process, data) {
     const grouped = Array.from(new Set(nonDocumentSources.map((source) => formatLabel(source.skill || "data"))));
     addChatProcessStep(process, "Pulled supporting data", grouped.join(", "), "done");
   }
+}
+
+function getAgentTrace(data) {
+  return data && data.agent_trace ? data.agent_trace : null;
+}
+
+function appendAgentTraceProcessSteps(process, trace) {
+  if (!trace || !Array.isArray(trace.steps) || !trace.steps.length) {
+    return;
+  }
+
+  trace.steps.forEach((step) => {
+    const title = step.title || formatLabel(step.phase || "agent step");
+    const detail = buildTraceStepDetail(step, trace);
+    const status = step.status === "error" ? "error" : "done";
+    addChatProcessStep(process, title, detail, status);
+  });
+}
+
+function buildTraceStepDetail(step, trace) {
+  const pieces = [];
+  if (step.phase) {
+    pieces.push(formatLabel(step.phase));
+  }
+  if (step.detail) {
+    pieces.push(step.detail);
+  }
+  if (step.phase === "trace" && trace.trace_id) {
+    pieces.push(`Trace id: ${trace.trace_id}`);
+  }
+  return pieces.join(" - ");
 }
 
 function appendWorkspaceRefreshProcessStep(process, actions) {
@@ -3268,6 +3488,7 @@ function buildAnalyticsPanel(record) {
       <button class="analytics-subtab active" type="button" data-analytics-subtab="quote">Quote</button>
       <button class="analytics-subtab" type="button" data-analytics-subtab="bind">Bind</button>
       <button class="analytics-subtab" type="button" data-analytics-subtab="what-if">What If</button>
+      <button class="analytics-subtab" type="button" data-analytics-subtab="portfolio">Portfolio</button>
     </div>
 
     <div class="analytics-view active" data-analytics-view="quote">
@@ -3280,6 +3501,10 @@ function buildAnalyticsPanel(record) {
 
     <div class="analytics-view" data-analytics-view="what-if">
       ${renderWhatIfView()}
+    </div>
+
+    <div class="analytics-view" data-analytics-view="portfolio">
+      ${renderPortfolioAnalyticsView()}
     </div>
   `;
 }
@@ -3363,6 +3588,54 @@ async function loadDecisionWorkflow(submissionId) {
   return decisionWorkflow;
 }
 
+async function loadClearanceReview(submissionId) {
+  try {
+    const data = await AUApi.get(`/api/submissions/${encodeURIComponent(submissionId)}/clearance`);
+    clearanceReview = data.clearance || null;
+  } catch (error) {
+    console.warn(error);
+    clearanceReview = null;
+  }
+
+  return clearanceReview;
+}
+
+async function loadExternalResearch(submissionId) {
+  try {
+    const data = await AUApi.get(`/api/submissions/${encodeURIComponent(submissionId)}/external-research`);
+    externalResearch = data.external_research || null;
+  } catch (error) {
+    console.warn(error);
+    externalResearch = null;
+  }
+
+  return externalResearch;
+}
+
+async function loadRatingQuote(submissionId) {
+  try {
+    const data = await AUApi.get(`/api/submissions/${encodeURIComponent(submissionId)}/rating-quote`);
+    ratingQuote = data.rating_quote || null;
+  } catch (error) {
+    console.warn(error);
+    ratingQuote = null;
+  }
+
+  return ratingQuote;
+}
+
+async function loadPortfolioDashboard() {
+  try {
+    const data = await AUApi.get("/api/portfolio/queue");
+    portfolioDashboard = data.portfolio || null;
+  } catch (error) {
+    console.warn(error);
+    portfolioDashboard = null;
+  }
+
+  return portfolioDashboard;
+}
+
 function renderUnderwritingSystemView() {
   if (!underwritingSystem) {
     return '<p class="empty-state">Underwriting system is not available for this submission.</p>';
@@ -3417,6 +3690,9 @@ function renderUnderwritingSystemView() {
     ${renderUnderwritingDecisionConsole(record, appetite, claimSnapshot, evidence, signals, broker)}
     ${renderSopSuggestionPanel(sopGuidance, sopSuggestions)}
     ${renderDecisionWorkflowPanel()}
+    ${renderClearanceReviewPanel()}
+    ${renderRatingQuotePanel()}
+    ${renderExternalResearchPanel()}
     ${renderSubmissionUpdateEditor(record)}
     ${renderBrokerSection(broker)}
 
@@ -3480,6 +3756,164 @@ function renderDecisionWorkflowPanel() {
   }
 
   return '<section class="uw-panel"><h4>Underwriting Decision Workflow</h4><p class="empty-state">Decision workflow renderer is unavailable.</p></section>';
+}
+
+function renderClearanceReviewPanel() {
+  if (!clearanceReview) {
+    return `
+      <section class="uw-panel clearance-panel">
+        <h4>Clearance Review</h4>
+        <p class="empty-state">Clearance review is not available.</p>
+      </section>
+    `;
+  }
+
+  const checks = Array.isArray(clearanceReview.checks) ? clearanceReview.checks : [];
+  const matches = Array.isArray(clearanceReview.possible_matches) ? clearanceReview.possible_matches : [];
+  return `
+    <section class="uw-panel clearance-panel">
+      <div class="card-heading">
+        <h4>Clearance Review</h4>
+        <span class="status-chip ${escapeHtml(workbenchStatusClass(clearanceReview.status))}">${escapeHtml(formatLabel(clearanceReview.status || "Review"))}</span>
+      </div>
+      <p class="uw-section-note">${escapeHtml(clearanceReview.summary || "")}</p>
+      <div class="clearance-check-grid">
+        ${checks.map((check) => `
+          <article class="${escapeHtml(workbenchStatusClass(check.status))}">
+            <strong>${escapeHtml(check.label || "Check")}</strong>
+            <span>${escapeHtml(formatLabel(check.status || "review"))}</span>
+            <small>${escapeHtml(check.detail || "")}</small>
+          </article>
+        `).join("")}
+      </div>
+      ${matches.length ? `
+        <div class="clearance-match-list">
+          <strong>Possible matches</strong>
+          ${matches.map((match) => `
+            <small>${escapeHtml(match.id)}, ${escapeHtml(match.insured_name || match.title || "Account")} | ${escapeHtml(match.status || "TBD")} | similarity ${escapeHtml(String(match.similarity || 0))}</small>
+          `).join("")}
+        </div>
+      ` : ""}
+    </section>
+  `;
+}
+
+function renderRatingQuotePanel() {
+  if (!ratingQuote) {
+    return `
+      <section class="uw-panel rating-panel">
+        <h4>Rating And Quote</h4>
+        <p class="empty-state">Rating package is not available.</p>
+      </section>
+    `;
+  }
+
+  const premiumRange = ratingQuote.premium_range || {};
+  const modifiers = Array.isArray(ratingQuote.modifiers) ? ratingQuote.modifiers : [];
+  const terms = Array.isArray(ratingQuote.coverage_terms) ? ratingQuote.coverage_terms : [];
+  const subjectivities = Array.isArray(ratingQuote.subjectivities) ? ratingQuote.subjectivities : [];
+  const calculation = ratingQuote.calculation || {};
+  const calculationInputs = calculation.inputs || {};
+  const referralReasons = Array.isArray(ratingQuote.referral_reasons) ? ratingQuote.referral_reasons : [];
+  return `
+    <section class="uw-panel rating-panel">
+      <div class="card-heading">
+        <h4>Rating And Quote</h4>
+        <span class="claim-system-tag">${escapeHtml(ratingQuote.rating_engine || "demo")}</span>
+      </div>
+      <div class="rating-summary-grid">
+        ${renderRatingMetric("Indicated Premium", formatCurrency(Number(ratingQuote.indicated_premium || 0)))}
+        ${renderRatingMetric("Premium Range", `${formatCurrency(Number(premiumRange.low || 0))} - ${formatCurrency(Number(premiumRange.high || 0))}`)}
+        ${renderRatingMetric("Quote Readiness", `${Math.round(Number(ratingQuote.quote_readiness || 0))}%`)}
+        ${renderRatingMetric("Recommended Limit", formatCurrency(Number(ratingQuote.recommended_limit || 0)))}
+        ${renderRatingMetric("Recommended Retention", ratingQuote.recommended_retention || "TBD")}
+        ${renderRatingMetric("Authority Path", ratingQuote.authority_path || "Underwriter delegated review")}
+      </div>
+      <div class="rating-calculation-panel">
+        <div>
+          <strong>Calculation</strong>
+          <small>${escapeHtml(calculation.formula || "Demo factor formula not available.")}</small>
+        </div>
+        <div class="rating-calculation-grid">
+          <span>Base ${escapeHtml(formatCurrency(Number(calculation.base_premium || 0)))}</span>
+          <span>Modifier product ${escapeHtml(String(calculation.modifier_product || "TBD"))}</span>
+          <span>Range ${escapeHtml(String(Math.round(Number(calculation.range_low_factor || 0.9) * 100)))}%-${escapeHtml(String(Math.round(Number(calculation.range_high_factor || 1.15) * 100)))}%</span>
+          <span>Revenue ${escapeHtml(formatCurrency(Number(calculationInputs.annual_revenue || 0)))}</span>
+          <span>Records ${escapeHtml(Number(calculationInputs.records_count || 0).toLocaleString("en-US"))}</span>
+          <span>Evidence ${escapeHtml(String(Math.round(Number(calculationInputs.evidence_ratio || 0) * 100)))}%</span>
+        </div>
+        ${referralReasons.length ? `
+          <div class="rating-referral-reasons">
+            <strong>Referral Triggers</strong>
+            ${referralReasons.map((reason) => `<small>${escapeHtml(reason)}</small>`).join("")}
+          </div>
+        ` : ""}
+      </div>
+      <div class="rating-columns">
+        <div>
+          <strong>Modifiers</strong>
+          ${modifiers.map((item) => `<small>${escapeHtml(item.label)}: ${escapeHtml(String(item.factor))} | ${escapeHtml(item.rationale || "")}</small>`).join("")}
+        </div>
+        <div>
+          <strong>Coverage Terms</strong>
+          ${terms.map((item) => `<small>${escapeHtml(item.coverage)}: ${escapeHtml(formatCurrency(Number(item.limit || 0)))} | ${escapeHtml(item.condition || "")}</small>`).join("")}
+        </div>
+        <div>
+          <strong>Subjectivities</strong>
+          ${subjectivities.length ? subjectivities.map((item) => `<small>${escapeHtml(item)}</small>`).join("") : "<small>No subjectivities generated.</small>"}
+        </div>
+      </div>
+    </section>
+  `;
+}
+
+function renderRatingMetric(label, value) {
+  return `
+    <article>
+      <span>${escapeHtml(label)}</span>
+      <strong>${escapeHtml(value)}</strong>
+    </article>
+  `;
+}
+
+function renderExternalResearchPanel() {
+  if (!externalResearch) {
+    return `
+      <section class="uw-panel external-research-panel">
+        <h4>External Research</h4>
+        <p class="empty-state">External research is not available.</p>
+      </section>
+    `;
+  }
+
+  const profile = externalResearch.profile || {};
+  const tasks = Array.isArray(externalResearch.research_tasks) ? externalResearch.research_tasks : [];
+  const signals = Array.isArray(externalResearch.signals_from_submission) ? externalResearch.signals_from_submission : [];
+  return `
+    <section class="uw-panel external-research-panel">
+      <div class="card-heading">
+        <h4>External Research</h4>
+        <span class="claim-system-tag">${escapeHtml(formatLabel(externalResearch.research_status || "connector ready"))}</span>
+      </div>
+      <p class="uw-section-note">${escapeHtml(externalResearch.research_note || "")}</p>
+      <div class="external-research-grid">
+        <article>
+          <strong>${escapeHtml(profile.insured_name || "Insured TBD")}</strong>
+          <small>${escapeHtml([profile.industry_bucket || profile.industry, profile.location, profile.broker].filter(Boolean).join(" | "))}</small>
+          ${signals.map((signal) => `<small>${escapeHtml(signal)}</small>`).join("")}
+        </article>
+        <div class="external-task-list">
+          ${tasks.map((task) => `
+            <div class="${escapeHtml(workbenchStatusClass(task.status))}">
+              <strong>${escapeHtml(task.label || "Research task")}</strong>
+              <span>${escapeHtml(formatLabel(task.status || "not connected"))}</span>
+              <small>${escapeHtml(task.detail || "")}</small>
+            </div>
+          `).join("")}
+        </div>
+      </div>
+    </section>
+  `;
 }
 
 function renderSopSuggestionPanel(sopGuidance, suggestions) {
@@ -3883,6 +4317,20 @@ function statusClass(value) {
     return "alert";
   }
   return "neutral";
+}
+
+function workbenchStatusClass(value) {
+  const normalized = String(value || "").toLowerCase();
+  if (["pass", "clear", "ready", "derived"].includes(normalized)) {
+    return "good";
+  }
+  if (["warn", "review", "connector_ready", "not_connected"].includes(normalized)) {
+    return "watch";
+  }
+  if (["hold", "referral", "fail", "blocked"].includes(normalized)) {
+    return "alert";
+  }
+  return statusClass(value);
 }
 
 function scoreStoredModel(model, featureLookup) {
@@ -4846,6 +5294,84 @@ function renderIndustryPropensityDetail() {
         }).join("")}
       </div>
     </div>
+  `;
+}
+
+function renderPortfolioAnalyticsView() {
+  if (!portfolioDashboard) {
+    return '<p class="empty-state">Portfolio analytics are not available.</p>';
+  }
+
+  const overview = portfolioDashboard.overview || {};
+  const dashboard = portfolioDashboard.dashboard || {};
+  const queue = Array.isArray(portfolioDashboard.queue) ? portfolioDashboard.queue : [];
+  const currentRow = selectedSubmission
+    ? queue.find((row) => row.id === selectedSubmission.id)
+    : null;
+  const industryMix = Array.isArray(dashboard.industry_mix) ? dashboard.industry_mix.slice(0, 8) : [];
+  const brokerMix = Array.isArray(dashboard.broker_mix) ? dashboard.broker_mix.slice(0, 6) : [];
+  const maxIndustryIncurred = Math.max(...industryMix.map((row) => Number(row.total_incurred || 0)), 1);
+
+  return `
+    <section class="portfolio-analytics-view">
+      <div class="portfolio-hero-row">
+        <article class="portfolio-focus-card">
+          <span>Current Account Queue Position</span>
+          <strong>${escapeHtml(currentRow ? currentRow.priority : "TBD")}</strong>
+          <p>${escapeHtml(currentRow ? currentRow.next_action : "Select a submission to view queue context.")}</p>
+        </article>
+        <div class="portfolio-metric-grid">
+          ${renderPortfolioMetric("Submissions", overview.submission_count)}
+          ${renderPortfolioMetric("Ready", overview.ready_count)}
+          ${renderPortfolioMetric("Referral", overview.referral_count)}
+          ${renderPortfolioMetric("Avg Readiness", `${Math.round(Number(overview.avg_quote_readiness || 0))}%`)}
+        </div>
+      </div>
+
+      <section class="portfolio-section">
+        <div class="card-heading">
+          <h4>Industry Loss And Readiness</h4>
+          <span class="claim-system-tag">${escapeHtml(String(industryMix.length))} industries</span>
+        </div>
+        <div class="portfolio-industry-list">
+          ${industryMix.map((row) => `
+            <div class="portfolio-bar-row">
+              <span>${escapeHtml(row.industry)}</span>
+              <div class="portfolio-bar-track">
+                <i style="width: ${Math.max(Number(row.total_incurred || 0) / maxIndustryIncurred * 100, 4)}%"></i>
+              </div>
+              <strong>${escapeHtml(formatCurrency(Number(row.total_incurred || 0)))}</strong>
+              <small>${escapeHtml(String(row.submission_count || 0))} submissions | ${escapeHtml(String(row.claim_count || 0))} claims | ${Math.round(Number(row.avg_readiness || 0))}% readiness</small>
+            </div>
+          `).join("")}
+        </div>
+      </section>
+
+      <section class="portfolio-section">
+        <div class="card-heading">
+          <h4>Broker Pipeline Mix</h4>
+          <span class="claim-system-tag">Demo portfolio</span>
+        </div>
+        <div class="broker-pipeline-grid">
+          ${brokerMix.map((broker) => `
+            <article>
+              <strong>${escapeHtml(broker.broker_name)}</strong>
+              <small>${escapeHtml(String(broker.submission_count || 0))} submissions | ${escapeHtml(String(broker.ready || 0))} ready | ${escapeHtml(String(broker.referral || 0))} referral</small>
+              <div class="score-meter"><i style="width: ${Math.round(Number(broker.avg_readiness || 0))}%"></i></div>
+            </article>
+          `).join("")}
+        </div>
+      </section>
+    </section>
+  `;
+}
+
+function renderPortfolioMetric(label, value) {
+  return `
+    <article>
+      <span>${escapeHtml(label)}</span>
+      <strong>${escapeHtml(String(value ?? 0))}</strong>
+    </article>
   `;
 }
 

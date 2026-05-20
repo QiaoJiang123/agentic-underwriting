@@ -1,6 +1,7 @@
 import math
 import re
 
+from backend.services.analytics_db_service import get_analytics_db_context
 from backend.services.broker_service import get_submission_broker, list_brokers
 from backend.services.claim_service import get_claim_record
 from backend.services.decision_workflow_service import get_decision_workflow_record
@@ -9,6 +10,12 @@ from backend.services.document_tools import read_documents, select_documents_for
 from backend.services.guide_service import get_guide_record
 from backend.services.model_service import get_model
 from backend.services.note_service import get_note_record
+from backend.services.portfolio_workbench_service import (
+    get_clearance_review,
+    get_external_research,
+    get_portfolio_queue,
+    get_rating_quote,
+)
 from backend.services.sop_service import select_relevant_sop_steps
 from backend.services.stage_state_service import get_stage_state_record
 from backend.services.submission_service import get_submission_detail
@@ -44,13 +51,14 @@ def build_data_retrieval_context(
     selected_files=None,
     file_selection_mode="auto",
     max_documents=6,
+    plan_override=None,
 ):
     if not submission_id or not prompt:
         return {"plan": [], "context": "", "sources": [], "selection": make_selection_record([], file_selection_mode)}
 
     selected_files = selected_files if isinstance(selected_files, list) else []
     prompt_text = normalize_text(prompt)
-    plan = select_information_for_prompt(prompt_text)
+    plan = dedupe(plan_override) if isinstance(plan_override, list) else select_information_for_prompt(prompt_text)
     sources = []
     sections = []
     selection_record = make_selection_record(plan, file_selection_mode)
@@ -135,6 +143,32 @@ def build_data_retrieval_context(
         analytics_context, analytics_sources = render_analytics_context(submission_id, submission)
         sections.append(analytics_context)
         sources.extend(analytics_sources)
+
+    if "portfolio" in plan:
+        portfolio = get_portfolio_queue()
+        sections.append(render_portfolio_context(portfolio, submission_id))
+        sources.append({"skill": "portfolio", "source": "/api/portfolio/queue"})
+
+    if "analytics_db" in plan:
+        analytics_db = get_analytics_db_context(submission_id, prompt_text)
+        sections.append(analytics_db.get("context", ""))
+        sources.extend(analytics_db.get("sources", []))
+        selection_record["analytics_db"] = analytics_db.get("selection", {})
+
+    if "clearance" in plan:
+        clearance = get_clearance_review(submission_id)
+        sections.append(render_clearance_context(clearance))
+        sources.append({"skill": "clearance", "source": f"/api/submissions/{submission_id}/clearance"})
+
+    if "rating_quote" in plan:
+        rating_quote = get_rating_quote(submission_id)
+        sections.append(render_rating_quote_context(rating_quote))
+        sources.append({"skill": "rating_quote", "source": f"/api/submissions/{submission_id}/rating-quote"})
+
+    if "external_research" in plan:
+        external_research = get_external_research(submission_id)
+        sections.append(render_external_research_context(external_research))
+        sources.append({"skill": "external_research", "source": f"/api/submissions/{submission_id}/external-research"})
 
     if "sop" in plan:
         sop_selection = select_relevant_sop_steps(prompt_text)
@@ -289,9 +323,49 @@ def plan_retrieval(prompt_text):
             "industry propensity",
             "propensity",
             "benchmark",
+            "portfolio",
+            "queue",
+            "pipeline",
         ],
     ):
         skills.append("analytics")
+
+    if has_any(prompt_text, ["portfolio", "queue", "pipeline", "book view", "dashboard"]):
+        skills.append("portfolio")
+
+    if has_any(
+        prompt_text,
+        [
+            "statistics",
+            "statistic",
+            "stats",
+            "aggregate",
+            "average",
+            "avg",
+            "total incurred",
+            "by broker",
+            "by company",
+            "by industry",
+            "sql",
+            "database",
+            "analytics db",
+            "analytic db",
+            "how many claims",
+            "associated underwriting decisions",
+            "claim statistics",
+            "claim stats",
+        ],
+    ):
+        skills.append("analytics_db")
+
+    if has_any(prompt_text, ["clearance", "clear this account", "duplicate", "duplicate scan", "conflict", "compliance check"]):
+        skills.append("clearance")
+
+    if has_any(prompt_text, ["rating", "rate this", "premium", "quote package", "indicated premium", "terms", "subjectivity", "subjectivities"]):
+        skills.append("rating_quote")
+
+    if has_any(prompt_text, ["external research", "research", "sanctions", "security rating", "breach news", "business registry", "domain security"]):
+        skills.append("external_research")
 
     if has_underwriting_intent(prompt_text):
         skills.append("underwriting")
@@ -906,6 +980,92 @@ def render_industry_benchmark(model, industry_feature):
             f"  - {item.get('industry')}: score {format_percent(item.get('score'))}, {item.get('submission_count')} submissions, {item.get('claim_company_count')} with claims, claim rate {format_percent(item.get('attack_frequency'))}, avg severity {format_currency(item.get('average_claim_severity'))}"
         )
     return "\n".join(lines)
+
+
+def render_portfolio_context(portfolio, submission_id):
+    overview = portfolio.get("overview") or {}
+    queue = portfolio.get("queue") or []
+    dashboard = portfolio.get("dashboard") or {}
+    current = next((row for row in queue if row.get("id") == submission_id), {})
+    industry_rows = (dashboard.get("industry_mix") or [])[:8]
+    return "\n".join(
+        [
+            "Portfolio Queue And Dashboard:",
+            f"- Portfolio submissions: {overview.get('submission_count', 0)} | Ready: {overview.get('ready_count', 0)} | Review: {overview.get('review_count', 0)} | Referral: {overview.get('referral_count', 0)}",
+            f"- Average quote readiness: {format_percent(make_number(overview.get('avg_quote_readiness')) / 100)} | Open claims: {overview.get('open_claims', 0)} | Incurred: {format_currency(overview.get('total_incurred'))}",
+            f"- Current account queue status: {current.get('priority', 'TBD')} | quote readiness {format_percent(make_number(current.get('quote_readiness')) / 100)} | next action: {current.get('next_action', 'TBD')}",
+            "Industry dashboard rows:",
+            *[
+                f"- {row.get('industry')}: {row.get('submission_count')} submissions | claims {row.get('claim_count')} | avg readiness {format_percent(make_number(row.get('avg_readiness')) / 100)} | incurred {format_currency(row.get('total_incurred'))}"
+                for row in industry_rows
+            ],
+        ]
+    )
+
+
+def render_clearance_context(clearance):
+    checks = clearance.get("checks") or []
+    matches = clearance.get("possible_matches") or []
+    return "\n".join(
+        [
+            "Clearance Review:",
+            f"- Status: {format_label(clearance.get('status'))}",
+            f"- Summary: {clearance.get('summary', 'TBD')}",
+            "Checks:",
+            *[f"- {check.get('label')}: {format_label(check.get('status'))} | {check.get('detail')}" for check in checks],
+            "Possible matches:",
+            *[
+                f"- {match.get('id')}: {match.get('insured_name') or match.get('title')} | {match.get('status')} | similarity {match.get('similarity')}"
+                for match in matches
+            ],
+        ]
+    )
+
+
+def render_rating_quote_context(rating_quote):
+    modifiers = rating_quote.get("modifiers") or []
+    terms = rating_quote.get("coverage_terms") or []
+    subjectivities = rating_quote.get("subjectivities") or []
+    premium_range = rating_quote.get("premium_range") or {}
+    calculation = rating_quote.get("calculation") or {}
+    inputs = calculation.get("inputs") or {}
+    return "\n".join(
+        [
+            "Rating And Quote Package:",
+            f"- Engine: {rating_quote.get('rating_engine', 'demo')} | Status: {format_label(rating_quote.get('status'))}",
+            f"- Authority path: {rating_quote.get('authority_path', 'Underwriter delegated review')}",
+            f"- Quote readiness: {format_percent(make_number(rating_quote.get('quote_readiness')) / 100)}",
+            f"- Indicated premium: {format_currency(rating_quote.get('indicated_premium'))} | Range: {format_currency(premium_range.get('low'))} to {format_currency(premium_range.get('high'))}",
+            f"- Requested limit: {format_currency(rating_quote.get('requested_limit'))} | Recommended limit: {format_currency(rating_quote.get('recommended_limit'))}",
+            f"- Requested retention: {rating_quote.get('requested_retention')} | Recommended retention: {rating_quote.get('recommended_retention')}",
+            f"- Pricing formula: {calculation.get('formula', 'Demo factor formula not available')}",
+            f"- Base premium: {format_currency(calculation.get('base_premium'))} | Modifier product: {calculation.get('modifier_product', 'TBD')} | Range factors: {calculation.get('range_low_factor', 'TBD')} to {calculation.get('range_high_factor', 'TBD')}",
+            f"- Exposure inputs: revenue {format_currency(inputs.get('annual_revenue'))}, records {int(make_number(inputs.get('records_count'))):,}, evidence ratio {format_percent(make_number(inputs.get('evidence_ratio')))}",
+            "Rating modifiers:",
+            *[f"- {item.get('label')}: factor {item.get('factor')} | {item.get('rationale')}" for item in modifiers],
+            "Coverage terms:",
+            *[f"- {item.get('coverage')}: {format_currency(item.get('limit'))} | {item.get('condition')}" for item in terms],
+            "Subjectivities:",
+            *([f"- {item}" for item in subjectivities] if subjectivities else ["- None generated."]),
+        ]
+    )
+
+
+def render_external_research_context(external_research):
+    profile = external_research.get("profile") or {}
+    tasks = external_research.get("research_tasks") or []
+    signals = external_research.get("signals_from_submission") or []
+    return "\n".join(
+        [
+            "External Research:",
+            f"- Status: {external_research.get('research_status', 'TBD')} | Note: {external_research.get('research_note', '')}",
+            f"- Insured: {profile.get('insured_name', 'TBD')} | Industry: {profile.get('industry_bucket') or profile.get('industry', 'TBD')} | Location: {profile.get('location', 'TBD')}",
+            "Submission-derived signals:",
+            *[f"- {signal}" for signal in signals],
+            "Research checklist:",
+            *[f"- {item.get('label')}: {format_label(item.get('status'))} | {item.get('detail')}" for item in tasks],
+        ]
+    )
 
 
 def render_notes_context(record):

@@ -75,6 +75,9 @@
                 &#8942;
               </button>
               <div class="workspace-menu" id="workspaceMenu" role="menu" hidden>
+                <button type="button" role="menuitem" data-workspace-menu-action="demo">
+                  Website Demo
+                </button>
                 <button type="button" role="menuitem" data-workspace-menu-action="sop">
                   Review SOP
                 </button>
@@ -149,6 +152,9 @@
               <section class="insight-card primary-card" data-agent-surface="details-summary">
                 <div class="card-heading">
                   <h3>Submission Summary</h3>
+                  <button class="selection-action compact-action" type="button" id="generateSummaryButton">
+                    Generate
+                  </button>
                 </div>
                 <p id="summaryPlaceholder">
                   Select a submission to reserve this area for AI-generated account summary,
@@ -278,6 +284,22 @@
         </header>
         <div class="sop-review-content" id="sopReviewContent">
           <p class="empty-state">Loading SOP...</p>
+        </div>
+      </section>
+    </div>
+
+    <div class="sop-review-modal" id="websiteDemoModal" aria-hidden="true">
+      <div class="sop-review-backdrop" data-close-website-demo></div>
+      <section class="sop-review-panel website-demo-panel" role="dialog" aria-modal="true" aria-labelledby="websiteDemoTitle">
+        <header class="sop-review-header">
+          <div>
+            <p class="eyebrow">Product Walkthrough</p>
+            <h2 id="websiteDemoTitle">Website Demo</h2>
+          </div>
+          <button class="ghost-button" id="websiteDemoCloseButton" type="button">Close</button>
+        </header>
+        <div class="sop-review-content website-demo-content" id="websiteDemoContent">
+          <p class="empty-state">Loading demo...</p>
         </div>
       </section>
     </div>

@@ -37,19 +37,23 @@ The browser sends chat requests to `/api/chat`. The backend calls the OpenAI Res
 ## What Is Built
 
 - Search page for choosing one of 50 dummy cyber submissions.
+- Submission Work Queue on the search page with ready/review/referral counts, average quote readiness, top queue items, broker context, and next action.
 - Add Submission intake panel on the search page. It supports manual entry, pasted submission-form text extraction, or multi-document automatic intake from uploaded `.txt`/`.pdf` files, tracks required documents to upload, saves intake status, previews inferred downstream checks, then creates a new submission folder and starter records only after underwriter confirmation.
 - Full-window chat workspace with chat history, documents, file selection, Auto selection, document upload, and document preview.
 - Guide editor beside the model badge. Guide items are sent as system-level instructions on each chat request.
 - Notes tab for underwriter-supplied ground-truth context. Notes are sent with each request but are not saved into chat history.
 - Details tab with submission summary, timeline, and an expandable underwriting system workbench.
 - Submission Update editor for selected metadata cells such as status, industry, revenue, records, employees, technology profile, risk flags, and open questions.
+- Clearance Review, Rating and Quote, and External Research surfaces inside the expanded underwriting system.
 - Underwriting decision workflow gates for quote readiness, referral, quote approval, and bind readiness.
 - Tasks tab with saved underwriting stages, scheduled tasks, a due-date calendar, red task markers, day filtering, due alert dots, and a permanent stage submit lock.
-- Expandable Analytics tab with Quote, Bind, and What If sub-tabs, including scenario controls for recalculating probability.
+- Expandable Analytics tab with Quote, Bind, What If, and Portfolio sub-tabs, including scenario controls for recalculating probability and portfolio-level dashboard metrics.
 - Demo logistic regression model artifacts for quote and bind probability.
 - Demo claims system with claims on 30 of 50 companies, plus broker database records linked into the underwriting workbench.
 - Local chat actions for broker/account/claims/evidence extraction and workspace navigation.
 - Backend retrieval skills that decide from the prompt whether to pull documents, analytics/models, claims, broker profile data, the broker database table, notes, guides, tasks, stages, or underwriting-system context before GPT answers.
+- Multi-step information-agent orchestration with planner, tool execution loop, confidence checks, retry expansion, and persisted agent traces.
+- Dev Agent Traces view for reviewing persisted planner, tool, confidence, source, and model-response runs.
 - Source citations are returned with retrieved context and shown under chatbot answers.
 - Lightweight schema validation covers the main JSON-backed records written by the demo.
 - Commercial cyber SOP guidance stored in JSON and used by underwriting-system recommendations and chat retrieval context.
@@ -131,6 +135,8 @@ Current demo limitations:
 - `data/brokers/brokers.json` stores reusable broker firm, contact, relationship, and placement metrics.
 - `data/underwriting/<submission_id>.json` stores editable underwriting workbench components and claim-review copy.
 - `data/agent_skills/underwriting_assistant.json` stores local chat skill definitions for extraction and navigation.
+- `data/agent_traces/<submission_id>/` stores persisted chat-request traces for planner decisions, retrieval tool execution, confidence checks, retry expansion, and model-response outcomes. The folder is ignored by Git because traces are runtime audit artifacts.
+- The portfolio queue, clearance review, rating/quote package, and external research checklist are computed from existing submissions, claims, broker data, evidence metadata, and model files. They are exposed through API routes rather than stored as separate JSON files.
 - `data/document_requirements/cyber_required_documents.json` stores the required cyber document checklist used to compare missing vs received submission documents.
 - `data/sop/cyber_underwriting_sop.json` stores the demo commercial cyber underwriting SOP used for next-action suggestions.
 - `data/sop/metadata.json` stores searchable SOP step metadata used by the centralized information agent to select relevant SOP sections for each prompt.
@@ -158,7 +164,7 @@ After confirmation, the form creates the same demo data shape as existing submis
 
 New Submission is API-driven through `/api/intake/*` routes. The search page loads intake bootstrap data from `/api/intake/bootstrap`, saves checklist state through `/api/intake/status`, drafts from text through `/api/intake/draft`, reads uploaded intake files through `/api/intake/draft-file`, previews confirmation checks through `/api/intake/review`, and creates the final record through `/api/intake/submissions`.
 
-The Dev console is API-driven through `/api/dev/*` routes. `/api/dev/catalog` aggregates the local stores that support the app, including submissions, brokers, claims, SOP, agent skills, models, notes, guides, tasks, stages, underwriting records, schemas, and chat history. The page now has separate views for data support, complete submission deletion, broker information, claim information, and an agent-skills workflow visual. Deletion still uses `/api/dev/submissions` and `/api/dev/submissions/<submission_id>`.
+The Dev console is API-driven through `/api/dev/*` routes. `/api/dev/catalog` aggregates the local stores that support the app, including submissions, brokers, claims, SOP, agent skills, models, notes, guides, tasks, stages, underwriting records, schemas, chat history, portfolio queue services, and trace metadata. The page now has separate views for data support, complete submission deletion, broker information, claim information, an agent-skills workflow visual, and agent traces. Deletion still uses `/api/dev/submissions` and `/api/dev/submissions/<submission_id>`. Recent traces are available through `/api/dev/agent-traces`.
 
 ## Validation And Tests
 
@@ -170,7 +176,7 @@ Run the current test suite with:
 .venv/bin/python -m unittest discover -s tests
 ```
 
-Current tests cover schema validation, upload metadata creation, retrieval planning, chat action parsing, task saving, stage locking, analytics scoring, and decision workflow gates.
+Current tests cover schema validation, upload metadata creation, retrieval planning, chat action parsing, task saving, stage locking, analytics scoring, decision workflow gates, portfolio queue routes, clearance review, external research, rating/quote, and Dev trace routes.
 
 ## Chat Prompt Behavior
 
@@ -204,12 +210,26 @@ For normal questions, the backend runs a retrieval skill planner before calling 
 - claim/loss questions pull linked dummy claim-system records;
 - linked-broker questions pull the current submission broker profile;
 - broker-table questions pull all broker database rows from `data/brokers/brokers.json`;
+- portfolio/queue/dashboard questions pull the computed submission work queue and portfolio metrics;
+- clearance questions pull duplicate-scan, broker, effective-date, evidence, and claim clearance checks;
+- rating/quote/premium questions pull the demo rating package, modifiers, premium indication, terms, and subjectivities;
+- external-research questions pull the connector-ready research checklist and submission-derived research signals;
 - workflow/task/note/guide/stage questions pull the relevant local JSON records;
 - appetite/evidence/referral questions pull underwriting-system context.
 - current-status questions pull metadata status, appetite, evidence readiness, claims, open tasks, stage progress, and stage lock state.
 - SOP/procedure questions use `data/sop/metadata.json` to select relevant SOP steps, then pull the matching SOP goals and templates from `data/sop/cyber_underwriting_sop.json`.
 
 This retrieved context is attached only to the current model request. It is not saved into chat history.
+
+Every chat request with a selected submission now runs through the Centralized Underwriting Information Agent:
+
+- `Multi-step planner`: chooses retrieval skills from the prompt and workspace state.
+- `Tool execution loop`: runs local retrieval tools for documents, SOP, claims, broker, models, notes, guides, tasks, stages, and workflow state.
+- `Confidence check`: scores whether the selected context has enough coverage, citations, document evidence, SOP matches, and model support.
+- `Retry expansion`: if confidence is low, expands the retrieval plan with fallback context such as account summary, underwriting, SOP, document completeness, or analytics.
+- `Trace persistence`: saves the request trace under `data/agent_traces/<submission_id>/` and returns a compact trace to the browser process panel.
+
+Agent traces are available through `/api/submissions/<submission_id>/agent-traces` and `/api/submissions/<submission_id>/agent-traces/<trace_id>`.
 
 The Details tab has a Timeline refresh button. Refresh calls the backend to regenerate a structured submission summary and timeline from current metadata and document excerpts. The model request uses a JSON Schema output format with `summary` and `timeline` fields, and the backend falls back to a deterministic local refresh when the model is unavailable.
 
@@ -225,7 +245,7 @@ The backend exposes them at:
 - `/api/models/quote_prob`
 - `/api/models/bind_prob`
 
-The quote and bind files currently contain demo logistic regression coefficients. The UI renders each model as a probability waterfall: average probability, each feature's marginal contribution as a percentage, and current probability. Quote and Bind also include supplemental modeling results backed by stored demo GLMs: cyber attack probability, ransomware probability, data breach probability, business interruption probability, and claim severity probability. Clicking one opens the same waterfall-style model explanation. Industry Propensity opens a benchmark bar chart calculated from the 50 dummy submissions and linked claim files: submission count, companies with claims, claim rate, and average claim severity by industry. Broker placement confidence and evidence confidence remain decision-support metrics. The `What If` sub-tab lets you switch between independent quote and bind scenarios, change feature values, and recalculate probability from the stored model coefficients. Numeric controls use dataset min/max values from `model/feature_metadata.json`, show the current submission value at its true position between min and max, and round scenario changes to practical increments while still allowing the dataset floor and cap.
+The quote and bind files currently contain demo logistic regression coefficients. The UI renders each model as a probability waterfall: average probability, each feature's marginal contribution as a percentage, and current probability. Quote and Bind also include supplemental modeling results backed by stored demo GLMs: cyber attack probability, ransomware probability, data breach probability, business interruption probability, and claim severity probability. Clicking one opens the same waterfall-style model explanation. Industry Propensity opens a benchmark bar chart calculated from the 50 dummy submissions and linked claim files: submission count, companies with claims, claim rate, and average claim severity by industry. Broker placement confidence and evidence confidence remain decision-support metrics. The `What If` sub-tab lets you switch between independent quote and bind scenarios, change feature values, and recalculate probability from the stored model coefficients. The `Portfolio` sub-tab summarizes the current account queue position, industry loss/readiness, and broker pipeline mix from `/api/portfolio/queue`. Numeric controls use dataset min/max values from `model/feature_metadata.json`, show the current submission value at its true position between min and max, and round scenario changes to practical increments while still allowing the dataset floor and cap.
 
 ## Underwriting System
 
@@ -237,6 +257,9 @@ The backend exposes:
 - `/api/agent-skills`
 - `/api/submissions/<submission_id>/claims`
 - `/api/submissions/<submission_id>/underwriting`
+- `/api/submissions/<submission_id>/clearance`
+- `/api/submissions/<submission_id>/external-research`
+- `/api/submissions/<submission_id>/rating-quote`
 
 The underwriting system sits in Details and can be expanded so the workbench uses the full workspace width to the right of the left navigation panel. Analytics uses the same left-edge double-arrow expansion control.
 
@@ -254,11 +277,14 @@ The underwriting system sits in Details and can be expanded so the workbench use
 - `backend/services/stage_state_service.py` reads and writes underwriting stage state JSON.
 - `backend/services/broker_service.py` reads broker database records and links them to submissions.
 - `backend/services/agent_skill_service.py` reads local chat skill definitions.
+- `backend/services/agent_orchestration_service.py` runs the multi-step planner, retrieval tool loop, confidence checks, retry expansion, and trace lifecycle.
+- `backend/services/agent_trace_service.py` persists and reads per-submission agent traces.
 - `backend/services/claim_service.py` reads dummy claim-system data.
 - `backend/services/underwriting_service.py` assembles appetite, broker context, evidence readiness, claim signals, and recommended actions.
 - `backend/services/insight_service.py` refreshes structured submission summary and timeline JSON.
 - `backend/services/document_tools.py` contains reusable document metadata, selection, and reading tools.
 - `backend/services/model_service.py` reads stored analytics models.
+- `backend/services/portfolio_workbench_service.py` computes the portfolio queue, clearance review, external research checklist, and rating/quote package.
 - `backend/services/openai_service.py` calls the OpenAI Responses API.
 
 ## MCP Tools
@@ -292,10 +318,12 @@ In the web app, turning on `Auto` uses the same document-selection logic before 
 - `POST /api/intake/review`
 - `POST /api/intake/submissions`
 - `GET /api/dev/catalog`
+- `GET /api/dev/agent-traces`
 - `GET /api/dev/submissions`
 - `DELETE /api/dev/submissions/<submission_id>`
 - `GET /api/submissions`
 - `GET /api/search-metadata`
+- `GET /api/portfolio/queue`
 - `GET /api/brokers`
 - `GET /api/agent-skills`
 - `GET /api/submissions/<submission_id>`
@@ -312,6 +340,9 @@ In the web app, turning on `Auto` uses the same document-selection logic before 
 - `PUT /api/submissions/<submission_id>/notes`
 - `GET /api/submissions/<submission_id>/claims`
 - `GET /api/submissions/<submission_id>/underwriting`
+- `GET /api/submissions/<submission_id>/clearance`
+- `GET /api/submissions/<submission_id>/external-research`
+- `GET /api/submissions/<submission_id>/rating-quote`
 - `GET /api/submissions/<submission_id>/tasks`
 - `PUT /api/submissions/<submission_id>/tasks`
 - `GET /api/submissions/<submission_id>/states`

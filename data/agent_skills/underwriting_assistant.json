@@ -162,6 +162,68 @@
       "output": "Pulls submission timeline and metadata update events from the submission record."
     },
     {
+      "skill_id": "retrieve_portfolio_queue",
+      "label": "Retrieve Portfolio Queue",
+      "trigger_examples": [
+        "show portfolio queue",
+        "what is in referral",
+        "compare the pipeline"
+      ],
+      "action_type": "retrieve",
+      "data_source": "computed from data/submissions, data/claims, data/brokers, and model files",
+      "output": "Pulls submission queue priority, portfolio dashboard metrics, industry mix, broker mix, readiness, and referral signals."
+    },
+    {
+      "skill_id": "retrieve_clearance_review",
+      "label": "Retrieve Clearance Review",
+      "trigger_examples": [
+        "clear this account",
+        "check duplicate submissions",
+        "show clearance issues"
+      ],
+      "action_type": "retrieve",
+      "data_source": "/api/submissions/<submission_id>/clearance",
+      "output": "Pulls duplicate scan, broker link, effective date, required evidence, claim clearance, and clearance status."
+    },
+    {
+      "skill_id": "retrieve_rating_quote",
+      "label": "Retrieve Rating And Quote",
+      "trigger_examples": [
+        "show indicated premium",
+        "build a quote package",
+        "what subjectivities should be on the quote"
+      ],
+      "action_type": "retrieve",
+      "data_source": "/api/submissions/<submission_id>/rating-quote",
+      "output": "Pulls demo rating factors, indicated premium, premium range, coverage terms, retention, and quote subjectivities."
+    },
+    {
+      "skill_id": "retrieve_external_research",
+      "label": "Retrieve External Research",
+      "trigger_examples": [
+        "what external research is needed",
+        "check sanctions and breach news",
+        "show security rating checklist"
+      ],
+      "action_type": "retrieve",
+      "data_source": "/api/submissions/<submission_id>/external-research",
+      "output": "Pulls external research checklist, enrichment connector readiness, and submission-derived research signals."
+    },
+    {
+      "skill_id": "retrieve_underwriting_claim_analytics_db",
+      "label": "Retrieve Underwriting Claim Analytics DB",
+      "trigger_examples": [
+        "show claim statistics by broker",
+        "how many claims does this broker have",
+        "compare underwriting decisions and incurred losses",
+        "show claim stats by company",
+        "what is the average quote readiness for referred accounts"
+      ],
+      "action_type": "retrieve",
+      "data_source": "data/analytics/underwriting_claim_analytics.db tables underwriting_submission_analytics and claim_analytics joined on company_id",
+      "output": "Merges submission-level underwriting analytics with claim-level rows by company_id, uses CLM_CLMT_ID for claim records, and returns aggregate statistics for companies, brokers, claims, queue priority, rating, and underwriting decision workflow status."
+    },
+    {
       "skill_id": "navigate_workspace",
       "label": "Navigate Workspace",
       "trigger_examples": [

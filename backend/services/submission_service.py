@@ -10,6 +10,7 @@ from backend.config import (
     DATA_DIR,
     DECISION_WORKFLOW_DIR,
     GUIDE_DIR,
+    AGENT_TRACE_DIR,
     INTAKE_STATUS_DIR,
     NOTE_DIR,
     SEARCH_METADATA_PATH,
@@ -211,6 +212,7 @@ def delete_submission_record(submission_id):
     removed = []
     remove_tree(folder_path, DATA_DIR.resolve(), removed)
     remove_tree(CHAT_HISTORY_DIR / submission_id, CHAT_HISTORY_DIR.resolve(), removed)
+    remove_tree(AGENT_TRACE_DIR / submission_id, AGENT_TRACE_DIR.resolve(), removed)
 
     for directory in [
         CLAIMS_DIR,

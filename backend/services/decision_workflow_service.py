@@ -231,14 +231,12 @@ def calculate_evidence_score(evidence):
 
 def is_referral_required(appetite, signals, claims):
     authority = str(appetite.get("recommended_authority") or "").lower()
-    status = str(appetite.get("status") or "").lower()
     total_incurred = float(claims.get("total_incurred") or 0)
     open_claims = int(claims.get("open_claims") or 0)
     return (
         "senior" in authority
-        or "referral" in status
         or open_claims > 0
-        or total_incurred >= 100000
+        or total_incurred >= 150000
         or any(signal.get("severity") == "high" for signal in signals)
     )
 
@@ -249,7 +247,7 @@ def referral_score(appetite, signals, claims):
         score += 0.3
     if int(claims.get("open_claims") or 0):
         score += 0.25
-    if float(claims.get("total_incurred") or 0) >= 100000:
+    if float(claims.get("total_incurred") or 0) >= 150000:
         score += 0.2
     if any(signal.get("severity") == "high" for signal in signals):
         score += 0.25
@@ -262,7 +260,7 @@ def build_referral_triggers(appetite, signals, claims):
         triggers.append("Senior authority recommended")
     if int(claims.get("open_claims") or 0):
         triggers.append("Open claim activity")
-    if float(claims.get("total_incurred") or 0) >= 100000:
+    if float(claims.get("total_incurred") or 0) >= 150000:
         triggers.append("High historical incurred losses")
     triggers.extend(
         f"High signal: {signal.get('label')}"

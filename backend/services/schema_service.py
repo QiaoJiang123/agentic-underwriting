@@ -178,6 +178,35 @@ SCHEMAS = {
             },
         },
     },
+    "agent_trace_record": {
+        "type": "object",
+        "required": ["trace_id", "submission_id", "created_at", "updated_at", "status", "steps"],
+        "properties": {
+            "trace_id": {"type": "string", "minLength": 1},
+            "submission_id": {"type": "string", "minLength": 1},
+            "created_at": {"type": "string"},
+            "updated_at": {"type": "string"},
+            "status": {"type": "string", "minLength": 1},
+            "agent": {"type": "string"},
+            "prompt_preview": {"type": "string"},
+            "attempt_count": {"type": "number"},
+            "confidence": {"type": "object"},
+            "steps": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                    "type": "object",
+                    "required": ["phase", "title", "status", "detail"],
+                    "properties": {
+                        "phase": {"type": "string", "minLength": 1},
+                        "title": {"type": "string", "minLength": 1},
+                        "status": {"type": "string", "minLength": 1},
+                        "detail": {"type": "string"},
+                    },
+                },
+            },
+        },
+    },
 }
 
 

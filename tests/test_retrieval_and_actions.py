@@ -25,6 +25,18 @@ class RetrievalAndActionTests(unittest.TestCase):
         self.assertIn("claims", result["plan"])
         self.assertTrue(any(source["skill"] == "claims" for source in result["sources"]))
 
+    def test_statistics_prompt_uses_analytics_db(self):
+        result = build_data_retrieval_context(
+            "001-acme-foods",
+            "show claim statistics by broker and associated underwriting decisions",
+            file_selection_mode="none",
+        )
+
+        self.assertIn("analytics_db", result["plan"])
+        self.assertIn("Analytics SQL DB:", result["context"])
+        self.assertIn("join both tables on company_id", result["context"])
+        self.assertTrue(any(source["skill"] == "analytics_db" for source in result["sources"]))
+
     def test_document_missing_prompt_selects_completeness_even_with_typo(self):
         plan = plan_retrieval("what documnts are missing here?")
 

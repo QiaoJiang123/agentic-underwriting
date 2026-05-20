@@ -1,6 +1,8 @@
 from pathlib import Path
 
 from backend.config import (
+    ANALYTICS_DB_PATH,
+    AGENT_TRACE_DIR,
     AGENT_SKILLS_PATH,
     BROKER_DB_PATH,
     CHAT_HISTORY_DIR,
@@ -21,6 +23,7 @@ from backend.config import (
     UNDERWRITING_DIR,
 )
 from backend.services.agent_skill_service import get_agent_skills_record
+from backend.services.agent_trace_service import list_all_agent_traces
 from backend.services.broker_service import get_broker_database
 from backend.services.claim_service import get_claim_record
 from backend.services.submission_service import get_search_metadata
@@ -42,6 +45,7 @@ def get_dev_console_catalog():
             "records": claim_records,
             "totals": summarize_claim_records(claim_records),
         },
+        "agent_traces": list_all_agent_traces(75),
         "agent_skills": agent_skills,
         "workflow": build_agent_workflow(agent_skills),
         "data_sources": data_sources,
@@ -128,6 +132,7 @@ def build_overview(submissions, brokers, agent_skills, claim_records, data_sourc
         "total_claims": claim_totals["total_claims"],
         "total_incurred": claim_totals["total_incurred"],
         "agent_skill_count": len(agent_skills.get("skills", [])),
+        "agent_trace_count": count_files(AGENT_TRACE_DIR, "*.json"),
         "data_source_count": len(data_sources),
     }
 
@@ -173,6 +178,38 @@ def build_data_sources(submissions, brokers, agent_skills, claim_records):
             len(agent_skills.get("skills", [])),
             "Local retrieval and navigation skills used by the centralized information agent.",
             "/api/agent-skills",
+        ),
+        source_item(
+            "agent_traces",
+            "Agent Traces",
+            path_label(AGENT_TRACE_DIR),
+            count_files(AGENT_TRACE_DIR, "*.json"),
+            "Persisted planner, tool execution, confidence, retry, and model-response traces for chat requests.",
+            "/api/dev/agent-traces",
+        ),
+        source_item(
+            "portfolio_queue",
+            "Portfolio Queue",
+            "computed from submissions, brokers, claims, evidence, and models",
+            len(submissions),
+            "Submission queue, portfolio dashboard, industry mix, readiness metrics, and priority routing.",
+            "/api/portfolio/queue",
+        ),
+        source_item(
+            "underwriting_claim_analytics_db",
+            "Underwriting Claim Analytics DB",
+            path_label(ANALYTICS_DB_PATH),
+            1 if ANALYTICS_DB_PATH.exists() else 0,
+            "Two-table SQLite analytics mart: submission-level underwriting rows and claim-level rows joined by company_id.",
+            "/api/analytics-db",
+        ),
+        source_item(
+            "clearance_rating_research",
+            "Clearance, Rating, And Research",
+            "computed workbench services",
+            len(submissions),
+            "Per-submission clearance review, external research checklist, and demo rating/quote package.",
+            "/api/submissions/<submission_id>/clearance | /rating-quote | /external-research",
         ),
         source_item(
             "sop",
@@ -295,7 +332,76 @@ def source_item(key, label, path, record_count, description, api):
 def build_agent_workflow(agent_skills):
     return {
         "title": "Centralized Underwriting Information Agent",
-        "summary": "Routes each prompt to the data needed for the answer, assembles cited context, then sends the compact working set to the model and UI action layer.",
+        "summary": "Runs a planner, executes retrieval tools, checks confidence, expands weak plans, persists the trace, then sends a cited working set to GPT and the UI action layer.",
+        "orchestration": {
+            "metrics": [
+                {"label": "Runtime mode", "value": "Planner + Tools + GPT"},
+                {"label": "Max attempts", "value": "2"},
+                {"label": "Confidence gate", "value": "72%"},
+                {"label": "Trace store", "value": "data/agent_traces"},
+            ],
+            "layers": [
+                {
+                    "key": "planner",
+                    "label": "Planner",
+                    "purpose": "Turn the prompt into an explicit skill plan.",
+                    "reads": ["Prompt", "submission id", "selection mode"],
+                    "emits": ["selected_skills", "file_selection_mode"],
+                },
+                {
+                    "key": "tool_loop",
+                    "label": "Tool Loop",
+                    "purpose": "Run local retrieval tools and record source coverage.",
+                    "reads": ["documents", "SOP", "claims", "broker", "models", "workflow stores"],
+                    "emits": ["context sections", "sources", "selected documents"],
+                },
+                {
+                    "key": "confidence",
+                    "label": "Confidence Gate",
+                    "purpose": "Score whether the retrieved context is strong enough.",
+                    "reads": ["source count", "context length", "document coverage", "SOP/model matches"],
+                    "emits": ["score", "label", "issues"],
+                },
+                {
+                    "key": "retry",
+                    "label": "Retry Expansion",
+                    "purpose": "Expand weak plans before the GPT call.",
+                    "reads": ["confidence issues", "prompt keywords", "first plan"],
+                    "emits": ["fallback plan", "second tool pass"],
+                },
+                {
+                    "key": "trace",
+                    "label": "Trace Persistence",
+                    "purpose": "Persist every decision for audit and debugging.",
+                    "reads": ["planner steps", "tool executions", "confidence checks", "model result"],
+                    "emits": ["trace_id", "agent_trace JSON", "UI process steps"],
+                },
+            ],
+            "execution_paths": [
+                {
+                    "label": "Normal answer path",
+                    "steps": ["Prompt", "Planner", "Tool loop", "Confidence >= 72%", "Context", "Trace", "GPT", "Answer"],
+                },
+                {
+                    "label": "Low-confidence path",
+                    "steps": ["Confidence < 72%", "Retry expansion", "Second tool loop", "Context", "Trace", "GPT"],
+                },
+                {
+                    "label": "Direct workspace action path",
+                    "steps": ["Prompt", "Action router", "Local write/read tool", "Trace", "UI refresh"],
+                },
+            ],
+            "trace_contract": [
+                "trace_id",
+                "prompt_preview",
+                "steps",
+                "tool_executions",
+                "confidence_checks",
+                "selected_sources",
+                "model",
+                "response_id",
+            ],
+        },
         "nodes": [
             {
                 "id": "prompt",
@@ -304,22 +410,28 @@ def build_agent_workflow(agent_skills):
                 "description": "Receives the underwriter question, current submission, selected files, notes, guides, and panel state.",
             },
             {
-                "id": "central_agent",
-                "label": "Information Agent",
+                "id": "planner",
+                "label": "Multi-Step Planner",
                 "phase": "Plan",
-                "description": "Classifies the request and chooses whether to pull documents, SOP, broker data, claims, analytics, workflow state, or account metadata.",
+                "description": "Classifies the request and creates a skill plan for documents, SOP, broker data, claims, analytics, workflow state, or account metadata.",
             },
             {
-                "id": "skill_router",
-                "label": "Skill Router",
-                "phase": "Route",
-                "description": "Maps intent to retrieval skills and local actions before the GPT response is built.",
+                "id": "tool_loop",
+                "label": "Tool Execution Loop",
+                "phase": "Execute",
+                "description": "Runs the selected local retrieval tools and records which sources, files, models, or JSON stores were read.",
             },
             {
-                "id": "retrieval",
-                "label": "Retrieval Layer",
-                "phase": "Retrieve",
-                "description": "Reads selected JSON stores and submission files. Auto mode can check documents in the left panel based on the selected evidence.",
+                "id": "confidence",
+                "label": "Confidence Check",
+                "phase": "Evaluate",
+                "description": "Scores the retrieved context for coverage, citations, document selection, SOP matches, and analytics/model support.",
+            },
+            {
+                "id": "retry",
+                "label": "Retry Expansion",
+                "phase": "Retry",
+                "description": "If confidence is low, expands the plan with fallback skills such as account summary, underwriting, SOP, or document completeness.",
             },
             {
                 "id": "context",
@@ -328,10 +440,16 @@ def build_agent_workflow(agent_skills):
                 "description": "Combines sources into a compact context block with citations, excluding full document text from saved chat history.",
             },
             {
+                "id": "trace",
+                "label": "Trace Persistence",
+                "phase": "Audit",
+                "description": "Saves planner, tool, confidence, retry, source, and model-response trace records under data/agent_traces.",
+            },
+            {
                 "id": "model",
                 "label": "LangGraph / GPT",
                 "phase": "Reason",
-                "description": "Runs the Python graph flow, applies system guides, and asks the configured GPT model to produce the answer.",
+                "description": "Runs the Python graph flow, applies system guides and notes, and asks the configured GPT model to produce the answer.",
             },
             {
                 "id": "response",
@@ -342,11 +460,13 @@ def build_agent_workflow(agent_skills):
         ],
         "retrieval_groups": build_retrieval_groups(agent_skills),
         "edges": [
-            {"from": "prompt", "to": "central_agent", "label": "question + workspace state"},
-            {"from": "central_agent", "to": "skill_router", "label": "intent plan"},
-            {"from": "skill_router", "to": "retrieval", "label": "selected skills"},
-            {"from": "retrieval", "to": "context", "label": "source records"},
-            {"from": "context", "to": "model", "label": "cited context"},
+            {"from": "prompt", "to": "planner", "label": "question + workspace state"},
+            {"from": "planner", "to": "tool_loop", "label": "skill plan"},
+            {"from": "tool_loop", "to": "confidence", "label": "source records"},
+            {"from": "confidence", "to": "retry", "label": "coverage score"},
+            {"from": "retry", "to": "context", "label": "accepted or expanded context"},
+            {"from": "context", "to": "trace", "label": "cited working set"},
+            {"from": "trace", "to": "model", "label": "auditable request"},
             {"from": "model", "to": "response", "label": "answer + actions"},
         ],
         "cycles": [
@@ -358,13 +478,19 @@ def build_agent_workflow(agent_skills):
             },
             {
                 "from": "response",
-                "to": "retrieval",
+                "to": "tool_loop",
                 "label": "Workspace update loop",
                 "description": "Chat actions can save notes, guides, tasks, stages, or metadata updates. Future retrieval reads those updated JSON records.",
             },
             {
-                "from": "retrieval",
-                "to": "skill_router",
+                "from": "confidence",
+                "to": "planner",
+                "label": "Low-confidence retry loop",
+                "description": "Weak source coverage triggers plan expansion and a second retrieval attempt before the model response is built.",
+            },
+            {
+                "from": "tool_loop",
+                "to": "planner",
                 "label": "Selection correction loop",
                 "description": "If Auto document selection or data retrieval is revised by the user, the next request routes with the corrected fixed or auto state.",
             },
@@ -380,6 +506,10 @@ def build_retrieval_groups(agent_skills):
         ("broker", "Broker Intelligence", ["broker"]),
         ("claims", "Claims", ["claim", "loss"]),
         ("analytics", "Analytics + Models", ["analytics", "model", "quote", "bind"]),
+        ("analytics_db", "Analytics SQL DB", ["analytics db", "statistics", "sql", "claim statistics"]),
+        ("portfolio", "Portfolio + Queue", ["portfolio", "queue", "pipeline"]),
+        ("quote", "Clearance + Rating", ["clearance", "rating", "premium", "subjectiv"]),
+        ("research", "External Research", ["external research", "sanctions", "security rating"]),
         ("workflow", "Tasks + Stages", ["task", "stage", "workflow", "status"]),
         ("navigation", "Workspace Navigation", ["navigate", "open"]),
     ]

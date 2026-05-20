@@ -11,10 +11,12 @@ const devClaimList = document.querySelector("#devClaimList");
 const devClaimCount = document.querySelector("#devClaimCount");
 const devWorkflowVisual = document.querySelector("#devWorkflowVisual");
 const devSkillCount = document.querySelector("#devSkillCount");
+const devTraceViewer = document.querySelector("#devTraceViewer");
+const devTraceCount = document.querySelector("#devTraceCount");
 const devTabs = Array.from(document.querySelectorAll("[data-dev-tab]"));
 const devPanels = Array.from(document.querySelectorAll("[data-dev-panel]"));
 
-const VALID_DEV_TABS = new Set(["support", "delete", "brokers", "claims", "workflow"]);
+const VALID_DEV_TABS = new Set(["support", "delete", "brokers", "claims", "workflow", "traces"]);
 
 let devCatalog = emptyDevCatalog();
 let activeDevTab = "support";
@@ -84,6 +86,7 @@ function normalizeDevCatalog(catalog) {
       ...(catalog.agent_skills || {}),
       skills: Array.isArray(catalog.agent_skills?.skills) ? catalog.agent_skills.skills : []
     },
+    agent_traces: Array.isArray(catalog.agent_traces) ? catalog.agent_traces : [],
     workflow: catalog.workflow || {},
     data_sources: Array.isArray(catalog.data_sources) ? catalog.data_sources : []
   };
@@ -109,6 +112,9 @@ function showDevLoadError() {
   if (devWorkflowVisual) {
     devWorkflowVisual.innerHTML = '<p class="empty-state">Unable to load agent workflow.</p>';
   }
+  if (devTraceViewer) {
+    devTraceViewer.innerHTML = '<p class="empty-state">Unable to load agent traces.</p>';
+  }
 }
 
 function renderDevConsole() {
@@ -119,6 +125,7 @@ function renderDevConsole() {
   renderBrokerTable(filterBrokers(query));
   renderClaimInformation(filterClaims(query));
   renderWorkflow(query);
+  renderTraceViewer(query);
   activateDevTab(activeDevTab);
 }
 
@@ -132,7 +139,7 @@ function renderOverview() {
     ["Submissions", formatNumber(overview.submission_count), "Searchable account records"],
     ["Brokers", formatNumber(overview.broker_count), "Firms in broker database"],
     ["Claims", formatNumber(overview.total_claims), `${formatNumber(overview.companies_with_claims)} companies with claims`],
-    ["Agent Skills", formatNumber(overview.agent_skill_count), "Retrieval and navigation skills"],
+    ["Agent Skills", formatNumber(overview.agent_skill_count), `${formatNumber(overview.agent_trace_count)} persisted traces`],
   ];
 
   devOverviewGrid.innerHTML = cards
@@ -376,9 +383,15 @@ function renderWorkflow(query) {
         <p class="eyebrow">${escapeHtml(workflow.title || "Information Agent")}</p>
         <h3>${escapeHtml(workflow.summary || "Routes prompts to the right underwriting data.")}</h3>
       </div>
+      ${renderWorkflowMetrics((workflow.orchestration || {}).metrics || [])}
     </section>
+    ${renderOrchestrationBoard(workflow.orchestration || {})}
     <section class="dev-workflow-layout" aria-label="Agent workflow map">
       <div class="dev-workflow-map">
+        <div class="dev-workflow-map-heading">
+          <span>Runtime Sequence</span>
+          <strong>${escapeHtml((workflow.nodes || []).length)} stages</strong>
+        </div>
         ${renderWorkflowNodes(workflow.nodes || [], workflow.edges || [])}
       </div>
       <aside class="dev-workflow-side">
@@ -404,13 +417,114 @@ function renderWorkflow(query) {
   `;
 }
 
+function renderWorkflowMetrics(metrics) {
+  if (!Array.isArray(metrics) || !metrics.length) {
+    return "";
+  }
+
+  return `
+    <div class="dev-workflow-metrics" aria-label="Workflow runtime metrics">
+      ${metrics.map((metric) => `
+        <span>
+          <small>${escapeHtml(metric.label || "")}</small>
+          <strong>${escapeHtml(metric.value || "")}</strong>
+        </span>
+      `).join("")}
+    </div>
+  `;
+}
+
+function renderOrchestrationBoard(orchestration) {
+  const layers = Array.isArray(orchestration.layers) ? orchestration.layers : [];
+  const paths = Array.isArray(orchestration.execution_paths) ? orchestration.execution_paths : [];
+  const traceContract = Array.isArray(orchestration.trace_contract) ? orchestration.trace_contract : [];
+  if (!layers.length && !paths.length && !traceContract.length) {
+    return "";
+  }
+
+  return `
+    <section class="dev-orchestration-board" aria-label="Agent orchestration overview">
+      <div class="dev-orchestration-main">
+        <div class="dev-side-heading">
+          <span>Orchestration Layer</span>
+          <strong>${escapeHtml(layers.length)} runtime controls</strong>
+        </div>
+        <div class="dev-orchestration-layers">
+          ${layers.map(renderOrchestrationLayer).join("")}
+        </div>
+      </div>
+      <aside class="dev-orchestration-aside">
+        ${renderExecutionPaths(paths)}
+        ${renderTraceContract(traceContract)}
+      </aside>
+    </section>
+  `;
+}
+
+function renderOrchestrationLayer(layer, index) {
+  return `
+    <article class="dev-orchestration-layer ${escapeHtml(layer.key || "")}">
+      <div class="dev-layer-index">${escapeHtml(String(index + 1).padStart(2, "0"))}</div>
+      <div>
+        <span>${escapeHtml(layer.label || layer.key || "Layer")}</span>
+        <strong>${escapeHtml(layer.purpose || "")}</strong>
+        <div class="dev-layer-io">
+          <small>Reads: ${escapeHtml(formatShortList(layer.reads || []))}</small>
+          <small>Emits: ${escapeHtml(formatShortList(layer.emits || []))}</small>
+        </div>
+      </div>
+    </article>
+  `;
+}
+
+function renderExecutionPaths(paths) {
+  if (!Array.isArray(paths) || !paths.length) {
+    return "";
+  }
+
+  return `
+    <section class="dev-execution-paths" aria-label="Execution paths">
+      <div class="dev-side-heading">
+        <span>Execution Paths</span>
+        <strong>${escapeHtml(paths.length)} routes</strong>
+      </div>
+      ${paths.map((path) => `
+        <article class="dev-execution-path">
+          <strong>${escapeHtml(path.label || "Execution path")}</strong>
+          <div>
+            ${(Array.isArray(path.steps) ? path.steps : []).map((step) => `<code>${escapeHtml(step)}</code>`).join("<i></i>")}
+          </div>
+        </article>
+      `).join("")}
+    </section>
+  `;
+}
+
+function renderTraceContract(fields) {
+  if (!Array.isArray(fields) || !fields.length) {
+    return "";
+  }
+
+  return `
+    <section class="dev-trace-contract" aria-label="Persisted trace contract">
+      <div class="dev-side-heading">
+        <span>Trace Contract</span>
+        <strong>${escapeHtml(fields.length)} fields</strong>
+      </div>
+      <div class="dev-chip-row">
+        ${fields.map((field) => `<span>${escapeHtml(field)}</span>`).join("")}
+      </div>
+    </section>
+  `;
+}
+
 function renderWorkflowNodes(nodes, edges) {
   return nodes
     .map((node, index) => {
       const nextNode = nodes[index + 1];
       const edge = nextNode ? findWorkflowEdge(edges, node.id, nextNode.id) : null;
       return `
-        <article class="dev-workflow-node" data-workflow-node="${escapeHtml(node.id)}">
+        <article class="dev-workflow-node phase-${escapeHtml(String(node.phase || "").toLowerCase())}" data-workflow-node="${escapeHtml(node.id)}">
           <div class="dev-workflow-index">${escapeHtml(String(index + 1).padStart(2, "0"))}</div>
           <div>
             <span>${escapeHtml(node.phase || "")}</span>
@@ -422,6 +536,16 @@ function renderWorkflowNodes(nodes, edges) {
       `;
     })
     .join("");
+}
+
+function formatShortList(values) {
+  const items = Array.isArray(values) ? values.filter(Boolean) : [];
+  if (!items.length) {
+    return "None";
+  }
+  const visible = items.slice(0, 4).join(", ");
+  const remaining = items.length - 4;
+  return remaining > 0 ? `${visible}, +${remaining}` : visible;
 }
 
 function renderWorkflowConnector(edge) {
@@ -441,9 +565,13 @@ function renderWorkflowCycles(cycles) {
   return cycles
     .map((cycle) => `
       <article class="dev-cycle-card">
-        <div>
+        <div class="dev-cycle-card-heading">
           <strong>${escapeHtml(cycle.label || "Feedback loop")}</strong>
-          <code>${escapeHtml(cycle.from || "")} -> ${escapeHtml(cycle.to || "")}</code>
+        </div>
+        <div class="dev-cycle-path" aria-label="${escapeHtml((cycle.from || "") + " to " + (cycle.to || ""))}">
+          <code>${escapeHtml(formatWorkflowNodeId(cycle.from))}</code>
+          <span aria-hidden="true">&#8634;</span>
+          <code>${escapeHtml(formatWorkflowNodeId(cycle.to))}</code>
         </div>
         <p>${escapeHtml(cycle.description || "")}</p>
       </article>
@@ -453,6 +581,12 @@ function renderWorkflowCycles(cycles) {
 
 function findWorkflowEdge(edges, from, to) {
   return (Array.isArray(edges) ? edges : []).find((edge) => edge.from === from && edge.to === to) || null;
+}
+
+function formatWorkflowNodeId(value) {
+  return String(value || "")
+    .replace(/_/g, " ")
+    .replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
 function renderRetrievalGroup(group) {
@@ -485,6 +619,74 @@ function renderSkillCard(skill) {
       ${dataSources.length ? `<small>Sources: ${escapeHtml(dataSources.join(" | "))}</small>` : ""}
     </article>
   `;
+}
+
+function renderTraceViewer(query) {
+  if (!devTraceViewer) {
+    return;
+  }
+
+  const traces = devCatalog.agent_traces.filter((trace) => matchesQuery(trace, query));
+  if (devTraceCount) {
+    devTraceCount.textContent = `${traces.length} of ${devCatalog.agent_traces.length} traces`;
+  }
+
+  if (!traces.length) {
+    devTraceViewer.innerHTML = '<p class="empty-state">No matching agent traces.</p>';
+    return;
+  }
+
+  devTraceViewer.innerHTML = `
+    <section class="dev-trace-explainer">
+      <strong>Trace Viewer</strong>
+      <p>Each row is a persisted planner, tool loop, confidence check, retry, and model-response run. Use this to debug why the agent selected documents, analytics, tasks, SOP, or other underwriting data.</p>
+    </section>
+    <div class="dev-trace-list">
+      ${traces.map(renderTraceCard).join("")}
+    </div>
+  `;
+}
+
+function renderTraceCard(trace) {
+  const confidence = trace.confidence || {};
+  const score = Number(confidence.score || 0);
+  const label = confidence.label || "unknown";
+  const skills = Array.isArray(trace.selected_skills) ? trace.selected_skills : [];
+  return `
+    <article class="dev-trace-card">
+      <header>
+        <div>
+          <strong>${escapeHtml(trace.submission_id || "unknown submission")}</strong>
+          <small>${escapeHtml(trace.prompt_preview || "No prompt preview.")}</small>
+        </div>
+        <span class="${escapeHtml(traceStatusClass(label))}">${escapeHtml(formatPct(score))}</span>
+      </header>
+      <div class="dev-trace-meta">
+        <span>${escapeHtml(trace.status || "unknown")}</span>
+        <span>${escapeHtml(formatDateTime(trace.updated_at || trace.created_at))}</span>
+        <span>${escapeHtml(String(trace.attempt_count || 0))} attempts</span>
+        <span>${escapeHtml(String(trace.source_count || 0))} sources</span>
+        <span>${escapeHtml(String(trace.step_count || 0))} steps</span>
+      </div>
+      <div class="dev-chip-row">
+        ${skills.length ? renderChips(skills) : "<span>No skills recorded</span>"}
+      </div>
+      <a class="inline-data-link" href="/api/submissions/${encodeURIComponent(trace.submission_id || "")}/agent-traces/${encodeURIComponent(trace.trace_id || "")}" target="_blank" rel="noreferrer">
+        Open trace JSON
+      </a>
+    </article>
+  `;
+}
+
+function traceStatusClass(label) {
+  const normalized = String(label || "").toLowerCase();
+  if (normalized === "high") {
+    return "good";
+  }
+  if (normalized === "medium") {
+    return "watch";
+  }
+  return "alert";
 }
 
 async function handleDeleteSubmission(event) {
@@ -626,6 +828,22 @@ function formatPct(value) {
 
 function formatNumber(value) {
   return Number(value || 0).toLocaleString();
+}
+
+function formatDateTime(value) {
+  if (!value) {
+    return "TBD";
+  }
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return String(value);
+  }
+  return date.toLocaleString([], {
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit"
+  });
 }
 
 function titleCase(value) {

@@ -167,7 +167,7 @@ def build_underwriting_signals(submission, claims, evidence):
     signals = []
 
     claim_severity = "low"
-    if aggregate["open_claims"] or aggregate["total_incurred"] >= 75000:
+    if aggregate["open_claims"] or aggregate["total_incurred"] >= 150000:
         claim_severity = "high"
     elif aggregate["total_claims"] or aggregate["total_incurred"] >= 25000:
         claim_severity = "moderate"
@@ -216,7 +216,7 @@ def build_appetite(submission, claims, evidence, signals):
     if has_high_signal:
         status = "Referral review"
         rationale = "Open or high-severity claim activity requires senior underwriting review."
-    elif missing_count >= 3:
+    elif missing_count >= 5:
         status = "Hold for evidence"
         rationale = "The submission is missing several required underwriting evidence categories."
     elif aggregate["total_claims"] or any(signal["severity"] == "moderate" for signal in signals):

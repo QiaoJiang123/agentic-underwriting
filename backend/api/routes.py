@@ -6,7 +6,14 @@ from fastapi.responses import FileResponse
 
 from backend.agents.underwriting_graph import run_underwriting_graph
 from backend.config import OPENAI_API_KEY, OPENAI_MODEL
+from backend.services.agent_orchestration_service import (
+    finalize_agent_trace,
+    persist_action_trace,
+    run_information_agent,
+)
 from backend.services.agent_skill_service import get_agent_skills_record
+from backend.services.agent_trace_service import get_agent_trace, list_agent_traces, list_all_agent_traces
+from backend.services.analytics_db_service import get_analytics_db_summary, refresh_analytics_db
 from backend.services.broker_service import get_broker_database
 from backend.services.claim_service import get_claim_record
 from backend.services.chat_action_service import run_chat_action
@@ -15,7 +22,6 @@ from backend.services.chat_history_service import (
     list_chat_history,
     save_chat_history,
 )
-from backend.services.data_retrieval_service import build_data_retrieval_context
 from backend.services.decision_workflow_service import (
     get_decision_workflow_record,
     save_decision_workflow_record,
@@ -28,6 +34,12 @@ from backend.services.intake_status_service import get_intake_status_record, sav
 from backend.services.model_service import get_model
 from backend.services.note_service import get_note_record, save_note_record
 from backend.services.openai_service import call_openai_responses
+from backend.services.portfolio_workbench_service import (
+    get_clearance_review,
+    get_external_research,
+    get_portfolio_queue,
+    get_rating_quote,
+)
 from backend.services.schema_service import get_schema_catalog
 from backend.services.sop_service import get_sop_metadata_record, get_sop_record
 from backend.services.stage_state_service import (
@@ -79,7 +91,9 @@ async def submissions():
 
 @router.post("/api/submissions")
 async def create_submission(body: dict = Body(default_factory=dict)):
-    return {"submission": create_submission_from_intake(body)}
+    result = create_submission_from_intake(body)
+    refresh_analytics_db()
+    return {"submission": result}
 
 
 @router.post("/api/submissions/draft")
@@ -95,6 +109,21 @@ async def draft_submission_file(file: UploadFile = File(...)):
 @router.get("/api/search-metadata")
 async def search_metadata():
     return get_search_metadata()
+
+
+@router.get("/api/portfolio/queue")
+async def portfolio_queue():
+    return {"portfolio": get_portfolio_queue()}
+
+
+@router.get("/api/analytics-db")
+async def analytics_db(refresh: bool = False):
+    return {"analytics_db": get_analytics_db_summary(refresh=refresh)}
+
+
+@router.post("/api/analytics-db/refresh")
+async def refresh_analytics_database():
+    return {"analytics_db": refresh_analytics_db()}
 
 
 @router.get("/api/intake/bootstrap")
@@ -133,7 +162,9 @@ async def review_intake_submission(body: dict = Body(default_factory=dict)):
 
 @router.post("/api/intake/submissions")
 async def create_intake_submission(body: dict = Body(default_factory=dict)):
-    return {"submission": create_submission_from_intake(body)}
+    result = create_submission_from_intake(body)
+    refresh_analytics_db()
+    return {"submission": result}
 
 
 @router.get("/api/dev/submissions")
@@ -147,9 +178,16 @@ async def dev_catalog():
     return get_dev_console_catalog()
 
 
+@router.get("/api/dev/agent-traces")
+async def dev_agent_traces(limit: int = 75):
+    return {"agent_traces": list_all_agent_traces(limit)}
+
+
 @router.delete("/api/dev/submissions/{submission_id}")
 async def delete_dev_submission(submission_id: str):
-    return {"delete": delete_submission_record(submission_id)}
+    result = delete_submission_record(submission_id)
+    refresh_analytics_db()
+    return {"delete": result}
 
 
 @router.get("/api/brokers")
@@ -197,6 +235,7 @@ async def upload_file(submission_id: str, file: UploadFile = File(...)):
         api_key=OPENAI_API_KEY,
         model=OPENAI_MODEL,
     )
+    refresh_analytics_db()
     return {"upload": result}
 
 
@@ -214,7 +253,9 @@ async def get_file(submission_id: str, file_name: str):
 
 @router.delete("/api/submissions/{submission_id}/files/{file_name}")
 async def delete_file(submission_id: str, file_name: str):
-    return {"delete": delete_submission_file(submission_id, file_name)}
+    result = delete_submission_file(submission_id, file_name)
+    refresh_analytics_db()
+    return {"delete": result}
 
 
 @router.post("/api/submissions/{submission_id}/insights/refresh")
@@ -233,6 +274,21 @@ async def underwriting(submission_id: str):
     return {"underwriting_system": get_underwriting_system_record(submission_id)}
 
 
+@router.get("/api/submissions/{submission_id}/clearance")
+async def clearance(submission_id: str):
+    return {"clearance": get_clearance_review(submission_id)}
+
+
+@router.get("/api/submissions/{submission_id}/external-research")
+async def external_research(submission_id: str):
+    return {"external_research": get_external_research(submission_id)}
+
+
+@router.get("/api/submissions/{submission_id}/rating-quote")
+async def rating_quote(submission_id: str):
+    return {"rating_quote": get_rating_quote(submission_id)}
+
+
 @router.get("/api/submissions/{submission_id}/decision-workflow")
 async def decision_workflow(submission_id: str):
     return {"decision_workflow": get_decision_workflow_record(submission_id)}
@@ -245,7 +301,9 @@ async def save_decision_workflow(submission_id: str, body: dict = Body(default_f
 
 @router.put("/api/submissions/{submission_id}/metadata-cells")
 async def metadata_cells(submission_id: str, body: dict = Body(default_factory=dict)):
-    return {"submission": update_submission_metadata_cells(submission_id, body)}
+    result = update_submission_metadata_cells(submission_id, body)
+    refresh_analytics_db()
+    return {"submission": result}
 
 
 @router.get("/api/submissions/{submission_id}/chat-history")
@@ -261,6 +319,16 @@ async def save_chat(submission_id: str, body: dict = Body(default_factory=dict))
 @router.get("/api/submissions/{submission_id}/chat-history/{history_id}")
 async def chat_history_detail(submission_id: str, history_id: str):
     return {"chat_history": get_chat_history_detail(submission_id, history_id)}
+
+
+@router.get("/api/submissions/{submission_id}/agent-traces")
+async def agent_traces(submission_id: str):
+    return {"agent_traces": list_agent_traces(submission_id)}
+
+
+@router.get("/api/submissions/{submission_id}/agent-traces/{trace_id}")
+async def agent_trace_detail(submission_id: str, trace_id: str):
+    return {"agent_trace": get_agent_trace(submission_id, trace_id)}
 
 
 @router.get("/api/submissions/{submission_id}/guides")
@@ -329,7 +397,9 @@ async def auto_select_documents(submission_id: str, body: dict = Body(default_fa
 
 @router.delete("/api/submissions/{submission_id}")
 async def delete_submission(submission_id: str):
-    return {"delete": delete_submission_record(submission_id)}
+    result = delete_submission_record(submission_id)
+    refresh_analytics_db()
+    return {"delete": result}
 
 
 @router.get("/api/submissions/{submission_id}")
@@ -385,12 +455,14 @@ def build_chat_response(body):
     if submission_id and user_prompt:
         action_result = run_chat_action(submission_id, user_prompt)
         if action_result:
+            agent_trace = persist_action_trace(submission_id, user_prompt, action_result)
             return {
                 "reply": action_result["reply"],
                 "model": "local-action",
                 "id": None,
                 "framework": "python-action",
                 "actions": [action_result],
+                "agent_trace": agent_trace,
             }
 
     if not OPENAI_API_KEY or OPENAI_API_KEY == "replace_with_your_openai_api_key":
@@ -407,8 +479,8 @@ def build_chat_response(body):
         for message in messages
         if isinstance(message, dict)
     ]
-    retrieval_result = (
-        build_data_retrieval_context(
+    orchestration_result = (
+        run_information_agent(
             submission_id=submission_id,
             prompt=user_prompt,
             selected_files=selected_files,
@@ -416,8 +488,9 @@ def build_chat_response(body):
             max_documents=6,
         )
         if submission_id and user_prompt
-        else {"plan": [], "context": "", "sources": []}
+        else {"retrieval": {"plan": [], "context": "", "sources": [], "selection": {}}, "trace": None, "record": None}
     )
+    retrieval_result = orchestration_result["retrieval"]
     append_context_to_latest_user_message(model_input, retrieval_result.get("context", ""))
 
     try:
@@ -430,6 +503,12 @@ def build_chat_response(body):
             call_openai=call_openai_responses,
         )
     except Exception as error:
+        finalize_agent_trace(
+            orchestration_result.get("record"),
+            status="model_error",
+            model=OPENAI_MODEL,
+            error=error,
+        )
         message = str(error) or "OpenAI request failed"
         if "incorrect api key" in message.lower():
             message = (
@@ -438,11 +517,19 @@ def build_chat_response(body):
             )
         raise HTTPException(status_code=502, detail={"error": message}) from error
 
+    agent_trace = finalize_agent_trace(
+        orchestration_result.get("record"),
+        status="completed",
+        model=OPENAI_MODEL,
+        response_id=graph_result.get("response_id"),
+    )
+
     return {
         "reply": graph_result.get("reply"),
         "model": OPENAI_MODEL,
         "id": graph_result.get("response_id"),
         "framework": "python-langgraph" if is_langgraph_available() else "python-graph-fallback",
+        "agent_trace": agent_trace or orchestration_result.get("trace"),
         "retrieval": {
             "plan": retrieval_result.get("plan", []),
             "sources": retrieval_result.get("sources", []),

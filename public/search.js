@@ -1,6 +1,7 @@
 const searchInput = document.querySelector("#submissionSearch");
 const searchResults = document.querySelector("#searchResults");
 const exampleResults = document.querySelector("#exampleResults");
+const queueDashboard = document.querySelector("#queueDashboard");
 const addSubmissionToggle = document.querySelector("#addSubmissionToggle");
 const addSubmissionPanel = document.querySelector("#addSubmissionPanel");
 const addSubmissionForm = document.querySelector("#addSubmissionForm");
@@ -25,6 +26,7 @@ const reviseIntakeButton = document.querySelector("#reviseIntakeButton");
 
 let submissions = [];
 let brokers = [];
+let portfolioQueue = null;
 let intakeMode = "manual";
 let intakeDocuments = [];
 let stagedIntakeDocuments = [];
@@ -53,8 +55,10 @@ initSearch();
 async function initSearch() {
   try {
     await loadIntakeBootstrap();
+    await loadPortfolioQueue();
     renderMatches([]);
     renderExamples(submissions.slice(0, 3));
+    renderQueueDashboard();
     renderBrokerOptions();
     renderIntakeDocuments();
     const currentView = getCurrentSearchView();
@@ -68,6 +72,7 @@ async function initSearch() {
     searchResults.innerHTML = '<p class="empty-state">Unable to load submission index.</p>';
     intakeDocuments = defaultIntakeDocuments.map((item) => ({ ...item }));
     renderIntakeDocuments();
+    renderQueueDashboard("Unable to load submission queue.");
   }
 }
 
@@ -85,6 +90,16 @@ async function loadIntakeBootstrap({ showStatus = false } = {}) {
 
   if (showStatus) {
     setIntakeStatus("Intake data loaded from API.");
+  }
+}
+
+async function loadPortfolioQueue() {
+  try {
+    const data = await AUApi.get("/api/portfolio/queue");
+    portfolioQueue = data.portfolio || null;
+  } catch (error) {
+    console.warn(error);
+    portfolioQueue = null;
   }
 }
 
@@ -236,6 +251,99 @@ function renderSubmissionLinks(results) {
     `
     )
     .join("");
+}
+
+function renderQueueDashboard(errorMessage = "") {
+  if (!queueDashboard) {
+    return;
+  }
+
+  if (errorMessage) {
+    queueDashboard.innerHTML = `<p class="empty-state">${escapeHtml(errorMessage)}</p>`;
+    return;
+  }
+
+  const overview = portfolioQueue && portfolioQueue.overview ? portfolioQueue.overview : {};
+  const rows = getQueuePreviewRows(portfolioQueue && Array.isArray(portfolioQueue.queue) ? portfolioQueue.queue : []);
+  if (!rows.length) {
+    queueDashboard.innerHTML = '<p class="empty-state">No queue records available.</p>';
+    return;
+  }
+
+  queueDashboard.innerHTML = `
+    <div class="queue-dashboard-heading">
+      <div>
+        <p class="eyebrow">Portfolio Queue</p>
+        <h2>Submission Work Queue</h2>
+      </div>
+      <span>${escapeHtml(formatNumber(overview.submission_count))} accounts</span>
+    </div>
+    <div class="queue-metric-grid">
+      ${renderQueueMetric("Ready", overview.ready_count, "No hard escalation trigger is active and the account can move toward quote work.")}
+      ${renderQueueMetric("Review", overview.review_count, "Underwriter delegated review. The underwriter should validate evidence, controls, claims, and authority.")}
+      ${renderQueueMetric("Referral", overview.referral_count, "Senior underwriting escalation for hard triggers such as open claims, high incurred losses, very low readiness, or large unresolved evidence gaps.")}
+      ${renderQueueMetric("Avg Readiness", `${Math.round(Number(overview.avg_quote_readiness || 0))}%`, "Average Quote Readiness across the portfolio. This is not referral probability.")}
+    </div>
+    <div class="queue-definition-panel">
+      <strong>Definition</strong>
+      <span><b>Referral</b> means senior underwriting escalation is required.</span>
+      <span><b>Quote Readiness</b> is how prepared the account is for quote terms based on evidence, broker quality, claims, controls, risk flags, exposure, and demo variance.</span>
+    </div>
+    <div class="queue-list">
+      ${rows.map(renderQueueRow).join("")}
+    </div>
+  `;
+}
+
+function getQueuePreviewRows(queue) {
+  const selected = [];
+  const selectedIds = new Set();
+  ["Referral", "Review", "Ready"].forEach((priority) => {
+    queue
+      .filter((row) => row.priority === priority)
+      .slice(0, 2)
+      .forEach((row) => {
+        selected.push(row);
+        selectedIds.add(row.id);
+      });
+  });
+
+  if (selected.length < 6) {
+    queue.forEach((row) => {
+      if (selected.length < 6 && !selectedIds.has(row.id)) {
+        selected.push(row);
+        selectedIds.add(row.id);
+      }
+    });
+  }
+
+  return selected.slice(0, 6);
+}
+
+function renderQueueMetric(label, value, definition = "") {
+  return `
+    <article title="${escapeHtml(definition)}">
+      <span>${escapeHtml(label)}</span>
+      <strong>${escapeHtml(String(value ?? 0))}</strong>
+    </article>
+  `;
+}
+
+function renderQueueRow(row) {
+  const readiness = `${Math.round(Number(row.quote_readiness || 0))}%`;
+  return `
+    <a class="queue-row" href="/chat.html?submission=${encodeURIComponent(row.id)}" title="Quote Readiness is not referral probability. It measures how ready this account is for quote terms.">
+      <div>
+        <strong>${escapeHtml(row.id)}, ${escapeHtml(row.title || row.insured_name || "Untitled")}</strong>
+        <small>${escapeHtml([row.industry_bucket, row.broker_name, row.next_action].filter(Boolean).join(" | "))}</small>
+      </div>
+      <span class="queue-priority ${escapeHtml(String(row.priority || "").toLowerCase())}">${escapeHtml(row.priority || "Review")}</span>
+      <span class="queue-readiness">
+        <small>Quote Readiness</small>
+        <em>${escapeHtml(readiness)}</em>
+      </span>
+    </a>
+  `;
 }
 
 function applyAddSubmissionUrlState() {
@@ -966,6 +1074,10 @@ function setApplicationFormUploadStatus(message, isError = false) {
   }
   applicationFormUploadStatus.textContent = message;
   applicationFormUploadStatus.style.color = isError ? "#991b1b" : "";
+}
+
+function formatNumber(value) {
+  return Number(value || 0).toLocaleString();
 }
 
 function escapeHtml(value) {

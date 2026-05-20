@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Developer Tools</title>
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-    <link rel="stylesheet" href="/styles.css" />
+    <link rel="stylesheet" href="/styles.css?v=workflow-visual" />
   </head>
   <body class="search-body dev-body">
     <a class="ghost-button dev-nav-button" href="/">Back</a>
@@ -55,6 +55,9 @@
               </button>
               <button class="dev-tab" type="button" role="tab" aria-selected="false" data-dev-tab="workflow">
                 Agent Skills Workflow
+              </button>
+              <button class="dev-tab" type="button" role="tab" aria-selected="false" data-dev-tab="traces">
+                Agent Traces
               </button>
             </div>
             <label class="sr-only" for="devDataSearch">Search developer console data</label>
@@ -142,12 +145,25 @@
               <p class="empty-state">Loading agent workflow...</p>
             </div>
           </section>
+
+          <section class="dev-tab-panel" data-dev-panel="traces" role="tabpanel" hidden>
+            <div class="dev-tool-heading">
+              <div>
+                <p class="eyebrow">Agent Traces</p>
+                <h2>Planner And Tool Runs</h2>
+              </div>
+              <span id="devTraceCount">Loading</span>
+            </div>
+            <div class="dev-trace-viewer" id="devTraceViewer" aria-live="polite">
+              <p class="empty-state">Loading agent traces...</p>
+            </div>
+          </section>
         </section>
 
       </section>
     </main>
 
     <script src="/js/api.js"></script>
-    <script src="/dev.js"></script>
+    <script src="/dev.js?v=workflow-visual"></script>
   </body>
 </html>
