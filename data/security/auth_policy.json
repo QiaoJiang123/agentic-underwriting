@@ -1,0 +1,104 @@
+{
+  "default_user_id": "uw-demo",
+  "roles": {
+    "senior_underwriter": {
+      "label": "Senior Underwriter",
+      "permissions": [
+        "agent:read",
+        "analytics:read",
+        "api:access",
+        "audit:read",
+        "auth:read",
+        "broker:read",
+        "chat:use",
+        "dev:delete",
+        "dev:read",
+        "intake:read",
+        "intake:write",
+        "model:read",
+        "portfolio:read",
+        "schema:read",
+        "sop:read",
+        "submission:create",
+        "submission:delete",
+        "submission:list",
+        "submission:read",
+        "submission:write"
+      ]
+    },
+    "underwriting_assistant": {
+      "label": "Underwriting Assistant",
+      "permissions": [
+        "agent:read",
+        "analytics:read",
+        "api:access",
+        "auth:read",
+        "broker:read",
+        "chat:use",
+        "intake:read",
+        "intake:write",
+        "model:read",
+        "portfolio:read",
+        "schema:read",
+        "sop:read",
+        "submission:create",
+        "submission:list",
+        "submission:read",
+        "submission:write"
+      ]
+    },
+    "read_only_auditor": {
+      "label": "Read Only Auditor",
+      "permissions": [
+        "agent:read",
+        "analytics:read",
+        "api:access",
+        "audit:read",
+        "auth:read",
+        "broker:read",
+        "model:read",
+        "portfolio:read",
+        "schema:read",
+        "sop:read",
+        "submission:list",
+        "submission:read"
+      ]
+    }
+  },
+  "users": [
+    {
+      "user_id": "admin",
+      "display_name": "Admin Underwriter",
+      "role": "senior_underwriter",
+      "team": "Platform Admin",
+      "submission_scope": ["*"]
+    },
+    {
+      "user_id": "uw-demo",
+      "display_name": "Demo Senior Underwriter",
+      "role": "senior_underwriter",
+      "team": "Cyber",
+      "submission_scope": ["*"]
+    },
+    {
+      "user_id": "uw-assistant",
+      "display_name": "Demo Underwriting Assistant",
+      "role": "underwriting_assistant",
+      "team": "Cyber",
+      "submission_scope": [
+        "001-acme-foods",
+        "002-northstar-contracting",
+        "003-evergreen-senior-living",
+        "004-harborview-marina",
+        "005-pixelwave-software"
+      ]
+    },
+    {
+      "user_id": "audit-demo",
+      "display_name": "Demo Read Only Auditor",
+      "role": "read_only_auditor",
+      "team": "Audit",
+      "submission_scope": ["*"]
+    }
+  ]
+}

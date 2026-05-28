@@ -20,7 +20,7 @@
           </div>
         </header>
 
-        <section class="sidebar-section">
+        <section class="sidebar-section history-section">
           <div class="section-heading">
             <h2>Chat History</h2>
             <button class="icon-button" id="newChatButton" type="button" aria-label="New chat">+</button>
@@ -57,6 +57,7 @@
             <h2 id="workspaceTitle">Underwriting Chat</h2>
           </div>
           <div class="header-actions">
+            <a class="ghost-button auth-header-link" href="/login.html">Login</a>
             <div class="model-card">
               <span class="status-dot" aria-hidden="true"></span>
               <span id="modelStatus">Connecting</span>
@@ -318,7 +319,22 @@
       </section>
     </div>
 
+    <div class="document-modal task-modal" id="taskModal" aria-hidden="true">
+      <div class="document-modal-backdrop" data-close-task></div>
+      <section class="document-modal-panel task-modal-panel" role="dialog" aria-modal="true" aria-labelledby="taskModalTitle">
+        <header class="document-modal-header">
+          <div>
+            <p class="eyebrow">Scheduled Task</p>
+            <h2 id="taskModalTitle">Task Detail</h2>
+          </div>
+          <button class="ghost-button" id="taskModalCloseButton" type="button">Close</button>
+        </header>
+        <div class="document-modal-content task-modal-content" id="taskModalContent"></div>
+      </section>
+    </div>
+
     <script src="/js/api.js"></script>
+    <script src="/js/auth-ui.js"></script>
     <script src="/js/citations.js"></script>
     <script src="/js/decision-workflow.js"></script>
     <script src="/app.js"></script>

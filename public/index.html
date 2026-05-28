@@ -8,10 +8,11 @@
     <link rel="stylesheet" href="/styles.css" />
   </head>
   <body class="search-body">
-    <a class="ghost-button dev-nav-button" href="/dev.html">Dev</a>
-    <button class="ghost-button search-add-button" id="addSubmissionToggle" type="button">
-      Add Submission
-    </button>
+    <nav class="search-top-nav" aria-label="Search page utilities">
+      <a class="ghost-button dev-nav-button" href="/dev.html">Dev</a>
+      <a class="ghost-button business-nav-button" href="/business.html">Business Demo</a>
+      <a class="ghost-button login-nav-button" href="/login.html">Login</a>
+    </nav>
     <main class="search-shell">
       <section class="search-panel" aria-label="Submission search">
         <header class="search-header">
@@ -21,6 +22,12 @@
             <h1>Search a Submission</h1>
           </div>
         </header>
+
+        <div class="search-primary-actions">
+          <button class="ghost-button search-add-button" id="addSubmissionToggle" type="button">
+            Add Submission
+          </button>
+        </div>
 
         <form class="search-form" id="searchForm">
           <label class="sr-only" for="submissionSearch">Search submissions</label>
@@ -215,6 +222,7 @@
     </main>
 
     <script src="/js/api.js"></script>
+    <script src="/js/auth-ui.js"></script>
     <script src="/search.js"></script>
   </body>
 </html>

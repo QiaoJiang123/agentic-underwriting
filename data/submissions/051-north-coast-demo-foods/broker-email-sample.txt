@@ -1,0 +1,16 @@
+From: Maya Chen <maya.chen@atlanticrisk.example>
+To: cyberunderwriting@examplecarrier.com
+Subject: New cyber submission - North Coast Demo Foods
+
+Broker Firm: Atlantic Risk Partners
+Producer: Maya Chen
+Producer Email: maya.chen@atlanticrisk.example
+Account Manager: Jordan Patel
+Account Manager Email: jordan.patel@atlanticrisk.example
+
+Please review the attached cyber application, ransomware supplement, loss runs,
+and security controls evidence for North Coast Demo Foods. The broker is seeking
+$2M cyber liability with a $25K retention and would like terms by 2026-05-29.
+
+The insured confirms MFA is enforced for remote access, email, and admins.
+The only outstanding item is SOC 2 evidence for the EDI vendor.

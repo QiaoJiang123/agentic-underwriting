@@ -47,6 +47,27 @@ def get_chat_history_detail(submission_id, history_id):
     return read_json(match)
 
 
+def delete_chat_history(submission_id, history_id):
+    if not is_valid_submission_id(submission_id) or not is_valid_history_id(history_id):
+        raise ValueError("Invalid chat history request.")
+
+    history_path = CHAT_HISTORY_DIR / submission_id
+    if not history_path.exists():
+        raise FileNotFoundError("Chat history not found.")
+
+    match = find_chat_history_file(history_path, history_id)
+    if not match:
+        raise FileNotFoundError("Chat history not found.")
+
+    deleted_record = read_json(match)
+    match.unlink()
+    return {
+        "deleted": True,
+        "id": deleted_record.get("id") or history_id,
+        "title": deleted_record.get("title") or match.name,
+    }
+
+
 def save_chat_history(submission_id, body):
     if not is_valid_submission_id(submission_id):
         raise ValueError("Invalid submission id.")
@@ -119,4 +140,3 @@ def is_valid_history_id(history_id):
 
 def utc_now():
     return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
-

@@ -1,6 +1,13 @@
 from datetime import datetime, timezone
 
 from backend.services.agent_trace_service import new_trace_id, save_agent_trace
+from backend.services.agent_tool_registry import (
+    get_action_tool,
+    get_agent_tool,
+    tool_contracts_for_plan,
+    tool_permissions_for_plan,
+)
+from backend.services.auth_service import require_permission
 from backend.services.data_retrieval_service import (
     CENTRAL_INFORMATION_AGENT,
     build_data_retrieval_context,
@@ -19,16 +26,33 @@ def run_information_agent(
     selected_files=None,
     file_selection_mode="auto",
     max_documents=6,
+    auth_context=None,
+    conversation_messages=None,
 ):
     trace = make_base_trace(submission_id, prompt)
+    if auth_context:
+        require_permission(auth_context, "submission:read", submission_id)
+        trace["auth_context"] = {
+            "user_id": auth_context.get("user_id"),
+            "role": auth_context.get("role"),
+            "team": auth_context.get("team"),
+        }
     selected_files = selected_files if isinstance(selected_files, list) else []
-    initial_plan = select_information_for_prompt(str(prompt or ""))
+    initial_plan = select_information_for_prompt(
+        str(prompt or ""),
+        conversation_messages=conversation_messages,
+    )
     add_trace_step(
         trace,
         "planner",
         "Multi-step planner",
         f"Selected {format_skill_list(initial_plan)} from the prompt and workspace state.",
-        data={"selected_skills": initial_plan, "file_selection_mode": file_selection_mode},
+        data={
+            "selected_skills": initial_plan,
+            "file_selection_mode": file_selection_mode,
+            "skill_permissions": tool_permissions_for_plan(initial_plan),
+            "tool_contracts": tool_contracts_for_plan(initial_plan, compact=True),
+        },
     )
 
     retrieval_result = {"plan": [], "context": "", "sources": [], "selection": {}}
@@ -43,6 +67,8 @@ def run_information_agent(
             file_selection_mode=file_selection_mode,
             max_documents=max_documents,
             plan_override=current_plan,
+            auth_context=auth_context,
+            conversation_messages=conversation_messages,
         )
         tool_steps = build_tool_execution_steps(retrieval_result, current_plan)
         trace.setdefault("tool_executions", []).extend(tool_steps)
@@ -111,12 +137,13 @@ def run_information_agent(
 def persist_action_trace(submission_id, prompt, action_result):
     trace = make_base_trace(submission_id, prompt)
     action_type = action_result.get("type", "action") if isinstance(action_result, dict) else "action"
+    action_tool = get_action_tool(action_type, compact=True)
     add_trace_step(
         trace,
         "planner",
         "Multi-step planner",
         f"Detected a direct workspace action: {format_skill(action_type)}.",
-        data={"action_type": action_type},
+        data={"action_type": action_type, "tool_contract": action_tool},
     )
     add_trace_step(
         trace,
@@ -216,6 +243,7 @@ def build_tool_execution_steps(retrieval_result, plan):
     selected_sources = selection.get("selected_sources", {})
     steps = []
     for skill in plan:
+        tool_contract = get_agent_tool(skill, compact=True) or {}
         source_count = selected_sources.get(skill, 0)
         detail = f"Read {source_count} source(s)." if source_count else "No source records were returned."
         if skill == "documents":
@@ -232,6 +260,13 @@ def build_tool_execution_steps(retrieval_result, plan):
         steps.append(
             {
                 "skill": skill,
+                "tool_label": tool_contract.get("label", format_skill(skill)),
+                "tool_type": tool_contract.get("tool_type", "read"),
+                "required_permission": tool_contract.get("required_permission", "api:access"),
+                "access_scope": tool_contract.get("access_scope", "submission"),
+                "backend": tool_contract.get("backend", "internal_python"),
+                "mcp_exposed": bool(tool_contract.get("mcp_exposed")),
+                "citation_policy": tool_contract.get("citation_policy"),
                 "status": "done" if source_count or skill in {"documents", "document_completeness"} else "empty",
                 "source_count": source_count,
                 "detail": detail,

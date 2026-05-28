@@ -1,4 +1,5 @@
 const searchInput = document.querySelector("#submissionSearch");
+const searchForm = document.querySelector("#searchForm");
 const searchResults = document.querySelector("#searchResults");
 const exampleResults = document.querySelector("#exampleResults");
 const queueDashboard = document.querySelector("#queueDashboard");
@@ -62,8 +63,15 @@ async function initSearch() {
     renderBrokerOptions();
     renderIntakeDocuments();
     const currentView = getCurrentSearchView();
+    if (
+      (currentView === ADD_SUBMISSION_VIEW || currentView === INTAKE_REVIEW_VIEW)
+      && !(await ensureSearchLogin("Opening add submission requires a local login session."))
+    ) {
+      updateSearchView("");
+    }
     applyAddSubmissionUrlState();
-    if (currentView === ADD_SUBMISSION_VIEW || currentView === INTAKE_REVIEW_VIEW) {
+    const activeView = getCurrentSearchView();
+    if (activeView === ADD_SUBMISSION_VIEW || activeView === INTAKE_REVIEW_VIEW) {
       focusAddSubmissionTarget();
     } else {
       searchInput.focus();
@@ -103,7 +111,7 @@ async function loadPortfolioQueue() {
   }
 }
 
-searchInput.addEventListener("input", () => {
+searchInput.addEventListener("input", async () => {
   const query = searchInput.value.trim().toLowerCase();
 
   if (!query) {
@@ -111,27 +119,47 @@ searchInput.addEventListener("input", () => {
     return;
   }
 
-  const filtered = submissions.filter((submission) => {
-    const haystack = [
-      submission.id,
-      submission.title,
-      submission.insured_name,
-      submission.industry,
-      submission.status,
-      ...(submission.keywords || [])
-    ]
-      .join(" ")
-      .toLowerCase();
+  if (!(await ensureSearchLogin("Searching submissions requires a local login session."))) {
+    searchInput.value = "";
+    renderMatches([]);
+    return;
+  }
 
-    return haystack.includes(query);
+  renderMatches(getMatchingSubmissions(query));
+});
+
+if (searchForm) {
+  searchForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const query = searchInput.value.trim().toLowerCase();
+    if (!query) {
+      renderMatches([]);
+      return;
+    }
+    if (!(await ensureSearchLogin("Searching submissions requires a local login session."))) {
+      return;
+    }
+    renderMatches(getMatchingSubmissions(query));
   });
+}
 
-  renderMatches(filtered);
+document.addEventListener("click", async (event) => {
+  const submissionLink = event.target.closest('a[href^="/chat.html?submission="]');
+  if (!submissionLink) {
+    return;
+  }
+  event.preventDefault();
+  if (await ensureSearchLogin("Opening a submission requires a local login session.")) {
+    window.location.href = submissionLink.href;
+  }
 });
 
 if (addSubmissionToggle && addSubmissionPanel) {
   addSubmissionToggle.addEventListener("click", async () => {
     const shouldOpen = addSubmissionPanel.hasAttribute("hidden");
+    if (shouldOpen && !(await ensureSearchLogin("Adding a submission requires a local login session."))) {
+      return;
+    }
     setAddSubmissionPanelOpen(shouldOpen, { updateUrl: true });
     if (shouldOpen) {
       addSubmissionToggle.disabled = true;
@@ -205,6 +233,28 @@ if (stagedDocumentList) {
       return;
     }
     removeStagedDocument(removeButton.dataset.removeStagedDocument);
+  });
+}
+
+function getMatchingSubmissions(query) {
+  const normalizedQuery = String(query || "").trim().toLowerCase();
+  if (!normalizedQuery) {
+    return [];
+  }
+
+  return submissions.filter((submission) => {
+    const haystack = [
+      submission.id,
+      submission.title,
+      submission.insured_name,
+      submission.industry,
+      submission.status,
+      ...(submission.keywords || [])
+    ]
+      .join(" ")
+      .toLowerCase();
+
+    return haystack.includes(normalizedQuery);
   });
 }
 
@@ -389,6 +439,17 @@ function updateSearchView(view) {
   }
 
   window.history.pushState({}, "", `${url.pathname}${url.search}${url.hash}`);
+}
+
+async function ensureSearchLogin(reason) {
+  if (!window.AUAuth) {
+    return true;
+  }
+  await window.AUAuth.ready.catch(() => null);
+  if (window.AUAuth.isLoggedIn()) {
+    return true;
+  }
+  return window.AUAuth.requireLogin({ reason });
 }
 
 function showIntakeReview() {

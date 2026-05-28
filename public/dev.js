@@ -86,6 +86,10 @@ function normalizeDevCatalog(catalog) {
       ...(catalog.agent_skills || {}),
       skills: Array.isArray(catalog.agent_skills?.skills) ? catalog.agent_skills.skills : []
     },
+    agent_tools: {
+      ...(catalog.agent_tools || {}),
+      tools: Array.isArray(catalog.agent_tools?.tools) ? catalog.agent_tools.tools : []
+    },
     agent_traces: Array.isArray(catalog.agent_traces) ? catalog.agent_traces : [],
     workflow: catalog.workflow || {},
     data_sources: Array.isArray(catalog.data_sources) ? catalog.data_sources : []
@@ -373,8 +377,9 @@ function renderWorkflow(query) {
 
   const workflow = devCatalog.workflow || {};
   const skills = devCatalog.agent_skills.skills.filter((skill) => matchesQuery(skill, query));
+  const tools = devCatalog.agent_tools.tools.filter((tool) => matchesQuery(tool, query));
   if (devSkillCount) {
-    devSkillCount.textContent = `${skills.length} of ${devCatalog.agent_skills.skills.length} skills`;
+    devSkillCount.textContent = `${tools.length} of ${devCatalog.agent_tools.tools.length} tools`;
   }
 
   devWorkflowVisual.innerHTML = `
@@ -411,6 +416,7 @@ function renderWorkflow(query) {
         </section>
       </aside>
     </section>
+    ${renderToolRegistry((workflow.orchestration || {}).tool_registry || devCatalog.agent_tools, tools)}
     <section class="dev-skill-grid" aria-label="Agent skills">
       ${skills.length ? skills.map(renderSkillCard).join("") : '<p class="empty-state">No matching agent skills.</p>'}
     </section>
@@ -518,6 +524,54 @@ function renderTraceContract(fields) {
   `;
 }
 
+function renderToolRegistry(registry, tools) {
+  const summary = registry.summary || {};
+  const contractFields = Array.isArray(registry.contract_fields) ? registry.contract_fields : [];
+  const visibleTools = Array.isArray(tools) ? tools : [];
+  return `
+    <section class="dev-tool-registry" aria-label="Agent tool registry">
+      <div class="dev-side-heading">
+        <div>
+          <span>Tool Registry</span>
+          <strong>${escapeHtml(registry.version || "local")} · ${escapeHtml(String(summary.tool_count || visibleTools.length || 0))} contracts</strong>
+        </div>
+        <small>${escapeHtml(String(summary.mcp_ready_count || 0))} MCP-ready · ${escapeHtml(String(summary.write_tool_count || 0))} write tools</small>
+      </div>
+      <p>${escapeHtml(registry.description || "Typed tool contracts used by the centralized agent.")}</p>
+      <div class="dev-chip-row">
+        ${contractFields.slice(0, 12).map((field) => `<span>${escapeHtml(field)}</span>`).join("")}
+      </div>
+      <div class="dev-tool-grid">
+        ${visibleTools.length ? visibleTools.map(renderToolContractCard).join("") : '<p class="empty-state">No matching registered tools.</p>'}
+      </div>
+    </section>
+  `;
+}
+
+function renderToolContractCard(tool) {
+  const tags = [
+    tool.tool_type || "read",
+    tool.required_permission || "api:access",
+    tool.access_scope || "global",
+    tool.mcp_exposed ? "MCP-ready" : "internal"
+  ];
+  return `
+    <article class="dev-tool-contract-card">
+      <header>
+        <div>
+          <span>${escapeHtml(tool.tool_type || "tool")}</span>
+          <strong>${escapeHtml(tool.label || tool.skill || "Tool")}</strong>
+        </div>
+        <code>${escapeHtml(tool.skill || "")}</code>
+      </header>
+      <p>${escapeHtml(tool.description || "")}</p>
+      <div class="dev-chip-row">${renderChips(tags)}</div>
+      <small>${escapeHtml(tool.citation_policy || "No citation policy provided.")}</small>
+      ${tool.mcp_tool_name ? `<small>MCP: ${escapeHtml(tool.mcp_tool_name)}</small>` : ""}
+    </article>
+  `;
+}
+
 function renderWorkflowNodes(nodes, edges) {
   return nodes
     .map((node, index) => {
@@ -591,10 +645,12 @@ function formatWorkflowNodeId(value) {
 
 function renderRetrievalGroup(group) {
   const skillIds = Array.isArray(group.skill_ids) ? group.skill_ids.filter(Boolean) : [];
+  const toolIds = Array.isArray(group.tool_ids) ? group.tool_ids.filter(Boolean) : [];
   return `
     <article>
       <strong>${escapeHtml(group.label)}</strong>
-      <small>${escapeHtml(skillIds.length ? skillIds.join(", ") : "No mapped skills")}</small>
+      <small>${escapeHtml(toolIds.length ? `Tools: ${toolIds.join(", ")}` : "No mapped tools")}</small>
+      <small>${escapeHtml(skillIds.length ? `Skills: ${skillIds.join(", ")}` : "No mapped skills")}</small>
     </article>
   `;
 }

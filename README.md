@@ -2,6 +2,17 @@
 
 A local agentic underwriting workspace for cyber submissions. The app combines a Python backend, a full-window underwriting chat UI, submission document handling, guide/note context, Auto document selection, and demo quote/bind analytics models.
 
+For a fuller platform explanation, revised requirements, and readiness assessment, see `docs/platform-requirements-readiness.md`. The in-app business deck is available at `http://localhost:3000/business.html`.
+
+The local demo login page is available at `http://localhost:3000/login.html`.
+
+Project-level coding guidance lives in `AGENTS.md`. Product UI guidance lives in `STYLE_GUIDE.md`.
+
+```text
+Username: admin
+Password: AU-Admin-2026!
+```
+
 ## Run Locally
 
 1. Add your OpenAI key and model to `.env`.
@@ -53,7 +64,12 @@ The browser sends chat requests to `/api/chat`. The backend calls the OpenAI Res
 - Local chat actions for broker/account/claims/evidence extraction and workspace navigation.
 - Backend retrieval skills that decide from the prompt whether to pull documents, analytics/models, claims, broker profile data, the broker database table, notes, guides, tasks, stages, or underwriting-system context before GPT answers.
 - Multi-step information-agent orchestration with planner, tool execution loop, confidence checks, retry expansion, and persisted agent traces.
+- Formal agent tool registry with typed input/output contracts, required permissions, read/write classification, citation policy, MCP readiness metadata, and trace metadata.
 - Dev Agent Traces view for reviewing persisted planner, tool, confidence, source, and model-response runs.
+- Local authorization policy with users, roles, permissions, submission scopes, API middleware enforcement, and an access audit log.
+- SQLite-backed local login with an HTTP-only session cookie. The seeded demo admin account is `admin` / `AU-Admin-2026!`.
+- Permission-aware agent skills. The information agent filters selected skills before retrieval if the current user lacks the required permission.
+- Business deck page at `/business.html` for the executive value story, architecture, local controls, readiness, and roadmap.
 - Source citations are returned with retrieved context and shown under chatbot answers.
 - Lightweight schema validation covers the main JSON-backed records written by the demo.
 - Commercial cyber SOP guidance stored in JSON and used by underwriting-system recommendations and chat retrieval context.
@@ -135,6 +151,10 @@ Current demo limitations:
 - `data/brokers/brokers.json` stores reusable broker firm, contact, relationship, and placement metrics.
 - `data/underwriting/<submission_id>.json` stores editable underwriting workbench components and claim-review copy.
 - `data/agent_skills/underwriting_assistant.json` stores local chat skill definitions for extraction and navigation.
+- `backend/services/agent_tool_registry.py` stores the executable tool contract registry used by the centralized agent. `/api/agent-tools` exposes the registry for Dev review.
+- `data/security/auth_policy.json` stores local demo users, roles, permissions, and submission scopes.
+- `data/security/auth.db` stores local login users and sessions. It is ignored by Git and seeded automatically with the demo admin account.
+- `data/audit/access_audit.jsonl` stores runtime API access audit rows. The folder is ignored by Git because audit rows are local runtime artifacts.
 - `data/agent_traces/<submission_id>/` stores persisted chat-request traces for planner decisions, retrieval tool execution, confidence checks, retry expansion, and model-response outcomes. The folder is ignored by Git because traces are runtime audit artifacts.
 - The portfolio queue, clearance review, rating/quote package, and external research checklist are computed from existing submissions, claims, broker data, evidence metadata, and model files. They are exposed through API routes rather than stored as separate JSON files.
 - `data/document_requirements/cyber_required_documents.json` stores the required cyber document checklist used to compare missing vs received submission documents.

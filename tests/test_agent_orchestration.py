@@ -35,6 +35,7 @@ class AgentOrchestrationTests(unittest.TestCase):
         self.assertIn("trace", phases)
         self.assertGreaterEqual(trace["attempt_count"], 1)
         self.assertIn("document_completeness", result["retrieval"]["plan"])
+        self.assertTrue(result["retrieval"]["selection"]["tool_contracts"])
         self.assertEqual(len(traces), 1)
         self.assertEqual(traces[0]["trace_id"], trace["trace_id"])
 
@@ -103,6 +104,13 @@ class AgentOrchestrationTests(unittest.TestCase):
         self.assertIn("analytics_db", retrieval["plan"])
         self.assertIn("broker", retrieval["plan"])
         self.assertIn("analytics_db", tool_skills)
+        analytics_tool = next(
+            step
+            for step in result["record"].get("tool_executions", [])
+            if step.get("skill") == "analytics_db"
+        )
+        self.assertEqual(analytics_tool["required_permission"], "analytics:read")
+        self.assertEqual(analytics_tool["tool_type"], "read")
         self.assertIn("Analytics SQL DB:", context)
         self.assertIn("join both tables on company_id", context)
         self.assertIn("Broker statistics from joined tables:", context)
@@ -111,6 +119,32 @@ class AgentOrchestrationTests(unittest.TestCase):
             ["underwriting_submission_analytics", "claim_analytics"],
         )
         self.assertEqual(retrieval["selection"]["analytics_db"]["claim_primary_key"], "CLM_CLMT_ID")
+
+    def test_information_agent_filters_skills_without_permission(self):
+        scoped_context = {
+            "user_id": "limited-test",
+            "role": "limited",
+            "team": "Cyber",
+            "permissions": ["submission:read"],
+            "submission_scope": ["001-acme-foods"],
+        }
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            with patch.object(agent_trace_service, "AGENT_TRACE_DIR", Path(temp_dir)):
+                result = run_information_agent(
+                    "001-acme-foods",
+                    "Show claim statistics by broker and associated underwriting decisions.",
+                    file_selection_mode="none",
+                    auth_context=scoped_context,
+                )
+
+        retrieval = result["retrieval"]
+        denied = retrieval["selection"]["denied_skills"]
+
+        self.assertIn("claims", retrieval["plan"])
+        self.assertNotIn("analytics_db", retrieval["plan"])
+        self.assertTrue(any(item["skill"] == "analytics_db" for item in denied))
+        self.assertTrue(any(item["skill"] == "broker" for item in denied))
 
 
 if __name__ == "__main__":

@@ -1,7 +1,7 @@
 import mimetypes
 from importlib.util import find_spec
 
-from fastapi import APIRouter, Body, File, HTTPException, UploadFile
+from fastapi import APIRouter, Body, File, HTTPException, Request, Response, UploadFile
 from fastapi.responses import FileResponse
 
 from backend.agents.underwriting_graph import run_underwriting_graph
@@ -13,11 +13,21 @@ from backend.services.agent_orchestration_service import (
 )
 from backend.services.agent_skill_service import get_agent_skills_record
 from backend.services.agent_trace_service import get_agent_trace, list_agent_traces, list_all_agent_traces
+from backend.services.agent_tool_registry import get_agent_tool_registry_record
 from backend.services.analytics_db_service import get_analytics_db_summary, refresh_analytics_db
+from backend.services.audit_service import read_recent_access_audit
+from backend.services.auth_service import (
+    SESSION_COOKIE_NAME,
+    authenticate_login,
+    get_auth_policy_summary,
+    logout_session,
+    require_permission,
+)
 from backend.services.broker_service import get_broker_database
 from backend.services.claim_service import get_claim_record
 from backend.services.chat_action_service import run_chat_action
 from backend.services.chat_history_service import (
+    delete_chat_history,
     get_chat_history_detail,
     list_chat_history,
     save_chat_history,
@@ -80,8 +90,44 @@ async def health():
 
 
 @router.post("/api/chat")
-async def chat(body: dict = Body(default_factory=dict)):
-    return build_chat_response(body)
+async def chat(request: Request, body: dict = Body(default_factory=dict)):
+    return build_chat_response(body, getattr(request.state, "auth_context", {}))
+
+
+@router.get("/api/auth/context")
+async def auth_context(request: Request):
+    context = getattr(request.state, "auth_context", {})
+    return {
+        "auth": context,
+        "policy": get_auth_policy_summary(),
+        "recent_access": read_recent_access_audit(20) if "audit:read" in context.get("permissions", []) else [],
+    }
+
+
+@router.post("/api/auth/login")
+async def login(response: Response, body: dict = Body(default_factory=dict)):
+    try:
+        result = authenticate_login(body.get("username"), body.get("password"))
+    except (PermissionError, ValueError) as error:
+        raise HTTPException(status_code=401, detail={"error": str(error)}) from error
+
+    response.set_cookie(
+        key=SESSION_COOKIE_NAME,
+        value=result["session_token"],
+        httponly=True,
+        samesite="lax",
+        secure=False,
+        max_age=12 * 60 * 60,
+        path="/",
+    )
+    return {"login": {"ok": True, "expires_at": result["expires_at"], "auth": result["auth"]}}
+
+
+@router.post("/api/auth/logout")
+async def logout(request: Request, response: Response):
+    result = logout_session(request.cookies.get(SESSION_COOKIE_NAME))
+    response.delete_cookie(SESSION_COOKIE_NAME, path="/")
+    return {"logout": result}
 
 
 @router.get("/api/submissions")
@@ -198,6 +244,11 @@ async def brokers():
 @router.get("/api/agent-skills")
 async def agent_skills():
     return get_agent_skills_record()
+
+
+@router.get("/api/agent-tools")
+async def agent_tools():
+    return get_agent_tool_registry_record()
 
 
 @router.get("/api/sop")
@@ -321,6 +372,11 @@ async def chat_history_detail(submission_id: str, history_id: str):
     return {"chat_history": get_chat_history_detail(submission_id, history_id)}
 
 
+@router.delete("/api/submissions/{submission_id}/chat-history/{history_id}")
+async def delete_chat(submission_id: str, history_id: str):
+    return {"chat_history": delete_chat_history(submission_id, history_id)}
+
+
 @router.get("/api/submissions/{submission_id}/agent-traces")
 async def agent_traces(submission_id: str):
     return {"agent_traces": list_agent_traces(submission_id)}
@@ -428,7 +484,7 @@ async def build_application_form_response(file):
     return {"application_form": result}
 
 
-def build_chat_response(body):
+def build_chat_response(body, auth_context=None):
     messages = body.get("messages") if isinstance(body.get("messages"), list) else []
     submission_id = str(body.get("submission_id", "")).strip()
     user_prompt = str(body.get("user_prompt", "")).strip()
@@ -452,9 +508,20 @@ def build_chat_response(body):
     if not messages:
         raise HTTPException(status_code=400, detail={"error": "No messages were provided."})
 
+    if submission_id and auth_context:
+        try:
+            require_permission(auth_context, "submission:read", submission_id)
+        except PermissionError as error:
+            raise HTTPException(status_code=403, detail={"error": str(error)}) from error
+
     if submission_id and user_prompt:
         action_result = run_chat_action(submission_id, user_prompt)
         if action_result:
+            if chat_action_requires_write(action_result):
+                try:
+                    require_permission(auth_context, "submission:write", submission_id)
+                except PermissionError as error:
+                    raise HTTPException(status_code=403, detail={"error": str(error)}) from error
             agent_trace = persist_action_trace(submission_id, user_prompt, action_result)
             return {
                 "reply": action_result["reply"],
@@ -486,6 +553,8 @@ def build_chat_response(body):
             selected_files=selected_files,
             file_selection_mode=file_selection_mode,
             max_documents=6,
+            auth_context=auth_context,
+            conversation_messages=model_input,
         )
         if submission_id and user_prompt
         else {"retrieval": {"plan": [], "context": "", "sources": [], "selection": {}}, "trace": None, "record": None}
@@ -557,3 +626,17 @@ def append_context_to_latest_user_message(messages, context):
                 ]
             )
             return
+
+
+def chat_action_requires_write(action_result):
+    action_type = str((action_result or {}).get("type") or "").lower()
+    return action_type in {
+        "note",
+        "guide",
+        "task",
+        "update_submission",
+        "stage",
+        "stages",
+        "workflow",
+        "decision",
+    }

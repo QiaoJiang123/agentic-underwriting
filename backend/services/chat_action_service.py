@@ -51,6 +51,7 @@ def run_chat_action(submission_id, prompt):
             "type": "note",
             "reply": "Added that as an underwriter note.",
             "record": record,
+            "ui_action": {"panel": "note", "expand": False},
         }
 
     if action_type == "guide":
@@ -59,10 +60,11 @@ def run_chat_action(submission_id, prompt):
             "type": "guide",
             "reply": "Added that as a guide instruction.",
             "record": record,
+            "ui_action": {"panel": "guide", "expand": False},
         }
 
     if action_type == "task":
-        due_date = parse_due_date(action["text"])
+        due_date = action.get("due_date") or parse_due_date(action["text"])
         if not due_date:
             return {
                 "type": "task",
@@ -70,7 +72,7 @@ def run_chat_action(submission_id, prompt):
                 "record": None,
             }
 
-        title = clean_task_title(action["text"], due_date)
+        title = action.get("title") or clean_task_title(action["text"], due_date)
         if not title:
             return {
                 "type": "task",
@@ -78,11 +80,13 @@ def run_chat_action(submission_id, prompt):
                 "record": None,
             }
 
-        record = add_task(submission_id, title, due_date)
+        record, created_task = add_task(submission_id, title, due_date)
         return {
             "type": "task",
             "reply": f"Added task due {due_date}: {title}",
             "record": record,
+            "created_task": created_task,
+            "ui_action": {"panel": "tasks", "expand": False},
         }
 
     if action_type == "navigate":
@@ -149,12 +153,14 @@ def parse_chat_action(prompt):
     lowered = normalized.lower()
 
     direct_match = re.match(
-        r"^(?:please\s+)?add\s+(note|guide|task)s?\b\s*[:,-]?\s*(.+)$",
+        r"^(?:please\s+)?add\s+(?:(?:an?|one\s+more|new|scheduled)\s+)?(note|guide|task)s?\b\s*[:,-]?\s*(.+)$",
         text,
         re.IGNORECASE | re.DOTALL,
     )
     if direct_match:
         action_type = direct_match.group(1).lower()
+        if action_type == "task":
+            return build_task_action(text, direct_match.group(2), direct_match.start(2))
         value = clean_action_value(direct_match.group(2))
         return {"type": action_type, "text": value} if value else None
 
@@ -171,11 +177,30 @@ def parse_chat_action(prompt):
         return None
 
     action_type = intent_match.group(1).lower()
+    if action_type == "task":
+        return build_task_action(text, text[intent_match.end():], intent_match.end())
+
     value = extract_action_text(text, action_type, intent_match.end())
     if not value:
         return None
 
     return {"type": action_type, "text": value}
+
+
+def build_task_action(full_text, action_text, fallback_start):
+    raw_text = clean_action_value(action_text)
+    due_date = parse_due_date(raw_text) or parse_due_date(full_text)
+    title = extract_task_title(full_text, raw_text, due_date, fallback_start)
+
+    if not raw_text and not title:
+        return None
+
+    action = {"type": "task", "text": raw_text or title}
+    if due_date:
+        action["due_date"] = due_date
+    if title:
+        action["title"] = title
+    return action
 
 
 def parse_skill_action(text, lowered):
@@ -330,17 +355,21 @@ def add_task(submission_id, title, due_date):
     record = get_task_record(submission_id)
     tasks = record.get("tasks", [])
     now = utc_now()
-    tasks.append(
-        {
-            "id": f"task-{int(time.time() * 1000)}",
-            "title": str(title).strip(),
-            "due_date": due_date,
-            "status": "open",
-            "created_at": now,
-            "updated_at": now,
-        }
+    task = {
+        "id": f"task-{int(time.time() * 1000)}",
+        "title": str(title).strip(),
+        "due_date": due_date,
+        "status": "open",
+        "created_at": now,
+        "updated_at": now,
+    }
+    tasks.append(task)
+    saved_record = save_task_record(submission_id, tasks)
+    saved_task = next(
+        (item for item in saved_record.get("tasks", []) if item.get("id") == task["id"]),
+        task,
     )
-    return save_task_record(submission_id, tasks)
+    return saved_record, saved_task
 
 
 def make_text_item(prefix, text):
@@ -383,20 +412,82 @@ def parse_due_date(text):
     return None
 
 
+def extract_task_title(full_text, action_text, due_date, fallback_start):
+    candidates = []
+    combined_text = str(full_text or "")
+    raw_action_text = str(action_text or "")
+
+    quoted = re.findall(r'"([^"]+)"|\'([^\']+)\'', combined_text, re.DOTALL)
+    candidates.extend(first or second for first, second in quoted if (first or second).strip())
+
+    label_patterns = [
+        r"\b(?:the\s+)?task(?:\s+(?:content|text|description|title|name))?\s*(?:should\s+be|is|=|:|called|named)\s*(.+)$",
+        r"\b(?:content|text|description|title|name)\s*(?:should\s+be|is|=|:)\s*(.+)$",
+        r"\b(?:task|todo|to\s+do)\s+(?:to|for)\s+(.+?)\s+(?:due|on|by|for)\s+",
+    ]
+    for source in (combined_text, raw_action_text):
+        for pattern in label_patterns:
+            match = re.search(pattern, source, re.IGNORECASE | re.DOTALL)
+            if match:
+                candidates.append(match.group(1))
+
+    if raw_action_text:
+        candidates.append(raw_action_text)
+
+    fallback = combined_text[fallback_start:] if isinstance(fallback_start, int) else ""
+    if fallback:
+        candidates.append(fallback)
+
+    for candidate in candidates:
+        title = clean_task_title(candidate, due_date)
+        if is_meaningful_task_title(title):
+            return title
+
+    return ""
+
+
+def is_meaningful_task_title(title):
+    normalized = re.sub(r"[^a-z0-9 ]+", " ", str(title or "").lower())
+    words = [word for word in normalized.split() if word]
+    filler = {"for", "on", "by", "due", "task", "the", "a", "an", "to", "please"}
+    return bool(words) and any(word not in filler for word in words)
+
+
 def clean_task_title(text, due_date):
     title = str(text or "")
-    title = re.sub(r"\b(?:due|on|by)\s+20\d{2}-\d{2}-\d{2}\b", "", title, flags=re.IGNORECASE)
-    title = re.sub(r"\b(?:due|on|by)\s+today\b", "", title, flags=re.IGNORECASE)
-    title = re.sub(r"\b(?:due|on|by)\s+tomorrow\b", "", title, flags=re.IGNORECASE)
-    title = re.sub(r"\b(?:due|on|by)?\s*in\s+\d{1,3}\s+days?\b", "", title, flags=re.IGNORECASE)
+    title = re.split(r"\s+(?:and|then)\s+(?:add|create|save|record)\s+(?:a\s+|an\s+)?(?:note|guide|task)\b", title, maxsplit=1, flags=re.IGNORECASE)[0]
     title = re.sub(
-        r"\b(?:due|on|by)?\s*(?:jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:t|tember)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\s+\d{1,2}(?:,)?\s+20\d{2}\b",
+        r"\b(?:due|on|by|for)\s+20\d{2}-\d{2}-\d{2}\b",
         "",
         title,
         flags=re.IGNORECASE,
     )
-    title = title.replace(due_date, "")
-    return re.sub(r"\s+", " ", title).strip(" -:,.")
+    title = re.sub(r"\b(?:due|on|by|for)\s+today\b", "", title, flags=re.IGNORECASE)
+    title = re.sub(r"\b(?:due|on|by|for)\s+tomorrow\b", "", title, flags=re.IGNORECASE)
+    title = re.sub(r"\b(?:due|on|by|for)?\s*in\s+\d{1,3}\s+days?\b", "", title, flags=re.IGNORECASE)
+    title = re.sub(
+        r"\b(?:due|on|by|for)?\s*(?:jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:t|tember)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\s+\d{1,2}(?:,)?\s+20\d{2}\b",
+        "",
+        title,
+        flags=re.IGNORECASE,
+    )
+    if due_date:
+        title = title.replace(due_date, "")
+    title = re.sub(
+        r"^(?:please\s+)?(?:add|create|save|record)\s+(?:(?:an?|one\s+more|new|scheduled)\s+)?tasks?\b\s*[:,-]?\s*",
+        "",
+        title,
+        flags=re.IGNORECASE,
+    )
+    title = re.sub(
+        r"^(?:the\s+)?task(?:\s+(?:content|text|description|title|name))?\s*(?:should\s+be|is|=|:|called|named)\s*",
+        "",
+        title,
+        flags=re.IGNORECASE,
+    )
+    title = clean_action_value(title)
+    title = re.sub(r"\s+", " ", title).strip(" -:,.")
+    return title[:1].upper() + title[1:] if title else ""
 
 
 def format_broker_profile(system):

@@ -1,0 +1,24 @@
+{
+  "id": "002-northstar-contracting-chat-1779814302944",
+  "title": "Can you tell me more about the Quote probabil...",
+  "created_at": "2026-05-26T16:51:42.944347Z",
+  "updated_at": "2026-05-26T16:52:54.686693Z",
+  "messages": [
+    {
+      "role": "user",
+      "content": "Can you tell me more about the Quote probability model?"
+    },
+    {
+      "role": "assistant",
+      "content": "Here\u2019s what the **Quote Probability model** is doing in this submission, and what the current outputs imply for underwriting review.\n\n## 1) What \u201cQuote probability\u201d means here\n- It\u2019s a **risk-scoring output** for whether the submission is likely to result in a higher-loss outcome category used by the model (i.e., it\u2019s estimating likelihoods, not coverage or pricing).\n- **Quote probability (overall):**\n  - **Average probability:** 58%\n  - **Current probability:** **63%** (above the model\u2019s average for comparable items)\n\n## 2) Main drivers of the current Quote probability\nThe model decomposes the score into logit contributions (directional effects):\n\n### Drivers increasing Quote probability\n- **MFA maturity (Microsoft 365 enabled) for subcontractor SaaS accounts not enforced**\n  - Contribution: **+0.176 logit**\n  - Interpretation: MFA is *partly* in place, but the gap around **project management SaaS subcontractor accounts** is treated as a meaningful positive contributor to the quote-risk outcome.\n\n- **Records exposure**\n  - **24,000 records**\n  - Contribution: **+0.136 logit**\n  - Interpretation: more records generally increases exposure.\n\n- **Requested limit fit**\n  - **Requested limit max = $2,000,000**\n  - Contribution: **+0.115 logit**\n  - Interpretation: the limit requested is within a range the model views as more \u201cfit,\u201d which increases the probability measure it\u2019s computing.\n\n### Drivers decreasing Quote probability\n- **Revenue scale**\n  - **$18,400,000**\n  - Contribution: **-0.170 logit**\n  - Interpretation: for this model, this revenue level is associated with a lower probability than average.\n\n- **Prior claims signal: elevated**\n  - Contribution: **-0.099 logit**\n  - Interpretation: in this model run, \u201celevated prior claims signal\u201d is actually pulling the quote probability down (this can happen depending on how the signal is encoded/calibrated\u2014so it\u2019s a point to sanity-check).\n\n## 3) Relationship to other model components\nEven though you asked specifically about Quote probability, the other modeled probabilities often help explain why Quote is higher/lower:\n\n- **Bind probability:** Avg 47% \u2192 Current **56%** (also above average)\n- **Cyber attack probability:** Avg 42% \u2192 Current **33%** (lower than average)\n- **Data breach probability:** Avg 28% \u2192 Current **17%** (much lower than average)\n\nSo: **Quote probability is relatively high (63%) even while some specific event probabilities (e.g., breach) are lower**\u2014which suggests the \u201cQuote\u201d score is influenced by underwriting/eligibility/rating structure factors beyond the event-level probabilities, or that the calibration treats the \u201celevated prior claims signal\u201d and other features non-intuitively.\n\n## 4) Underwriting-relevant flags to verify (high impact)\nBecause the **top Quote driver includes an MFA enforcement gap for subcontractor SaaS accounts**, this is a concrete item to confirm with evidence.\n\nAlso, since the model output shows **\u201cprior claims signal: elevated\u201d decreasing** both Quote and Bind probability, that\u2019s a **potential encoding/calibration nuance**\u2014worth human validation of what \u201cprior claims signal\u201d specifically represents for this submission.\n\n## 5) Missing evidence / questions to ask next\nTo support/adjust underwriting actions, I\u2019d request:\n1. **MFA enforcement scope**\n   - Is MFA enforced for the **project management SaaS subcontractor accounts** (not just Microsoft 365)?\n   - Provide policy screenshots/config evidence.\n2. **Subcontractor access control**\n   - How are subcontractor users provisioned/deprovisioned?\n   - Any SSO integration and session controls?\n3. **What \u201celevated prior claims signal\u201d means**\n   - Does it reflect prior claims at the entity level, RO/region, or external loss indicators?\n   - Provide a brief loss history summary or signal definition for this submission.\n\nIf you want, I can also translate the logit drivers into a **1-page underwriter checklist** tailored to invoice/funds-transfer fraud controls and subcontractor portal/call-back verification\u2014since those are key focus areas for this workflow."
+    },
+    {
+      "role": "user",
+      "content": "Add a task for May 28, 2026. The task is review the loss run."
+    },
+    {
+      "role": "assistant",
+      "content": "Added task due 2026-05-28: Review the loss run"
+    }
+  ]
+}

@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-05-19T23:14:54.482404Z",
+  "generated_at": "2026-05-26T17:22:56.436626Z",
   "description": "Search index for cyber underwriting dummy submissions.",
   "submissions": [
     {
@@ -1277,6 +1277,27 @@
       ],
       "broker_id": "brk-crestline-specialty",
       "broker_name": "Crestline Specialty Partners"
+    },
+    {
+      "id": "051-north-coast-demo-foods",
+      "title": "North Coast Demo Foods",
+      "insured_name": "North Coast Demo Foods",
+      "industry": "Food distribution and cold storage",
+      "industry_bucket": "Food Distribution / Logistics",
+      "status": "New",
+      "received_at": "2026-05-26T17:22:56.430438Z",
+      "folder": "data/submissions/051-north-coast-demo-foods",
+      "keywords": [
+        "North Coast Demo Foods",
+        "Food distribution and cold storage",
+        "Food Distribution / Logistics",
+        "Warehouse management system, EDI ordering, cloud email, and managed firewall.",
+        "Atlantic Risk Partners",
+        "Maya Chen",
+        "New"
+      ],
+      "broker_id": "brk-atlantic-risk-partners",
+      "broker_name": "Atlantic Risk Partners"
     }
   ]
 }

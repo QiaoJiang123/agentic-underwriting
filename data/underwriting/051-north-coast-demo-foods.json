@@ -1,0 +1,7 @@
+{
+  "submission_id": "051-north-coast-demo-foods",
+  "updated_at": "2026-05-26T17:22:56.430438Z",
+  "source": "add_submission_intake",
+  "maintenance_note": "Starter underwriting record. The backend calculates appetite, evidence, SOP suggestions, broker, and claim context from current data.",
+  "components": []
+}

@@ -1,0 +1,67 @@
+{
+  "submission_id": "051-north-coast-demo-foods",
+  "updated_at": "2026-05-26T17:22:56.430438Z",
+  "submitted_at": null,
+  "stages": [
+    {
+      "key": "intake",
+      "label": "Intake",
+      "checked": false,
+      "locked": false
+    },
+    {
+      "key": "document_collection",
+      "label": "Document Collection",
+      "checked": false,
+      "locked": false
+    },
+    {
+      "key": "data_extraction",
+      "label": "Data Extraction",
+      "checked": false,
+      "locked": false
+    },
+    {
+      "key": "initial_review",
+      "label": "Initial Review",
+      "checked": false,
+      "locked": false
+    },
+    {
+      "key": "risk_assessment",
+      "label": "Risk Assessment",
+      "checked": false,
+      "locked": false
+    },
+    {
+      "key": "clarification",
+      "label": "Clarification",
+      "checked": false,
+      "locked": false
+    },
+    {
+      "key": "referral_approval",
+      "label": "Referral / Approval",
+      "checked": false,
+      "locked": false
+    },
+    {
+      "key": "terms_conditions",
+      "label": "Terms & Conditions",
+      "checked": false,
+      "locked": false
+    },
+    {
+      "key": "quote",
+      "label": "Quote",
+      "checked": false,
+      "locked": false
+    },
+    {
+      "key": "bind_close",
+      "label": "Bind / Close",
+      "checked": false,
+      "locked": false
+    }
+  ]
+}

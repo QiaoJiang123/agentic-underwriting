@@ -1,0 +1,106 @@
+{
+  "status_id": "051-north-coast-demo-foods",
+  "updated_at": "2026-05-26T17:22:56.430438Z",
+  "intake_mode": "submission_form",
+  "overall_status": "draft",
+  "documents": [
+    {
+      "key": "cyber_application",
+      "label": "Cyber application",
+      "status": "needed",
+      "note": ""
+    },
+    {
+      "key": "ransomware_supplemental_application",
+      "label": "Ransomware supplemental application",
+      "status": "received",
+      "note": "broker-email-sample.txt"
+    },
+    {
+      "key": "prior_cyber_insurance_policy",
+      "label": "Prior cyber insurance policy",
+      "status": "received",
+      "note": "loss-runs-sample.txt"
+    },
+    {
+      "key": "loss_runs_claims_history",
+      "label": "Loss runs / claims history",
+      "status": "needed",
+      "note": ""
+    },
+    {
+      "key": "financial_information_revenue_breakdown",
+      "label": "Financial information or revenue breakdown",
+      "status": "received",
+      "note": "cyber-application-sample.txt"
+    },
+    {
+      "key": "it_security_controls_questionnaire",
+      "label": "IT/security controls questionnaire",
+      "status": "needed",
+      "note": ""
+    },
+    {
+      "key": "mfa_edr_backup_documentation",
+      "label": "MFA/EDR/backup documentation",
+      "status": "needed",
+      "note": ""
+    },
+    {
+      "key": "incident_response_plan",
+      "label": "Incident response plan",
+      "status": "needed",
+      "note": ""
+    },
+    {
+      "key": "vendor_security_assessment",
+      "label": "Vendor/security assessment",
+      "status": "received",
+      "note": "vendor-security-sample.pdf"
+    },
+    {
+      "key": "compliance_documents",
+      "label": "Compliance documents",
+      "status": "needed",
+      "note": ""
+    }
+  ],
+  "draft": {
+    "submission_id": "",
+    "title": "North Coast Demo Foods",
+    "insured_name": "North Coast Demo Foods",
+    "industry": "Food distribution and cold storage",
+    "industry_bucket": "Food Distribution / Logistics",
+    "location": "Portland, Oregon",
+    "annual_revenue": 42000000,
+    "employee_count": 185,
+    "records_count": 68000,
+    "technology_profile": "Warehouse management system, EDI ordering, cloud email, and managed firewall.",
+    "requested_effective_date": "2026-06-01",
+    "retention_requested": "$25,000",
+    "coverage_limit": "$2,000,000",
+    "lines_requested": [
+      "Cyber liability"
+    ],
+    "broker_id": "brk-atlantic-risk-partners",
+    "broker_name": "Atlantic Risk Partners",
+    "producer_name": "",
+    "producer_email": "",
+    "account_manager_name": "",
+    "account_manager_email": "",
+    "mfa": "Required for VPN, remote desktop, email, and privileged administrator accounts.",
+    "edr": "CrowdStrike deployed on workstations and servers.",
+    "backup": "Immutable daily backups with quarterly restore testing.",
+    "patching": "",
+    "security_training": "",
+    "risk_flags": [
+      "Ransomware exposure",
+      "Prior claim activity",
+      "Operational dependency",
+      "Sensitive records exposure"
+    ],
+    "open_questions": [],
+    "status": "New"
+  },
+  "submission_id": "051-north-coast-demo-foods"
+}

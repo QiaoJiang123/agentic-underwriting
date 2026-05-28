@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Login</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body class="search-body login-body">
+    <a class="ghost-button dev-nav-button" href="/">Back</a>
+    <main class="login-shell">
+      <section class="login-panel" aria-label="Login">
+        <header class="search-header">
+          <div class="brand-mark">AU</div>
+          <div>
+            <p class="eyebrow">Agentic Underwriting</p>
+            <h1>Login</h1>
+          </div>
+        </header>
+
+        <form class="login-form" id="loginForm">
+          <label>
+            <span>Username</span>
+            <input id="loginUsername" type="text" autocomplete="username" value="admin" required />
+          </label>
+          <label>
+            <span>Password</span>
+            <input id="loginPassword" type="password" autocomplete="current-password" value="AU-Admin-2026!" required />
+          </label>
+          <button class="send-button" type="submit">Log In</button>
+          <p class="login-status" id="loginStatus">Demo admin: admin / AU-Admin-2026!</p>
+          <div class="login-demo-credential">
+            <span>Demo Credential</span>
+            <strong>admin / AU-Admin-2026!</strong>
+          </div>
+        </form>
+
+        <section class="login-session-card" id="loginSessionCard" aria-live="polite">
+          <p class="empty-state">Checking current session...</p>
+        </section>
+      </section>
+    </main>
+
+    <script src="/js/api.js"></script>
+    <script src="/login.js"></script>
+  </body>
+</html>

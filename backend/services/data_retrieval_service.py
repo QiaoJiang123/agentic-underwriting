@@ -2,6 +2,12 @@ import math
 import re
 
 from backend.services.analytics_db_service import get_analytics_db_context
+from backend.services.agent_tool_registry import (
+    scoped_submission_for_skill,
+    tool_contracts_for_plan,
+    tool_permissions_for_plan,
+)
+from backend.services.auth_service import require_permission
 from backend.services.broker_service import get_submission_broker, list_brokers
 from backend.services.claim_service import get_claim_record
 from backend.services.decision_workflow_service import get_decision_workflow_record
@@ -52,16 +58,26 @@ def build_data_retrieval_context(
     file_selection_mode="auto",
     max_documents=6,
     plan_override=None,
+    auth_context=None,
+    conversation_messages=None,
 ):
     if not submission_id or not prompt:
         return {"plan": [], "context": "", "sources": [], "selection": make_selection_record([], file_selection_mode)}
 
     selected_files = selected_files if isinstance(selected_files, list) else []
     prompt_text = normalize_text(prompt)
-    plan = dedupe(plan_override) if isinstance(plan_override, list) else select_information_for_prompt(prompt_text)
+    plan = (
+        dedupe(plan_override)
+        if isinstance(plan_override, list)
+        else select_information_for_prompt(prompt_text, conversation_messages=conversation_messages)
+    )
+    plan, denied_skills, skill_permissions = authorize_skill_plan(plan, auth_context, submission_id)
     sources = []
     sections = []
     selection_record = make_selection_record(plan, file_selection_mode)
+    selection_record["skill_permissions"] = skill_permissions
+    selection_record["denied_skills"] = denied_skills
+    selection_record["tool_contracts"] = tool_contracts_for_plan(plan, compact=True)
 
     submission = get_submission_detail(submission_id)["submission"]
 
@@ -92,6 +108,7 @@ def build_data_retrieval_context(
             selected_files=selected_files,
             file_selection_mode=file_selection_mode,
             max_documents=max_documents,
+            conversation_messages=conversation_messages,
         )
         selection_record["document_selection"] = document_selection
         if document_context:
@@ -208,6 +225,7 @@ def build_data_retrieval_context(
             [
                 "Retrieved underwriting data context. Use this as source data for the current answer. Do not mention a source unless it is relevant to the answer.",
                 f"Retrieval skills used: {', '.join(plan)}.",
+                render_denied_skill_context(denied_skills),
                 *sections,
             ]
         )
@@ -224,20 +242,141 @@ def build_data_retrieval_context(
     }
 
 
-def select_information_for_prompt(prompt_text):
-    return plan_retrieval(prompt_text)
+def select_information_for_prompt(prompt_text, conversation_messages=None):
+    planning_prompt = build_planning_prompt(normalize_text(prompt_text), conversation_messages)
+    return plan_retrieval(normalize_text(planning_prompt))
+
+
+def build_planning_prompt(prompt_text, conversation_messages=None):
+    if not should_use_history_for_planning(prompt_text):
+        return prompt_text
+
+    history_context = format_recent_chat_context(conversation_messages, prompt_text, max_messages=6)
+    if not history_context:
+        return prompt_text
+
+    return "\n".join(
+        [
+            "Current underwriter prompt:",
+            str(prompt_text or "").strip(),
+            "",
+            "Recent chat context for resolving references:",
+            history_context,
+        ]
+    )
+
+
+def should_use_history_for_planning(prompt_text):
+    normalized = normalize_text(prompt_text)
+    if not normalized:
+        return False
+
+    reference_terms = [
+        "that",
+        "those",
+        "these",
+        "them",
+        "same",
+        "above",
+        "previous",
+        "earlier",
+        "continue",
+        "what about",
+        "how about",
+        "tell me more",
+        "show more",
+        "explain more",
+    ]
+    words = normalized.split()
+    if has_any(normalized, reference_terms):
+        return True
+
+    current_plan = plan_retrieval(normalized)
+    specific_skills = [skill for skill in current_plan if skill != "account_summary"]
+    return not specific_skills and len(words) <= 8
+
+
+def build_document_selection_prompt(prompt, conversation_messages=None):
+    history_context = format_recent_chat_context(conversation_messages, prompt, max_messages=8)
+    if not history_context:
+        return str(prompt or "")
+
+    return "\n".join(
+        [
+            "Current underwriter prompt:",
+            str(prompt or "").strip(),
+            "",
+            "Recent chat context for document selection only:",
+            history_context,
+        ]
+    )
+
+
+def format_recent_chat_context(conversation_messages, current_prompt, max_messages=8, max_chars_per_message=420):
+    if not isinstance(conversation_messages, list):
+        return ""
+
+    current_normalized = normalize_text(current_prompt)
+    lines = []
+    for message in conversation_messages:
+        if not isinstance(message, dict):
+            continue
+        role = "assistant" if message.get("role") == "assistant" else "user"
+        content = re.sub(r"\s+", " ", str(message.get("content") or "")).strip()
+        if not content:
+            continue
+        if role == "user" and normalize_text(content) == current_normalized:
+            continue
+        if len(content) > max_chars_per_message:
+            content = f"{content[:max_chars_per_message].rstrip()}..."
+        lines.append(f"- {role}: {content}")
+
+    return "\n".join(lines[-max_messages:])
 
 
 def make_selection_record(plan, file_selection_mode):
     return {
         "agent": CENTRAL_INFORMATION_AGENT,
+        "tool_registry_version": "0.1.0",
         "mode": "auto" if file_selection_mode == "auto" else "fixed",
         "file_selection_mode": file_selection_mode,
         "selected_skills": plan,
+        "tool_contracts": tool_contracts_for_plan(plan, compact=True),
         "document_selection": None,
         "document_completeness": None,
         "sop_selection": None,
+        "skill_permissions": {},
+        "denied_skills": [],
     }
+
+
+def authorize_skill_plan(plan, auth_context, submission_id):
+    permission_map = tool_permissions_for_plan(plan)
+    if not auth_context:
+        return plan, [], permission_map
+
+    authorized = []
+    denied = []
+    for skill in plan:
+        permission = permission_map.get(skill, "api:access")
+        scoped_submission = scoped_submission_for_skill(skill, submission_id)
+        try:
+            require_permission(auth_context, permission, scoped_submission)
+            authorized.append(skill)
+        except PermissionError as error:
+            denied.append({"skill": skill, "required_permission": permission, "reason": str(error)})
+    return authorized, denied, permission_map
+
+
+def render_denied_skill_context(denied_skills):
+    if not denied_skills:
+        return "Authorization filter: all selected skills were permitted for this user."
+    lines = ["Authorization filter: some selected skills were not available to this user."]
+    for item in denied_skills:
+        lines.append(
+            f"- {item.get('skill')}: requires {item.get('required_permission')} | {item.get('reason')}"
+        )
+    return "\n".join(lines)
 
 
 def summarize_selected_sources(sources):
@@ -615,7 +754,14 @@ def render_submission_status_context(submission, system, claims, tasks, stages):
     )
 
 
-def retrieve_document_context(submission_id, prompt, selected_files, file_selection_mode, max_documents):
+def retrieve_document_context(
+    submission_id,
+    prompt,
+    selected_files,
+    file_selection_mode,
+    max_documents,
+    conversation_messages=None,
+):
     if file_selection_mode == "none":
         selected = []
         selection_source = "no_files_selected"
@@ -635,15 +781,22 @@ def retrieve_document_context(submission_id, prompt, selected_files, file_select
             "reason": "User fixed document selection; centralized agent did not override it.",
         }
     else:
+        selection_prompt = build_document_selection_prompt(prompt, conversation_messages)
+        history_context_used = bool(format_recent_chat_context(conversation_messages, prompt, max_messages=8))
         selection = select_documents_for_prompt(
             submission_id=submission_id,
-            prompt=prompt,
+            prompt=selection_prompt,
             max_documents=max_documents,
         )
         selected = selection.get("selected_files", [])
         selection_source = selection.get("source", "metadata_rules")
         selection["mode"] = "auto"
-        selection["reason"] = "Centralized information agent selected documents from submission metadata."
+        selection["conversation_context_used"] = history_context_used
+        selection["reason"] = (
+            "Centralized information agent selected documents from submission metadata using the current prompt and recent chat history."
+            if history_context_used
+            else "Centralized information agent selected documents from submission metadata."
+        )
 
     if not selected:
         return "", [], selection

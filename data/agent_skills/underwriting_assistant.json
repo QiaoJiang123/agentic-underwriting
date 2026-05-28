@@ -1,6 +1,40 @@
 {
   "version": "0.1-demo",
   "description": "Local chat skills for extraction and navigation inside the underwriting workspace.",
+  "permission_model": {
+    "source": "data/security/auth_policy.json",
+    "enforcement": "FastAPI middleware authorizes API calls; the information agent filters selected skills before retrieval.",
+    "skill_permission_groups": {
+      "submission:read": [
+        "extract_account_snapshot",
+        "extract_claim_history",
+        "extract_missing_evidence",
+        "retrieve_document_completeness",
+        "retrieve_relevant_documents",
+        "retrieve_submission_current_status",
+        "retrieve_workflow_stage_status",
+        "retrieve_operating_context"
+      ],
+      "broker:read": [
+        "extract_broker_profile",
+        "retrieve_broker_database_table"
+      ],
+      "analytics:read": [
+        "retrieve_analytics_models",
+        "retrieve_underwriting_claim_analytics_db",
+        "retrieve_portfolio_queue"
+      ],
+      "sop:read": [
+        "retrieve_sop_guidance"
+      ],
+      "submission:write": [
+        "save_note",
+        "save_guide",
+        "save_task",
+        "update_submission_cells"
+      ]
+    }
+  },
   "skills": [
     {
       "skill_id": "extract_broker_profile",

@@ -1,0 +1,24 @@
+{
+  "id": "002-northstar-contracting-chat-1779813206252",
+  "title": "Tell me about the prior cyber insurance polic...",
+  "created_at": "2026-05-26T16:33:26.251999Z",
+  "updated_at": "2026-05-26T16:33:57.745535Z",
+  "messages": [
+    {
+      "role": "user",
+      "content": "Tell me about the prior cyber insurance policy for this submisison."
+    },
+    {
+      "role": "assistant",
+      "content": "### Prior cyber insurance policy (for this submission)\n**Insured:** Northstar Contracting Group Inc.  \n**Submission ID:** 002-northstar-contracting  \n\n**Expiring coverage summary (from prior policy):**\n- **Cyber limit:** **$2,000,000**\n- **Retention:** **$25,000**\n- **Funds transfer fraud:** has a **$ sublimit that requires underwriter review** (i.e., not automatically granted/confirmed in the prior terms)\n\n### Key items to note vs. the current submission\n- **Requested retention today:** **$10,000** (lower than the prior **$25,000** retention), which may impact how the prior expiring structure compares.\n- The current application highlights **funds transfer fraud controls gaps** relevant to underwriting (see below), and these are likely areas that would have been evaluated under the prior policy\u2019s \u201cunderwriter review\u201d requirement for the funds transfer fraud sublimit:\n  - **Wire verification:** \u201cVerbal callback required but **not documented** in formal policy.\u201d\n  - **Subcontractor portal access:** **MFA not enforced** for subcontractor portal users.\n\n### Information gaps to request (to understand prior handling/expectations)\nTo accurately describe how the prior policy treated these exposures, I\u2019d ask for:\n1. **Whether the funds transfer fraud sublimit was actually bound** previously (and the prior sublimit amount/terms).\n2. **Any prior endorsements/conditions** tied to invoice manipulation / funds transfer fraud.\n3. **Evidence of the \u201cverbal callback\u201d practice** that was accepted under the prior policy (e.g., written procedure, training, audit logs).\n4. **Any prior cyber incidents/near-misses tied to**:\n   - invoice manipulation\n   - wire/funds transfer fraud\n   - subcontractor portal compromise or account misuse\n\nIf you can share the prior policy declarations page/endorsements (or the underwriting file notes from that policy), I can summarize the exact prior terms more precisely."
+    },
+    {
+      "role": "user",
+      "content": "Can you add a task to review this prior insurance policy? It's due in May 27, 2026."
+    },
+    {
+      "role": "assistant",
+      "content": "Added task due 2026-05-27: Review this prior insurance policy? It's"
+    }
+  ]
+}

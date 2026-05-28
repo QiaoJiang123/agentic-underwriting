@@ -1,9 +1,11 @@
 from pathlib import Path
 
 from backend.config import (
+    ACCESS_AUDIT_PATH,
     ANALYTICS_DB_PATH,
     AGENT_TRACE_DIR,
     AGENT_SKILLS_PATH,
+    AUTH_POLICY_PATH,
     BROKER_DB_PATH,
     CHAT_HISTORY_DIR,
     CLAIMS_DIR,
@@ -23,7 +25,10 @@ from backend.config import (
     UNDERWRITING_DIR,
 )
 from backend.services.agent_skill_service import get_agent_skills_record
+from backend.services.agent_tool_registry import get_agent_tool_registry_record
 from backend.services.agent_trace_service import list_all_agent_traces
+from backend.services.audit_service import read_recent_access_audit
+from backend.services.auth_service import get_auth_policy_summary
 from backend.services.broker_service import get_broker_database
 from backend.services.claim_service import get_claim_record
 from backend.services.submission_service import get_search_metadata
@@ -33,9 +38,10 @@ def get_dev_console_catalog():
     submissions = get_search_metadata().get("submissions", [])
     brokers = get_broker_database().get("brokers", [])
     agent_skills = get_agent_skills_record()
+    agent_tools = get_agent_tool_registry_record()
     claim_records = build_claim_records(submissions)
-    data_sources = build_data_sources(submissions, brokers, agent_skills, claim_records)
-    overview = build_overview(submissions, brokers, agent_skills, claim_records, data_sources)
+    data_sources = build_data_sources(submissions, brokers, agent_skills, agent_tools, claim_records)
+    overview = build_overview(submissions, brokers, agent_skills, agent_tools, claim_records, data_sources)
 
     return {
         "overview": overview,
@@ -46,8 +52,11 @@ def get_dev_console_catalog():
             "totals": summarize_claim_records(claim_records),
         },
         "agent_traces": list_all_agent_traces(75),
+        "authorization": get_auth_policy_summary(),
+        "access_audit": read_recent_access_audit(75),
         "agent_skills": agent_skills,
-        "workflow": build_agent_workflow(agent_skills),
+        "agent_tools": agent_tools,
+        "workflow": build_agent_workflow(agent_skills, agent_tools),
         "data_sources": data_sources,
     }
 
@@ -123,7 +132,7 @@ def summarize_claim_records(claim_records):
     }
 
 
-def build_overview(submissions, brokers, agent_skills, claim_records, data_sources):
+def build_overview(submissions, brokers, agent_skills, agent_tools, claim_records, data_sources):
     claim_totals = summarize_claim_records(claim_records)
     return {
         "submission_count": len(submissions),
@@ -132,12 +141,13 @@ def build_overview(submissions, brokers, agent_skills, claim_records, data_sourc
         "total_claims": claim_totals["total_claims"],
         "total_incurred": claim_totals["total_incurred"],
         "agent_skill_count": len(agent_skills.get("skills", [])),
+        "agent_tool_count": len(agent_tools.get("tools", [])),
         "agent_trace_count": count_files(AGENT_TRACE_DIR, "*.json"),
         "data_source_count": len(data_sources),
     }
 
 
-def build_data_sources(submissions, brokers, agent_skills, claim_records):
+def build_data_sources(submissions, brokers, agent_skills, agent_tools, claim_records):
     return [
         source_item(
             "submissions",
@@ -178,6 +188,30 @@ def build_data_sources(submissions, brokers, agent_skills, claim_records):
             len(agent_skills.get("skills", [])),
             "Local retrieval and navigation skills used by the centralized information agent.",
             "/api/agent-skills",
+        ),
+        source_item(
+            "agent_tool_registry",
+            "Agent Tool Registry",
+            "backend/services/agent_tool_registry.py",
+            len(agent_tools.get("tools", [])),
+            "Typed permission-aware tool contracts used by the centralized agent for retrieval, write actions, citations, MCP readiness, and trace metadata.",
+            "/api/agent-tools",
+        ),
+        source_item(
+            "authorization_policy",
+            "Authorization Policy",
+            path_label(AUTH_POLICY_PATH),
+            count_json_list(AUTH_POLICY_PATH, "users"),
+            "Local demo users, roles, permissions, and submission scopes used by API middleware and agent skill filtering.",
+            "/api/auth/context",
+        ),
+        source_item(
+            "access_audit",
+            "Access Audit Log",
+            path_label(ACCESS_AUDIT_PATH),
+            count_jsonl(ACCESS_AUDIT_PATH),
+            "JSONL access trail for allowed and denied API calls, including user, role, permission, path, and submission scope.",
+            "/api/auth/context",
         ),
         source_item(
             "agent_traces",
@@ -329,7 +363,8 @@ def source_item(key, label, path, record_count, description, api):
     }
 
 
-def build_agent_workflow(agent_skills):
+def build_agent_workflow(agent_skills, agent_tools):
+    tool_summary = agent_tools.get("summary", {})
     return {
         "title": "Centralized Underwriting Information Agent",
         "summary": "Runs a planner, executes retrieval tools, checks confidence, expands weak plans, persists the trace, then sends a cited working set to GPT and the UI action layer.",
@@ -338,22 +373,31 @@ def build_agent_workflow(agent_skills):
                 {"label": "Runtime mode", "value": "Planner + Tools + GPT"},
                 {"label": "Max attempts", "value": "2"},
                 {"label": "Confidence gate", "value": "72%"},
+                {"label": "Tool contracts", "value": str(tool_summary.get("tool_count", 0))},
+                {"label": "MCP-ready tools", "value": str(tool_summary.get("mcp_ready_count", 0))},
                 {"label": "Trace store", "value": "data/agent_traces"},
             ],
+            "tool_registry": {
+                "version": agent_tools.get("version"),
+                "summary": agent_tools.get("summary", {}),
+                "contract_fields": agent_tools.get("contract_fields", []),
+                "tools": agent_tools.get("tools", []),
+                "description": agent_tools.get("description"),
+            },
             "layers": [
                 {
                     "key": "planner",
                     "label": "Planner",
                     "purpose": "Turn the prompt into an explicit skill plan.",
-                    "reads": ["Prompt", "submission id", "selection mode"],
-                    "emits": ["selected_skills", "file_selection_mode"],
+                    "reads": ["Prompt", "submission id", "selection mode", "tool registry"],
+                    "emits": ["selected_skills", "tool contracts", "file_selection_mode"],
                 },
                 {
                     "key": "tool_loop",
                     "label": "Tool Loop",
-                    "purpose": "Run local retrieval tools and record source coverage.",
-                    "reads": ["documents", "SOP", "claims", "broker", "models", "workflow stores"],
-                    "emits": ["context sections", "sources", "selected documents"],
+                    "purpose": "Run registered retrieval tools and record source coverage.",
+                    "reads": ["tool contracts", "documents", "SOP", "claims", "broker", "models", "workflow stores"],
+                    "emits": ["context sections", "sources", "selected documents", "tool metadata"],
                 },
                 {
                     "key": "confidence",
@@ -458,7 +502,7 @@ def build_agent_workflow(agent_skills):
                 "description": "Returns the answer, citations, selected surfaces, document selections, and workflow actions to the browser.",
             },
         ],
-        "retrieval_groups": build_retrieval_groups(agent_skills),
+        "retrieval_groups": build_retrieval_groups(agent_skills, agent_tools),
         "edges": [
             {"from": "prompt", "to": "planner", "label": "question + workspace state"},
             {"from": "planner", "to": "tool_loop", "label": "skill plan"},
@@ -498,8 +542,9 @@ def build_agent_workflow(agent_skills):
     }
 
 
-def build_retrieval_groups(agent_skills):
+def build_retrieval_groups(agent_skills, agent_tools):
     skills = agent_skills.get("skills", [])
+    tools = agent_tools.get("tools", [])
     groups = [
         ("documents", "Documents + Evidence", ["document", "evidence", "loss", "application"]),
         ("sop", "SOP Guidance", ["sop", "procedure"]),
@@ -522,6 +567,11 @@ def build_retrieval_groups(agent_skills):
                 for skill in skills
                 if any(term in " ".join([skill.get("skill_id", ""), skill.get("label", ""), skill.get("output", "")]).lower() for term in terms)
             ],
+            "tool_ids": [
+                tool.get("skill")
+                for tool in tools
+                if any(term in " ".join([tool.get("skill", ""), tool.get("label", ""), tool.get("description", "")]).lower() for term in terms)
+            ],
         }
         for key, label, terms in groups
     ]
@@ -538,6 +588,13 @@ def count_json_list(path, list_key):
     data = read_json_if_exists(path)
     value = data.get(list_key, []) if isinstance(data, dict) else []
     return len(value) if isinstance(value, list) else 0
+
+
+def count_jsonl(path):
+    path = Path(path)
+    if not path.exists():
+        return 0
+    return len(path.read_text(encoding="utf-8").splitlines())
 
 
 def count_required_documents(path):

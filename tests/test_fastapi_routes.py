@@ -3,6 +3,7 @@ from pathlib import Path
 
 from fastapi.testclient import TestClient
 
+from backend.config import AUTH_DB_PATH
 from backend.main import app
 
 
@@ -23,6 +24,59 @@ class FastAPIRouteTests(unittest.TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertGreaterEqual(len(response.json()["submissions"]), 1)
+
+    def test_auth_context_exposes_local_policy(self):
+        response = self.client.get("/api/auth/context", headers={"x-au-user": "uw-assistant"})
+        payload = response.json()
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(payload["auth"]["user_id"], "uw-assistant")
+        self.assertEqual(payload["auth"]["role"], "underwriting_assistant")
+        self.assertIn("submission:read", payload["auth"]["permissions"])
+        self.assertIn("policy", payload)
+
+    def test_admin_login_uses_local_login_database(self):
+        client = TestClient(app)
+        response = client.post("/api/auth/login", json={"username": "admin", "password": "AU-Admin-2026!"})
+        payload = response.json()
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(AUTH_DB_PATH.exists())
+        self.assertEqual(payload["login"]["auth"]["user_id"], "admin")
+        self.assertEqual(payload["login"]["auth"]["role"], "senior_underwriter")
+
+        context_response = client.get("/api/auth/context")
+        context_payload = context_response.json()
+        self.assertEqual(context_response.status_code, 200)
+        self.assertEqual(context_payload["auth"]["user_id"], "admin")
+        self.assertEqual(context_payload["auth"]["auth_source"], "local login session")
+
+    def test_admin_login_rejects_bad_password(self):
+        client = TestClient(app)
+        response = client.post("/api/auth/login", json={"username": "admin", "password": "wrong"})
+
+        self.assertEqual(response.status_code, 401)
+        self.assertIn("Invalid username or password", response.json()["error"])
+
+    def test_submission_scope_blocks_unauthorized_account(self):
+        response = self.client.get(
+            "/api/submissions/010-sunrise-hospitality-group/claims",
+            headers={"x-au-user": "uw-assistant"},
+        )
+        payload = response.json()
+
+        self.assertEqual(response.status_code, 403)
+        self.assertIn("outside user scope", payload["error"])
+
+    def test_read_only_user_cannot_delete_submission(self):
+        response = self.client.delete(
+            "/api/dev/submissions/001-acme-foods",
+            headers={"x-au-user": "audit-demo"},
+        )
+        payload = response.json()
+
+        self.assertEqual(response.status_code, 403)
+        self.assertIn("Missing permission dev:delete", payload["error"])
 
     def test_intake_bootstrap_is_api_based(self):
         response = self.client.get("/api/intake/bootstrap")
@@ -49,6 +103,7 @@ class FastAPIRouteTests(unittest.TestCase):
         self.assertIn("brokers", payload)
         self.assertIn("claims", payload)
         self.assertIn("agent_skills", payload)
+        self.assertIn("agent_tools", payload)
         self.assertIn("workflow", payload)
         self.assertIn("data_sources", payload)
         self.assertGreaterEqual(payload["overview"]["data_source_count"], 1)
@@ -67,6 +122,23 @@ class FastAPIRouteTests(unittest.TestCase):
         self.assertEqual(layer_keys, {"planner", "tool_loop", "confidence", "retry", "trace"})
         self.assertGreaterEqual(len(orchestration["execution_paths"]), 3)
         self.assertIn("trace_id", orchestration["trace_contract"])
+        self.assertIn("tool_registry", orchestration)
+        self.assertGreaterEqual(orchestration["tool_registry"]["summary"]["tool_count"], 20)
+
+    def test_agent_tools_route_exposes_tool_contracts(self):
+        response = self.client.get("/api/agent-tools")
+        payload = response.json()
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("tools", payload)
+        self.assertIn("contract_fields", payload)
+        self.assertGreaterEqual(payload["summary"]["read_tool_count"], 10)
+        self.assertGreaterEqual(payload["summary"]["write_tool_count"], 1)
+        document_tool = next(tool for tool in payload["tools"] if tool["skill"] == "documents")
+        self.assertEqual(document_tool["required_permission"], "submission:read")
+        self.assertTrue(document_tool["mcp_exposed"])
+        task_tool = next(tool for tool in payload["tools"] if tool["skill"] == "write_task")
+        self.assertEqual(task_tool["tool_type"], "write")
 
     def test_portfolio_and_workbench_feature_routes(self):
         queue_response = self.client.get("/api/portfolio/queue")
@@ -138,11 +210,37 @@ class FastAPIRouteTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn("Developer Tools", response.text)
 
+    def test_static_business_deck_page_is_served(self):
+        response = self.client.get("/business.html")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("Business Deck", response.text)
+
+    def test_static_login_page_is_served(self):
+        response = self.client.get("/login.html")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("Login", response.text)
+
     def test_chat_validation_uses_existing_error_shape(self):
         response = self.client.post("/api/chat", json={"messages": []})
 
         self.assertEqual(response.status_code, 400)
         self.assertIn("error", response.json())
+
+    def test_chat_body_submission_scope_is_authorized(self):
+        response = self.client.post(
+            "/api/chat",
+            headers={"x-au-user": "uw-assistant"},
+            json={
+                "submission_id": "010-sunrise-hospitality-group",
+                "user_prompt": "show claim information",
+                "messages": [{"role": "user", "content": "show claim information"}],
+            },
+        )
+
+        self.assertEqual(response.status_code, 403)
+        self.assertIn("outside user scope", response.json()["error"])
 
     def test_application_file_draft_accepts_multipart_upload(self):
         sample_path = Path("tests/sample_submission/cyber-application-sample.txt")
@@ -189,6 +287,10 @@ class FastAPIRouteTests(unittest.TestCase):
         schema = self.client.get("/openapi.json").json()
 
         self.assertIn("/api/intake/submissions", schema["paths"])
+        self.assertIn("/api/auth/context", schema["paths"])
+        self.assertIn("/api/auth/login", schema["paths"])
+        self.assertIn("/api/auth/logout", schema["paths"])
+        self.assertIn("/api/agent-tools", schema["paths"])
         self.assertIn("/api/intake/review", schema["paths"])
         self.assertIn("/api/intake/draft-file", schema["paths"])
         self.assertIn("/api/dev/catalog", schema["paths"])

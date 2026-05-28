@@ -56,6 +56,10 @@ const documentModal = document.querySelector("#documentModal");
 const documentModalTitle = document.querySelector("#documentModalTitle");
 const documentModalContent = document.querySelector("#documentModalContent");
 const documentCloseButton = document.querySelector("#documentCloseButton");
+const taskModal = document.querySelector("#taskModal");
+const taskModalTitle = document.querySelector("#taskModalTitle");
+const taskModalContent = document.querySelector("#taskModalContent");
+const taskModalCloseButton = document.querySelector("#taskModalCloseButton");
 const panelTabButtons = document.querySelectorAll("[data-panel-tab]");
 const panelViews = document.querySelectorAll("[data-panel-view]");
 const guideForm = document.querySelector("#guideForm");
@@ -147,6 +151,8 @@ let noteItems = [];
 let editingNoteIndex = null;
 let followUpItems = [];
 let selectedTaskDate = null;
+let selectedFollowUpId = null;
+let editingFollowUpId = null;
 let taskCalendarCursor = clampTaskCalendarDate(new Date());
 let stageItems = [];
 let workflowSubmittedAt = null;
@@ -334,6 +340,8 @@ async function selectSubmission(submission, button) {
     editingNoteIndex = null;
     followUpItems = [];
     selectedTaskDate = null;
+    selectedFollowUpId = null;
+    editingFollowUpId = null;
     taskCalendarCursor = clampTaskCalendarDate(new Date());
     stageItems = [];
     workflowSubmittedAt = null;
@@ -410,15 +418,26 @@ async function loadChatHistory(submissionId) {
     historyList.innerHTML = history
       .map(
         (item, index) => `
-          <button
-            class="history-item ${index === 0 ? "active" : ""}"
-            type="button"
-            data-history-id="${escapeHtml(item.id)}"
-            title="${escapeHtml(formatDateTime(item.updated_at))} · ${item.message_count} messages"
-          >
-            <span>${escapeHtml(item.title)}</span>
-            <small>${escapeHtml(formatDateTime(item.updated_at))} · ${item.message_count} messages</small>
-          </button>
+          <div class="history-row ${index === 0 ? "active" : ""}">
+            <button
+              class="history-item ${index === 0 ? "active" : ""}"
+              type="button"
+              data-history-id="${escapeHtml(item.id)}"
+              title="${escapeHtml(formatDateTime(item.updated_at))} · ${item.message_count} messages"
+            >
+              <span>${escapeHtml(item.title)}</span>
+              <small>${escapeHtml(formatDateTime(item.updated_at))} · ${item.message_count} messages</small>
+            </button>
+            <button
+              class="icon-button small-icon-button history-delete-button"
+              type="button"
+              data-history-delete-id="${escapeHtml(item.id)}"
+              aria-label="Delete chat history"
+              title="Delete chat history"
+            >
+              &times;
+            </button>
+          </div>
         `
       )
       .join("");
@@ -428,17 +447,59 @@ async function loadChatHistory(submissionId) {
 }
 
 historyList.addEventListener("click", async (event) => {
+  const deleteButton = event.target.closest("[data-history-delete-id]");
+  if (deleteButton && selectedSubmission) {
+    event.stopPropagation();
+    await deleteChatHistoryItem(selectedSubmission.id, deleteButton.dataset.historyDeleteId);
+    return;
+  }
+
   const button = event.target.closest("[data-history-id]");
   if (!button || !selectedSubmission) {
     return;
   }
 
+  document.querySelectorAll(".history-row").forEach((item) => {
+    item.classList.toggle("active", item.contains(button));
+  });
   document.querySelectorAll("[data-history-id]").forEach((item) => {
     item.classList.toggle("active", item === button);
   });
 
   await loadChatHistoryMessages(selectedSubmission.id, button.dataset.historyId);
 });
+
+async function deleteChatHistoryItem(submissionId, historyId) {
+  if (!historyId) {
+    return;
+  }
+
+  const confirmed = window.confirm(
+    "Delete this chat history? This removes the saved chat thread for this submission."
+  );
+  if (!confirmed) {
+    return;
+  }
+
+  try {
+    const response = await fetch(
+      `/api/submissions/${encodeURIComponent(submissionId)}/chat-history/${encodeURIComponent(historyId)}`,
+      { method: "DELETE" }
+    );
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.error || "Unable to delete chat history.");
+    }
+
+    if (currentChatHistoryId === historyId) {
+      currentChatHistoryId = null;
+    }
+    await loadChatHistory(submissionId);
+  } catch (error) {
+    console.warn(error);
+    addMessage("assistant", error.message || "Unable to delete chat history.", true);
+  }
+}
 
 async function loadChatHistoryMessages(submissionId, historyId) {
   setAutoDocumentMode({ clearHighlights: true });
@@ -1090,6 +1151,8 @@ if (followUpForm) {
       created_at: now,
       updated_at: now
     });
+    selectedFollowUpId = followUpItems[followUpItems.length - 1].id;
+    editingFollowUpId = null;
     selectedTaskDate = dueDate;
     setTaskCalendarFromDate(dueDate, false);
     followUpTitle.value = "";
@@ -1102,30 +1165,32 @@ if (followUpForm) {
 if (followUpList) {
   followUpList.addEventListener("click", async (event) => {
     const button = event.target.closest("[data-follow-up-action]");
-    if (!button) {
+    if (button) {
+      const shouldSave = await handleFollowUpAction(button.dataset.followUpAction, button.dataset.followUpId);
+      if (shouldSave) {
+        await saveFollowUps();
+      }
       return;
     }
 
-    const itemId = button.dataset.followUpId;
-    const index = followUpItems.findIndex((item) => item.id === itemId);
-    if (index < 0) {
+    const taskItem = event.target.closest("[data-follow-up-open-id]");
+    if (!taskItem) {
       return;
     }
 
-    if (button.dataset.followUpAction === "delete") {
-      followUpItems.splice(index, 1);
-    }
+    openTaskModal(taskItem.dataset.followUpOpenId);
+  });
 
-    if (button.dataset.followUpAction === "toggle") {
-      followUpItems[index] = {
-        ...followUpItems[index],
-        status: followUpItems[index].status === "done" ? "open" : "done",
-        updated_at: new Date().toISOString()
-      };
+  followUpList.addEventListener("keydown", (event) => {
+    if (!["Enter", " "].includes(event.key)) {
+      return;
     }
-
-    renderFollowUps();
-    await saveFollowUps();
+    const taskItem = event.target.closest("[data-follow-up-open-id]");
+    if (!taskItem) {
+      return;
+    }
+    event.preventDefault();
+    openTaskModal(taskItem.dataset.followUpOpenId);
   });
 }
 
@@ -1137,6 +1202,12 @@ if (followUpCalendar) {
       return;
     }
 
+    const taskPreview = event.target.closest("[data-calendar-task-id]");
+    if (taskPreview) {
+      openTaskModal(taskPreview.dataset.calendarTaskId);
+      return;
+    }
+
     const dayButton = event.target.closest("[data-task-date]");
     if (!dayButton) {
       return;
@@ -1144,6 +1215,11 @@ if (followUpCalendar) {
 
     const date = dayButton.dataset.taskDate;
     selectedTaskDate = selectedTaskDate === date ? null : date;
+    const selectedItem = getSelectedFollowUpItem();
+    if (selectedTaskDate && selectedItem && selectedItem.due_date !== selectedTaskDate) {
+      selectedFollowUpId = null;
+      editingFollowUpId = null;
+    }
     renderFollowUps();
   });
 
@@ -1213,9 +1289,39 @@ documentModal.addEventListener("click", (event) => {
   }
 });
 
+if (taskModalCloseButton) {
+  taskModalCloseButton.addEventListener("click", closeTaskModal);
+}
+
+if (taskModal) {
+  taskModal.addEventListener("click", (event) => {
+    if (event.target.matches("[data-close-task]")) {
+      closeTaskModal();
+    }
+  });
+}
+
+if (taskModalContent) {
+  taskModalContent.addEventListener("click", async (event) => {
+    const button = event.target.closest("[data-follow-up-action]");
+    if (!button) {
+      return;
+    }
+
+    const shouldSave = await handleFollowUpAction(button.dataset.followUpAction, button.dataset.followUpId);
+    if (shouldSave) {
+      await saveFollowUps();
+    }
+  });
+}
+
 document.addEventListener("keydown", (event) => {
   if (event.key === "Escape" && documentModal.classList.contains("open")) {
     closeDocumentPreview();
+  }
+
+  if (event.key === "Escape" && taskModal && taskModal.classList.contains("open")) {
+    closeTaskModal();
   }
 
   if (event.key === "Escape" && guidePopover && guidePopover.classList.contains("open")) {
@@ -1329,44 +1435,133 @@ function renderWebsiteDemoContent() {
       <div>
         <span>Demo Goal</span>
         <strong>Agentic cyber underwriting workspace</strong>
-        <p>Use this local app to search submissions, review evidence, chat with an information agent, inspect analytics, and manage underwriting workflow tasks.</p>
+        <p>This demo shows how a commercial cyber underwriter can move from submission intake to evidence review, claim analysis, broker follow-up, analytics, referral, quote readiness, and bind preparation inside one workspace.</p>
       </div>
       <div>
-        <span>Data Backbone</span>
-        <strong>Files + JSON + SQLite</strong>
-        <p>The SQLite analytics mart keeps submission and claim rows in separate tables, then joins them by company ID for portfolio-level questions.</p>
+        <span>Local Login</span>
+        <strong>admin / AU-Admin-2026!</strong>
+        <p>The app uses a local SQLite login database, an HTTP-only session cookie, file-backed role policy, API authorization middleware, and access audit logging.</p>
       </div>
     </section>
+
     <section class="website-demo-section">
-      <h3>How To Use The Demo</h3>
+      <h3>What This Prototype Demonstrates</h3>
+      <div class="website-demo-card-grid">
+        ${[
+          ["Underwriting cockpit", "Search a submission, review documents, chat with the account, inspect the underwriting workbench, and manage tasks without leaving the account."],
+          ["Conversational data access", "The assistant routes each prompt to relevant authorized data: documents, claims, broker records, analytics, tasks, SOP, notes, guides, workflow, or portfolio metrics."],
+          ["Human-owned decisions", "The system supports quote, referral, approval, and bind readiness, but the underwriter remains responsible for final judgment and overrides."],
+          ["Local production shape", "The demo now includes login, roles, permissions, submission scope, access audit, agent traces, schema validation, and a SQLite analytics mart."]
+        ].map(([title, text]) => `
+          <article>
+            <strong>${escapeHtml(title)}</strong>
+            <p>${escapeHtml(text)}</p>
+          </article>
+        `).join("")}
+      </div>
+    </section>
+
+    <section class="website-demo-section">
+      <h3>Recommended Walkthrough</h3>
       <ol>
-        <li><strong>Search a submission:</strong> use the search page to open an account or preview the portfolio queue.</li>
-        <li><strong>Review documents:</strong> select files manually or use Auto so the information agent picks relevant evidence.</li>
-        <li><strong>Ask underwriting questions:</strong> ask about missing evidence, claims, broker quality, rating, quote readiness, tasks, SOP, or portfolio statistics.</li>
-        <li><strong>Open Details:</strong> expand the underwriting system for account signals, broker data, claims, clearance, rating, and research checks.</li>
-        <li><strong>Open Analytics:</strong> inspect quote/bind models, What If scenarios, portfolio metrics, and model interpretations.</li>
-        <li><strong>Use Tasks and Notes:</strong> save underwriter notes, schedule tasks, and lock completed underwriting stages.</li>
+        <li><strong>Start on Search:</strong> review the portfolio queue, referral counts, quote readiness, broker mix, and top accounts.</li>
+        <li><strong>Open a submission:</strong> use a sample such as Acme Foods or Evergreen Senior Living to see documents, chat history, and account context.</li>
+        <li><strong>Use Auto document selection:</strong> leave Auto on so the information agent selects relevant documents from metadata and marks only selected files in green.</li>
+        <li><strong>Ask claim or evidence questions:</strong> the agent retrieves claim files, required document rules, submitted document metadata, and selected file text only for the active prompt.</li>
+        <li><strong>Expand Details:</strong> review the underwriting system: account signals, broker profile, claim history, clearance, rating, external research, SOP suggestions, and editable submission cells.</li>
+        <li><strong>Open Analytics:</strong> compare quote, bind, cyber attack, ransomware, breach, interruption, and claim severity models with waterfall explanations and What If scenarios.</li>
+        <li><strong>Use Tasks and stages:</strong> add scheduled tasks, review them on the calendar, check workflow stages, and submit checked stages when they should be locked.</li>
+        <li><strong>Try the Dev console:</strong> inspect data stores, broker records, claim records, agent workflow, access policy, and recent agent traces.</li>
       </ol>
     </section>
+
+    <section class="website-demo-section">
+      <h3>Agent Workflow</h3>
+      <div class="website-demo-flow">
+        ${["Prompt", "Planner", "Permission Filter", "Tool Loop", "Confidence", "Retry", "Cited Context", "GPT Answer", "Trace"].map((step) => `<span>${escapeHtml(step)}</span>`).join("<i></i>")}
+      </div>
+      <p>The assistant does not simply answer from the model. It first decides which local skills are needed, checks whether the logged-in user can use those skills and view that submission, retrieves a compact cited working set, scores confidence, retries if the context is weak, and saves an audit trace.</p>
+    </section>
+
+    <section class="website-demo-section">
+      <h3>Data And Systems Included</h3>
+      <div class="website-demo-data-grid">
+        ${[
+          ["Submissions", "50 cyber accounts with standardized document folders and metadata."],
+          ["Documents", "Cyber application, ransomware supplement, prior policy, loss runs, financials, controls, MFA/EDR/backups, IR plan, vendor assessment, and compliance evidence."],
+          ["Claims", "Dummy claim records with CLM_CLMT_ID, company ID, loss dates, status, severity, paid, reserves, cause, and recovery status."],
+          ["Brokers", "Reusable broker firms with contacts, service tiers, response metrics, quote ratio, bind ratio, and placement notes."],
+          ["SOP", "Commercial cyber underwriting procedure with metadata so the agent can select relevant guidance."],
+          ["Workflow", "Notes, guides, tasks, stages, decision gates, chat history, access audit, and agent traces."],
+          ["Models", "Stored quote, bind, supplemental cyber GLMs, feature metadata, and industry propensity benchmark."],
+          ["Analytics DB", "SQLite mart with underwriting_submission_analytics and claim_analytics joined by company_id."]
+        ].map(([label, text]) => `
+          <div>
+            <strong>${escapeHtml(label)}</strong>
+            <p>${escapeHtml(text)}</p>
+          </div>
+        `).join("")}
+      </div>
+    </section>
+
+    <section class="website-demo-section">
+      <h3>Underwriting Workbench</h3>
+      <p><strong>Details:</strong> account summary, timeline, key information, and the expandable underwriting system.</p>
+      <p><strong>Underwriting System:</strong> appetite, risk signals, evidence status, broker section, claim section, clearance review, rating and quote, external research, SOP suggestions, and submission update editor.</p>
+      <p><strong>Tasks:</strong> scheduled task entry, calendar, day filtering, stage checklist, and permanent lock for submitted stages.</p>
+      <p><strong>Notes and Guide:</strong> notes provide underwriter ground-truth context; guide entries become reusable system-level instructions for the chat request.</p>
+    </section>
+
+    <section class="website-demo-section">
+      <h3>Analytics And Models</h3>
+      <div class="website-demo-card-grid">
+        ${[
+          ["Quote", "Probability waterfall from average probability to current account probability using stored model coefficients."],
+          ["Bind", "Independent bind model and What If scenario state separate from quote."],
+          ["Supplemental cyber risk", "Cyber attack, ransomware, breach, interruption, and claim severity model views."],
+          ["Portfolio", "Queue position, industry loss/readiness, broker pipeline mix, and SQL claim statistics."]
+        ].map(([title, text]) => `
+          <article>
+            <strong>${escapeHtml(title)}</strong>
+            <p>${escapeHtml(text)}</p>
+          </article>
+        `).join("")}
+      </div>
+    </section>
+
     <section class="website-demo-section">
       <h3>Example Chat Prompts</h3>
       <div class="website-demo-prompt-grid">
         ${[
+          "What claim information do we have for this submission?",
+          "What is the severity of the open prior loss and what caused it?",
           "Show claim statistics for this broker and associated underwriting decisions.",
           "Which companies have the highest incurred losses and are they referrals?",
           "Compare average quote readiness by broker.",
           "What documents are missing for this submission?",
           "Draft broker follow-up questions based on SOP and evidence gaps.",
-          "Show the rating calculation and explain the premium range."
+          "Show the rating calculation and explain the premium range.",
+          "Open Analytics and show the Quote model.",
+          "What tasks are due and what stage are we in?",
+          "Add note: Broker confirmed MFA rollout evidence will arrive Friday."
         ].map((prompt) => `<button class="website-demo-prompt" type="button" data-demo-prompt="${escapeHtml(prompt)}">${escapeHtml(prompt)}</button>`).join("")}
       </div>
     </section>
+
     <section class="website-demo-section">
       <h3>Analytics DB</h3>
       <p><strong>Tables:</strong> underwriting_submission_analytics + claim_analytics</p>
       <p><strong>Join key:</strong> company_id · <strong>Claim key:</strong> CLM_CLMT_ID</p>
       <p><strong>Path:</strong> data/analytics/underwriting_claim_analytics.db</p>
       <p>It is refreshed when submissions, documents, or editable metadata change, and it is used by the chat retrieval layer for claim and underwriting decision statistics.</p>
+    </section>
+
+    <section class="website-demo-section">
+      <h3>Local Demo Pages</h3>
+      <p><strong>Login:</strong> /login.html · admin / AU-Admin-2026!</p>
+      <p><strong>Search:</strong> / · portfolio queue, submission search, and new submission intake.</p>
+      <p><strong>Business Deck:</strong> /business.html · executive view of use case, impact, architecture, and readiness.</p>
+      <p><strong>Developer Console:</strong> /dev.html · data stores, claim/broker tables, agent workflow visual, and traces.</p>
     </section>
   `;
 }
@@ -2182,6 +2377,7 @@ async function refreshAfterChatActions(actions) {
   }
 
   applyChatUiActions(actions);
+  applyChatActionRecords(actions);
 
   const actionTypes = new Set(actions.map((action) => action && action.type));
   const refreshes = [];
@@ -2210,6 +2406,55 @@ async function refreshAfterChatActions(actions) {
 
   await Promise.all(refreshes);
   renderUnderwritingDetails();
+}
+
+function applyChatActionRecords(actions) {
+  actions.forEach((action) => {
+    if (!action || !action.record) {
+      return;
+    }
+
+    if (action.type === "note" && Array.isArray(action.record.notes)) {
+      noteItems = normalizeContextItems(action.record.notes, "note");
+      editingNoteIndex = null;
+      renderNoteContext();
+    }
+
+    if (action.type === "guide" && Array.isArray(action.record.guides)) {
+      guideItems = normalizeContextItems(action.record.guides, "guide");
+      editingGuideIndex = null;
+      renderGuideContext();
+    }
+
+    if (action.type === "task" && Array.isArray(action.record.tasks)) {
+      followUpItems = normalizeFollowUps(action.record.tasks);
+      const createdTask = findCreatedTaskFromAction(action);
+      if (createdTask && createdTask.due_date) {
+        selectedFollowUpId = createdTask.id;
+        editingFollowUpId = null;
+        selectedTaskDate = createdTask.due_date;
+        setTaskCalendarFromDate(createdTask.due_date, false);
+      }
+      renderFollowUps();
+    }
+  });
+}
+
+function findCreatedTaskFromAction(action) {
+  const taskId = action.created_task && action.created_task.id;
+  if (taskId) {
+    const byId = followUpItems.find((item) => item.id === String(taskId));
+    if (byId) {
+      return byId;
+    }
+  }
+
+  const createdTask = normalizeFollowUps(action.created_task ? [action.created_task] : [])[0];
+  if (createdTask) {
+    return createdTask;
+  }
+
+  return followUpItems[followUpItems.length - 1] || null;
 }
 
 function applyChatUiActions(actions) {
@@ -2612,10 +2857,14 @@ async function loadFollowUps(submissionId) {
     }
 
     followUpItems = normalizeFollowUps(data.task && data.task.tasks);
-    renderFollowUps();
+    ensureSelectedFollowUpExists();
+    refreshTaskViews();
   } catch (error) {
     console.warn(error);
     followUpItems = [];
+    selectedFollowUpId = null;
+    editingFollowUpId = null;
+    closeTaskModal();
     renderFollowUps("Unable to load tasks.");
   }
 }
@@ -2640,10 +2889,182 @@ async function saveFollowUps() {
     }
 
     followUpItems = normalizeFollowUps(data.task && data.task.tasks);
-    renderFollowUps();
+    ensureSelectedFollowUpExists();
+    refreshTaskViews();
   } catch (error) {
     console.warn(error);
     renderFollowUps(error.message || "Unable to save tasks.");
+  }
+}
+
+async function handleFollowUpAction(action, itemId) {
+  const index = followUpItems.findIndex((item) => item.id === itemId);
+  if (index < 0) {
+    return false;
+  }
+
+  if (action === "edit") {
+    selectedFollowUpId = itemId;
+    editingFollowUpId = itemId;
+    refreshTaskViews({ focusEditor: true });
+    return false;
+  }
+
+  if (action === "cancel-edit") {
+    editingFollowUpId = null;
+    refreshTaskViews();
+    return false;
+  }
+
+  if (action === "save") {
+    const updatedTask = readTaskDetailForm(itemId);
+    if (!updatedTask) {
+      return false;
+    }
+    followUpItems[index] = {
+      ...followUpItems[index],
+      ...updatedTask,
+      updated_at: new Date().toISOString()
+    };
+    selectedFollowUpId = itemId;
+    editingFollowUpId = null;
+    selectedTaskDate = updatedTask.due_date;
+    setTaskCalendarFromDate(updatedTask.due_date, false);
+    refreshTaskViews();
+    return true;
+  }
+
+  if (action === "delete") {
+    followUpItems.splice(index, 1);
+    if (selectedFollowUpId === itemId) {
+      selectedFollowUpId = null;
+    }
+    if (editingFollowUpId === itemId) {
+      editingFollowUpId = null;
+    }
+    refreshTaskViews();
+    return true;
+  }
+
+  if (action === "toggle") {
+    followUpItems[index] = {
+      ...followUpItems[index],
+      status: followUpItems[index].status === "done" ? "open" : "done",
+      updated_at: new Date().toISOString()
+    };
+    selectedFollowUpId = itemId;
+    refreshTaskViews();
+    return true;
+  }
+
+  return false;
+}
+
+function openTaskModal(itemId, edit = false) {
+  const item = followUpItems.find((task) => task.id === itemId);
+  if (!item || !taskModal) {
+    return;
+  }
+
+  selectedFollowUpId = itemId;
+  editingFollowUpId = edit ? itemId : null;
+  selectedTaskDate = item.due_date;
+  setTaskCalendarFromDate(item.due_date, false);
+  taskModal.classList.add("open");
+  taskModal.setAttribute("aria-hidden", "false");
+  refreshTaskViews({ focusModal: true, focusEditor: edit });
+}
+
+function closeTaskModal() {
+  if (!taskModal) {
+    return;
+  }
+  taskModal.classList.remove("open");
+  taskModal.setAttribute("aria-hidden", "true");
+  editingFollowUpId = null;
+  if (taskModalContent) {
+    taskModalContent.innerHTML = "";
+  }
+}
+
+function refreshTaskViews(options = {}) {
+  renderFollowUps();
+  renderTaskModal();
+  if (options.focusEditor) {
+    focusTaskEditor();
+  } else if (options.focusModal) {
+    focusTaskModal();
+  }
+}
+
+function renderTaskModal() {
+  if (!taskModal || !taskModal.classList.contains("open") || !taskModalContent) {
+    return;
+  }
+
+  const item = getSelectedFollowUpItem();
+  if (!item) {
+    closeTaskModal();
+    return;
+  }
+
+  if (taskModalTitle) {
+    taskModalTitle.textContent = item.title || "Task Detail";
+  }
+  taskModalContent.innerHTML = renderTaskDetailPanel(item);
+}
+
+function readTaskDetailForm(itemId) {
+  const titleInput = document.querySelector(`[data-task-detail-title="${cssEscape(itemId)}"]`);
+  const dateInput = document.querySelector(`[data-task-detail-date="${cssEscape(itemId)}"]`);
+  const statusInput = document.querySelector(`[data-task-detail-status="${cssEscape(itemId)}"]`);
+  const title = titleInput ? titleInput.value.trim() : "";
+  const dueDate = dateInput ? dateInput.value : "";
+  const status = statusInput && statusInput.value === "done" ? "done" : "open";
+
+  if (!title) {
+    window.alert("Task message cannot be empty.");
+    if (titleInput) {
+      titleInput.focus();
+    }
+    return null;
+  }
+  if (!dueDate || !isTaskDateInRange(dueDate)) {
+    window.alert(`Task due date must be between ${TASK_CALENDAR_MIN_YEAR}-01-01 and ${TASK_CALENDAR_MAX_YEAR}-12-31.`);
+    if (dateInput) {
+      dateInput.focus();
+    }
+    return null;
+  }
+
+  return { title, due_date: dueDate, status };
+}
+
+function focusTaskEditor() {
+  window.requestAnimationFrame(() => {
+    const field = (taskModalContent || document).querySelector(".task-detail-panel textarea");
+    if (field) {
+      field.focus();
+      field.select();
+    }
+  });
+}
+
+function focusTaskModal() {
+  window.requestAnimationFrame(() => {
+    const target = taskModalContent && taskModalContent.querySelector("[data-follow-up-action='edit']");
+    if (target) {
+      target.focus();
+    }
+  });
+}
+
+function ensureSelectedFollowUpExists() {
+  if (selectedFollowUpId && !followUpItems.some((item) => item.id === selectedFollowUpId)) {
+    selectedFollowUpId = null;
+  }
+  if (editingFollowUpId && !followUpItems.some((item) => item.id === editingFollowUpId)) {
+    editingFollowUpId = null;
   }
 }
 
@@ -2668,6 +3089,7 @@ function renderFollowUps(statusMessage) {
   updateFollowUpDots();
   renderFollowUpCalendar();
   syncWorkflowSubmitControls();
+  ensureSelectedFollowUpExists();
 
   if (!followUpList) {
     return;
@@ -2693,10 +3115,17 @@ function renderFollowUps(statusMessage) {
     ${visibleItems
     .map((item) => {
       const dueState = getFollowUpDueState(item);
+      const taskTooltip = escapeTitle(getTaskHoverText(item));
       return `
-        <div class="follow-up-item ${item.status === "done" ? "done" : ""} ${dueState}">
+        <div
+          class="follow-up-item ${item.status === "done" ? "done" : ""} ${dueState} ${selectedFollowUpId === item.id ? "selected" : ""}"
+          title="${taskTooltip}"
+          data-follow-up-open-id="${escapeHtml(item.id)}"
+          role="button"
+          tabindex="0"
+        >
           <div>
-            <strong>${escapeHtml(item.title)}</strong>
+            <strong title="${taskTooltip}">${escapeHtml(item.title)}</strong>
             <small>${escapeHtml(formatDateOnly(item.due_date))}</small>
           </div>
           <div class="follow-up-actions">
@@ -2709,6 +3138,74 @@ function renderFollowUps(statusMessage) {
       `;
     })
     .join("")}
+  `;
+}
+
+function getSelectedFollowUpItem() {
+  return followUpItems.find((item) => item.id === selectedFollowUpId) || null;
+}
+
+function renderTaskDetailPanel(item) {
+  const isEditing = editingFollowUpId === item.id;
+  const dueState = getFollowUpDueState(item);
+  const statusLabel = item.status === "done" ? "Done" : dueState === "due-alert" ? "Past Due" : "Open";
+
+  if (isEditing) {
+    return `
+      <section class="task-detail-panel editing" aria-label="Edit scheduled task">
+        <div class="task-detail-heading">
+          <span>Task Detail</span>
+          <strong>Edit task</strong>
+        </div>
+        <label>
+          <span>Full Message</span>
+          <textarea rows="4" data-task-detail-title="${escapeHtml(item.id)}">${escapeHtml(item.title)}</textarea>
+        </label>
+        <div class="task-detail-grid">
+          <label>
+            <span>Due Date</span>
+            <input type="date" min="${TASK_CALENDAR_MIN_YEAR}-01-01" max="${TASK_CALENDAR_MAX_YEAR}-12-31" value="${escapeHtml(item.due_date)}" data-task-detail-date="${escapeHtml(item.id)}" />
+          </label>
+          <label>
+            <span>Status</span>
+            <select data-task-detail-status="${escapeHtml(item.id)}">
+              <option value="open"${item.status === "open" ? " selected" : ""}>Open</option>
+              <option value="done"${item.status === "done" ? " selected" : ""}>Done</option>
+            </select>
+          </label>
+        </div>
+        <div class="task-detail-actions">
+          <button class="selection-action" type="button" data-follow-up-action="save" data-follow-up-id="${escapeHtml(item.id)}">Save</button>
+          <button class="selection-action secondary-action" type="button" data-follow-up-action="cancel-edit" data-follow-up-id="${escapeHtml(item.id)}">Cancel</button>
+          <button class="icon-button small-icon-button danger-icon-button" type="button" data-follow-up-action="delete" data-follow-up-id="${escapeHtml(item.id)}" aria-label="Delete task">&times;</button>
+        </div>
+      </section>
+    `;
+  }
+
+  return `
+    <section class="task-detail-panel" aria-label="Scheduled task detail">
+      <div class="task-detail-heading">
+        <span>Task Detail</span>
+        <strong>${escapeHtml(statusLabel)}</strong>
+      </div>
+      <p>${escapeHtml(item.title)}</p>
+      <dl>
+        <div>
+          <dt>Due Date</dt>
+          <dd>${escapeHtml(formatDateOnly(item.due_date))}</dd>
+        </div>
+        <div>
+          <dt>Status</dt>
+          <dd>${escapeHtml(formatLabel(item.status))}</dd>
+        </div>
+      </dl>
+      <div class="task-detail-actions">
+        <button class="selection-action" type="button" data-follow-up-action="edit" data-follow-up-id="${escapeHtml(item.id)}">Edit</button>
+        <button class="selection-action secondary-action" type="button" data-follow-up-action="toggle" data-follow-up-id="${escapeHtml(item.id)}">${item.status === "done" ? "Reopen" : "Done"}</button>
+        <button class="icon-button small-icon-button danger-icon-button" type="button" data-follow-up-action="delete" data-follow-up-id="${escapeHtml(item.id)}" aria-label="Delete task">&times;</button>
+      </div>
+    </section>
   `;
 }
 
@@ -2867,18 +3364,23 @@ function renderFollowUpCalendar() {
     const hasDueAlert = dayItems.some((item) => getFollowUpDueState(item) === "due-alert");
     const hasItem = dayItems.length > 0;
     const previewItems = dayItems.slice(0, 3);
+    const calendarDayTooltip = hasItem
+      ? dayItems.map(getTaskHoverText).join("\n\n")
+      : date;
+    const remainingItems = dayItems.slice(previewItems.length);
     cells.push(`
       <button
         class="calendar-day ${hasItem ? "has-task" : ""} ${hasDueAlert ? "due-alert" : ""} ${selectedTaskDate === date ? "selected" : ""}"
         type="button"
         data-task-date="${escapeHtml(date)}"
+        title="${escapeTitle(calendarDayTooltip)}"
       >
         <span class="calendar-day-number">${day}</span>
         ${hasItem ? `
           <span class="calendar-task-count">${escapeHtml(String(dayItems.length))}</span>
           <span class="calendar-task-preview">
-            ${previewItems.map((item) => `<em title="${escapeHtml(item.title)}">${escapeHtml(item.title)}</em>`).join("")}
-            ${dayItems.length > previewItems.length ? `<em>${escapeHtml(`+${dayItems.length - previewItems.length} more`)}</em>` : ""}
+            ${previewItems.map((item) => `<em data-calendar-task-id="${escapeHtml(item.id)}" title="${escapeTitle(getTaskHoverText(item))}">${escapeHtml(item.title)}</em>`).join("")}
+            ${remainingItems.length ? `<em title="${escapeTitle(remainingItems.map(getTaskHoverText).join("\n\n"))}">${escapeHtml(`+${remainingItems.length} more`)}</em>` : ""}
           </span>
         ` : ""}
       </button>
@@ -2905,6 +3407,28 @@ function renderFollowUpCalendar() {
     </div>
     <div class="calendar-grid">${cells.join("")}</div>
   `;
+}
+
+function getTaskHoverText(item) {
+  const lines = [String(item && item.title ? item.title : "Scheduled task")];
+  if (item && item.due_date) {
+    lines.push(`Due: ${formatDateOnly(item.due_date)}`);
+  }
+  if (item && item.status) {
+    lines.push(`Status: ${formatLabel(item.status)}`);
+  }
+  return lines.join("\n");
+}
+
+function escapeTitle(value) {
+  return escapeHtml(value).replace(/\r?\n/g, "&#10;");
+}
+
+function cssEscape(value) {
+  if (window.CSS && typeof window.CSS.escape === "function") {
+    return window.CSS.escape(String(value));
+  }
+  return String(value).replace(/["\\]/g, "\\$&");
 }
 
 function buildCalendarMonthOptions(activeMonth) {
@@ -3253,9 +3777,12 @@ function describeInformationSelection(data) {
     : fileSelectionMode === "none"
       ? "documents: none by user selection"
       : "documents: none";
+  const historyText = documentSelection.conversation_context_used
+    ? " Recent chat context was used for file selection."
+    : "";
   const agentName = selection.agent ? formatLabel(selection.agent) : "Centralized Information Agent";
 
-  return `${agentName}: ${skillText}; ${documentText}.`;
+  return `${agentName}: ${skillText}; ${documentText}.${historyText}`;
 }
 
 function describeBackendResponse(data) {
@@ -3394,7 +3921,7 @@ function getActionProcessDetail(action) {
   if (type === "guide") return "Saved to this submission's guide JSON file and future system prompts.";
   if (type === "task") {
     const tasks = action.record && Array.isArray(action.record.tasks) ? action.record.tasks : [];
-    const latest = tasks[tasks.length - 1];
+    const latest = action.created_task || tasks[tasks.length - 1];
     return latest
       ? `${latest.title} due ${formatDateOnly(latest.due_date)}.`
       : "No task was saved because more information is needed.";
