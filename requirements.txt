@@ -1,4 +1,5 @@
 fastapi>=0.115.6
 fastmcp==3.2.4
+openai-agents==0.17.4
 python-multipart==0.0.20
 uvicorn>=0.35

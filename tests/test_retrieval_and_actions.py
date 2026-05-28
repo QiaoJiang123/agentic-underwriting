@@ -93,6 +93,46 @@ class RetrievalAndActionTests(unittest.TestCase):
         self.assertIn("ransomware-supplemental-application.txt", selected_files)
         self.assertIn("mfa-edr-backup-documentation.txt", selected_files)
 
+    def test_auto_document_selection_executes_mcp_tools(self):
+        def fake_mcp_tool(tool_name, arguments):
+            if tool_name == "select_documents":
+                return {
+                    "submission_id": arguments["submission_id"],
+                    "source": "metadata_rules",
+                    "selected_files": ["mfa-edr-backup-documentation.txt"],
+                    "selections": [],
+                }
+            if tool_name == "read_selected_documents":
+                return {
+                    "submission_id": arguments["submission_id"],
+                    "documents": [
+                        {
+                            "file_name": "mfa-edr-backup-documentation.txt",
+                            "file_type": "mfa_documentation",
+                            "major_categories": ["cyber_security"],
+                            "description": "MFA evidence",
+                            "content": "MFA is enabled for email and VPN.",
+                        }
+                    ],
+                }
+            raise AssertionError(f"Unexpected MCP tool: {tool_name}")
+
+        with patch("backend.services.data_retrieval_service.call_mcp_tool", side_effect=fake_mcp_tool) as mcp_mock:
+            result = build_data_retrieval_context(
+                "001-acme-foods",
+                "review mfa evidence",
+                file_selection_mode="auto",
+            )
+
+        document_selection = result["selection"]["document_selection"]
+        called_tools = [call.args[0] for call in mcp_mock.call_args_list]
+
+        self.assertEqual(called_tools, ["select_documents", "read_selected_documents"])
+        self.assertEqual(document_selection["transport"], "mcp")
+        self.assertEqual(document_selection["document_read_transport"], "mcp")
+        self.assertIn("Document retrieval source: mcp:metadata_rules.", result["context"])
+        self.assertIn("MFA is enabled for email and VPN.", result["context"])
+
     def test_parse_add_note_action(self):
         action = parse_chat_action("add note: Broker confirmed MFA rollout is complete")
 
@@ -113,7 +153,7 @@ class RetrievalAndActionTests(unittest.TestCase):
                 {"submission_id": "001-acme-foods", "tasks": [created_task]},
                 created_task,
             ),
-        ):
+        ), patch.object(chat_action_service, "call_mcp_tool", side_effect=RuntimeError("MCP unavailable")):
             action = chat_action_service.run_chat_action(
                 "001-acme-foods",
                 "add task: Request MFA evidence due 2026-05-30",
@@ -122,6 +162,38 @@ class RetrievalAndActionTests(unittest.TestCase):
         self.assertEqual(action["type"], "task")
         self.assertEqual(action["created_task"]["id"], "task-test")
         self.assertEqual(action["ui_action"]["panel"], "tasks")
+        self.assertEqual(action["transport"], "internal_python_fallback")
+
+    def test_task_action_can_execute_via_mcp(self):
+        created_task = {
+            "id": "task-mcp",
+            "title": "Request MFA evidence",
+            "due_date": "2026-05-30",
+            "status": "open",
+        }
+        with patch.object(
+            chat_action_service,
+            "call_mcp_tool",
+            return_value={
+                "record": {"submission_id": "001-acme-foods", "tasks": [created_task]},
+                "created_task": created_task,
+            },
+        ) as mcp_mock:
+            action = chat_action_service.run_chat_action(
+                "001-acme-foods",
+                "add task: Request MFA evidence due 2026-05-30",
+            )
+
+        mcp_mock.assert_called_once_with(
+            "add_scheduled_task",
+            {
+                "submission_id": "001-acme-foods",
+                "title": "Request MFA evidence",
+                "due_date": "2026-05-30",
+            },
+        )
+        self.assertEqual(action["created_task"]["id"], "task-mcp")
+        self.assertEqual(action["transport"], "mcp")
 
     def test_task_action_understands_date_then_task_description(self):
         created_task = {
@@ -137,7 +209,7 @@ class RetrievalAndActionTests(unittest.TestCase):
                 {"submission_id": "001-acme-foods", "tasks": [created_task]},
                 created_task,
             ),
-        ) as add_task_mock:
+        ) as add_task_mock, patch.object(chat_action_service, "call_mcp_tool", side_effect=RuntimeError("MCP unavailable")):
             action = chat_action_service.run_chat_action(
                 "001-acme-foods",
                 "Can you add a task for May 27, 2026. The task should be loss run review.",

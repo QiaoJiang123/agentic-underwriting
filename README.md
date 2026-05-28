@@ -288,7 +288,8 @@ The underwriting system sits in Details and can be expanded so the workbench use
 - `backend/main.py` defines the FastAPI app, serves the frontend, and exposes API routes.
 - `backend/api/routes.py` defines the FastAPI `APIRouter` for health, chat, intake, dev maintenance, submissions, documents, workflow, task, guide, note, model, SOP, broker, claim, and underwriting-system routes.
 - `backend/config.py` defines project paths and environment variables.
-- `backend/agents/underwriting_graph.py` runs the underwriting graph. If Python LangGraph is installed, it uses LangGraph; otherwise it falls back to the same single-node Python graph flow.
+- `backend/agents/underwriting_graph.py` is the central chat entrypoint. It now prefers the OpenAI Agents SDK runner and falls back to LangGraph or the local single-node Python graph if the SDK is unavailable.
+- `backend/agents/openai_agents_sdk.py` builds the OpenAI Agent, attaches the approved local MCP server, and exposes read-side underwriting MCP tools to the model turn.
 - `backend/services/submission_service.py` handles submission metadata, documents, and simple generated-PDF text extraction.
 - `backend/services/chat_history_service.py` reads and writes chat history.
 - `backend/services/guide_service.py` reads and writes guide JSON.
@@ -305,9 +306,42 @@ The underwriting system sits in Details and can be expanded so the workbench use
 - `backend/services/document_tools.py` contains reusable document metadata, selection, and reading tools.
 - `backend/services/model_service.py` reads stored analytics models.
 - `backend/services/portfolio_workbench_service.py` computes the portfolio queue, clearance review, external research checklist, and rating/quote package.
-- `backend/services/openai_service.py` calls the OpenAI Responses API.
+- `backend/services/openai_service.py` builds shared model instructions and remains the direct Responses API fallback path.
 
 ## MCP Tools
+
+The central information agent now has an MCP client path for document retrieval. Approved MCP servers are registered in `data/mcp/servers.json`; the default registry points to `backend.mcp_server` through stdio:
+
+```json
+{
+  "mcpServers": {
+    "agentic-underwriting": {
+      "command": ".venv/bin/python",
+      "args": ["-m", "backend.mcp_server"],
+      "cwd": ".",
+      "transport": "stdio",
+      "enabled": true,
+      "trusted": true
+    }
+  }
+}
+```
+
+At runtime, MCP is used in two places:
+
+- `backend/agents/openai_agents_sdk.py` attaches the approved MCP server directly to the OpenAI Agent. The model can call read-side MCP tools natively during the chat turn.
+- `backend/services/mcp_client_service.py` loads the same registry for deterministic backend actions and retrieval steps that run before the model call.
+
+The document retrieval path in `backend/services/data_retrieval_service.py` calls MCP tools first:
+
+```text
+Auto document selection
+-> MCP select_documents
+-> MCP read_selected_documents
+-> internal Python fallback if MCP is unavailable
+```
+
+The OpenAI Agent exposes only read-side MCP tools: `extract_metadata`, `select_documents`, and `read_selected_documents`. Deterministic write actions for notes, guides, and scheduled tasks still go through FastAPI permission checks; those backend actions call their approved MCP tools first, then fall back to direct local Python writes if the MCP transport is unavailable.
 
 Run the FastMCP server:
 
@@ -324,7 +358,7 @@ Available tools:
 - `add_guide_instruction(submission_id, text)`: adds a guide instruction.
 - `add_scheduled_task(submission_id, title, due_date)`: adds a scheduled task with a `YYYY-MM-DD` due date.
 
-In the web app, turning on `Auto` uses the same document-selection logic before each chat request and updates the selected file checkboxes.
+In the web app, turning on `Auto` uses the centralized agent's MCP-enabled document-selection path before each chat request and updates the selected file checkboxes. The central chat response then runs through the OpenAI Agents SDK with the same local MCP server attached, while notes, guides, and tasks continue to use the permission-aware MCP-first / local-fallback backend path.
 
 ## Useful API Routes
 

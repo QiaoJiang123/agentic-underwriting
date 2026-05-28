@@ -44,7 +44,8 @@ def add_guide_instruction(submission_id: str, text: str) -> dict:
 @mcp.tool
 def add_scheduled_task(submission_id: str, title: str, due_date: str) -> dict:
     """Add a scheduled underwriting task for a submission. due_date must be YYYY-MM-DD."""
-    return add_task(submission_id, title, due_date)
+    record, created_task = add_task(submission_id, title, due_date)
+    return {"record": record, "created_task": created_task}
 
 
 if __name__ == "__main__":

@@ -4,7 +4,7 @@ from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
-from backend.api.routes import is_langgraph_available, router
+from backend.api.routes import is_langgraph_available, is_openai_agents_sdk_available, router
 from backend.config import OPENAI_MODEL, PORT, PUBLIC_DIR
 from backend.services.audit_service import record_access_audit
 from backend.services.auth_service import authorize_request, init_auth_database
@@ -111,6 +111,7 @@ def main():
     print(f"Agentic underwriting FastAPI backend is running at http://localhost:{PORT}")
     print(f"FastAPI docs: http://localhost:{PORT}/docs")
     print(f"Using model: {OPENAI_MODEL}")
+    print(f"OpenAI Agents SDK available: {is_openai_agents_sdk_available()}")
     print(f"LangGraph Python available: {is_langgraph_available()}")
     uvicorn.run(app, host="0.0.0.0", port=PORT, reload=False)
 

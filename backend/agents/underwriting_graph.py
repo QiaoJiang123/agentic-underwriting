@@ -20,6 +20,19 @@ def run_underwriting_graph(
     call_openai: Callable[..., dict[str, Any]],
 ):
     try:
+        from backend.agents.openai_agents_sdk import run_openai_agents_sdk
+
+        return run_openai_agents_sdk(
+            messages=messages,
+            model=model,
+            api_key=api_key,
+            guide_instructions=guide_instructions,
+            underwriter_notes=underwriter_notes,
+        )
+    except ModuleNotFoundError:
+        pass
+
+    try:
         return run_langgraph(
             messages,
             model,
@@ -53,7 +66,7 @@ def run_langgraph(messages, model, api_key, guide_instructions, underwriter_note
     graph.add_edge("underwriting_model", END)
     compiled = graph.compile()
 
-    return compiled.invoke(
+    result = compiled.invoke(
         {
             "messages": messages,
             "model": model,
@@ -62,6 +75,8 @@ def run_langgraph(messages, model, api_key, guide_instructions, underwriter_note
             "underwriter_notes": underwriter_notes,
         }
     )
+    result["framework"] = "python-langgraph"
+    return result
 
 
 def call_underwriting_model(state, call_openai):
@@ -76,4 +91,5 @@ def call_underwriting_model(state, call_openai):
         **state,
         "reply": response.get("reply", ""),
         "response_id": response.get("id"),
+        "framework": "python-graph-fallback",
     }

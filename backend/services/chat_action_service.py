@@ -6,6 +6,7 @@ from backend.services.broker_service import list_brokers
 from backend.services.document_completeness_service import get_document_completeness_record
 from backend.services.underwriting_service import get_underwriting_system_record
 from backend.services.guide_service import get_guide_record, save_guide_record
+from backend.services.mcp_client_service import call_mcp_tool
 from backend.services.note_service import get_note_record, save_note_record
 from backend.services.submission_service import update_submission_metadata_cells
 from backend.services.task_service import get_task_record, save_task_record
@@ -46,20 +47,24 @@ def run_chat_action(submission_id, prompt):
 
     action_type = action["type"]
     if action_type == "note":
-        record = add_note(submission_id, action["text"])
+        record, transport = add_note_with_agent_tool(submission_id, action["text"])
         return {
             "type": "note",
             "reply": "Added that as an underwriter note.",
             "record": record,
+            "transport": transport,
+            "mcp_tool": "add_underwriter_note" if transport == "mcp" else None,
             "ui_action": {"panel": "note", "expand": False},
         }
 
     if action_type == "guide":
-        record = add_guide(submission_id, action["text"])
+        record, transport = add_guide_with_agent_tool(submission_id, action["text"])
         return {
             "type": "guide",
             "reply": "Added that as a guide instruction.",
             "record": record,
+            "transport": transport,
+            "mcp_tool": "add_guide_instruction" if transport == "mcp" else None,
             "ui_action": {"panel": "guide", "expand": False},
         }
 
@@ -80,12 +85,14 @@ def run_chat_action(submission_id, prompt):
                 "record": None,
             }
 
-        record, created_task = add_task(submission_id, title, due_date)
+        record, created_task, transport = add_task_with_agent_tool(submission_id, title, due_date)
         return {
             "type": "task",
             "reply": f"Added task due {due_date}: {title}",
             "record": record,
             "created_task": created_task,
+            "transport": transport,
+            "mcp_tool": "add_scheduled_task" if transport == "mcp" else None,
             "ui_action": {"panel": "tasks", "expand": False},
         }
 
@@ -349,6 +356,38 @@ def add_guide(submission_id, text):
     guides = record.get("guides", [])
     guides.append(make_text_item("guide", text))
     return save_guide_record(submission_id, guides)
+
+
+def add_note_with_agent_tool(submission_id, text):
+    try:
+        return call_mcp_tool(
+            "add_underwriter_note",
+            {"submission_id": submission_id, "text": text},
+        ), "mcp"
+    except Exception:
+        return add_note(submission_id, text), "internal_python_fallback"
+
+
+def add_guide_with_agent_tool(submission_id, text):
+    try:
+        return call_mcp_tool(
+            "add_guide_instruction",
+            {"submission_id": submission_id, "text": text},
+        ), "mcp"
+    except Exception:
+        return add_guide(submission_id, text), "internal_python_fallback"
+
+
+def add_task_with_agent_tool(submission_id, title, due_date):
+    try:
+        result = call_mcp_tool(
+            "add_scheduled_task",
+            {"submission_id": submission_id, "title": title, "due_date": due_date},
+        )
+        return result.get("record", {}), result.get("created_task", {}), "mcp"
+    except Exception:
+        record, created_task = add_task(submission_id, title, due_date)
+        return record, created_task, "internal_python_fallback"
 
 
 def add_task(submission_id, title, due_date):

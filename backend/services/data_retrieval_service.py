@@ -14,6 +14,7 @@ from backend.services.decision_workflow_service import get_decision_workflow_rec
 from backend.services.document_completeness_service import get_document_completeness_record
 from backend.services.document_tools import read_documents, select_documents_for_prompt
 from backend.services.guide_service import get_guide_record
+from backend.services.mcp_client_service import call_mcp_tool
 from backend.services.model_service import get_model
 from backend.services.note_service import get_note_record
 from backend.services.portfolio_workbench_service import (
@@ -783,13 +784,30 @@ def retrieve_document_context(
     else:
         selection_prompt = build_document_selection_prompt(prompt, conversation_messages)
         history_context_used = bool(format_recent_chat_context(conversation_messages, prompt, max_messages=8))
-        selection = select_documents_for_prompt(
-            submission_id=submission_id,
-            prompt=selection_prompt,
-            max_documents=max_documents,
-        )
+        try:
+            selection = call_mcp_tool(
+                "select_documents",
+                {
+                    "submission_id": submission_id,
+                    "prompt": selection_prompt,
+                    "max_documents": max_documents,
+                },
+            )
+            selection["transport"] = "mcp"
+            selection["mcp_server"] = "agentic-underwriting"
+            selection["mcp_tool"] = "select_documents"
+        except Exception as error:
+            selection = select_documents_for_prompt(
+                submission_id=submission_id,
+                prompt=selection_prompt,
+                max_documents=max_documents,
+            )
+            selection["transport"] = "internal_python_fallback"
+            selection["mcp_error"] = str(error)
         selected = selection.get("selected_files", [])
         selection_source = selection.get("source", "metadata_rules")
+        if selection.get("transport") == "mcp":
+            selection_source = f"mcp:{selection_source}"
         selection["mode"] = "auto"
         selection["conversation_context_used"] = history_context_used
         selection["reason"] = (
@@ -801,7 +819,7 @@ def retrieve_document_context(
     if not selected:
         return "", [], selection
 
-    document_record = read_documents(submission_id, selected)
+    document_record = read_documents_with_agent_tool(submission_id, selected, selection)
     documents = document_record.get("documents", [])
     if not documents:
         selection["selected_files"] = []
@@ -826,6 +844,25 @@ def retrieve_document_context(
         )
 
     return "\n".join(sections), sources, selection
+
+
+def read_documents_with_agent_tool(submission_id, selected_files, selection):
+    try:
+        document_record = call_mcp_tool(
+            "read_selected_documents",
+            {
+                "submission_id": submission_id,
+                "file_names": selected_files,
+            },
+        )
+        selection["document_read_transport"] = "mcp"
+        selection["document_read_tool"] = "read_selected_documents"
+        selection["mcp_server"] = selection.get("mcp_server", "agentic-underwriting")
+        return document_record
+    except Exception as error:
+        selection["document_read_transport"] = "internal_python_fallback"
+        selection["document_read_mcp_error"] = str(error)
+        return read_documents(submission_id, selected_files)
 
 
 def render_document_completeness_context(record):

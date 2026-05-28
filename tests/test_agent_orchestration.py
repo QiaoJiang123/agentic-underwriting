@@ -7,6 +7,7 @@ from fastapi.testclient import TestClient
 
 from backend.api import routes as api_routes
 from backend.main import app
+from backend.agents.underwriting_graph import run_underwriting_graph
 from backend.services import agent_trace_service
 from backend.services.agent_orchestration_service import run_information_agent
 
@@ -145,6 +146,44 @@ class AgentOrchestrationTests(unittest.TestCase):
         self.assertNotIn("analytics_db", retrieval["plan"])
         self.assertTrue(any(item["skill"] == "analytics_db" for item in denied))
         self.assertTrue(any(item["skill"] == "broker" for item in denied))
+
+    def test_underwriting_graph_prefers_openai_agents_sdk(self):
+        with patch(
+            "backend.agents.openai_agents_sdk.run_openai_agents_sdk",
+            return_value={
+                "reply": "SDK response",
+                "response_id": "resp-sdk-test",
+                "framework": "openai-agents-sdk",
+            },
+        ) as sdk_mock:
+            result = run_underwriting_graph(
+                messages=[{"role": "user", "content": "Summarize this submission."}],
+                model="gpt-5.4-nano",
+                api_key="sk-test",
+                guide_instructions=[],
+                underwriter_notes=[],
+                call_openai=lambda **kwargs: self.fail("Legacy OpenAI path should not be called."),
+            )
+
+        self.assertEqual(result["framework"], "openai-agents-sdk")
+        self.assertEqual(result["response_id"], "resp-sdk-test")
+        sdk_mock.assert_called_once()
+
+    def test_openai_agents_sdk_uses_approved_mcp_registry(self):
+        from backend.agents.openai_agents_sdk import (
+            READ_ONLY_MCP_TOOLS,
+            build_agent_instructions,
+            get_agentic_underwriting_mcp_config,
+        )
+
+        config = get_agentic_underwriting_mcp_config()
+        instructions = build_agent_instructions([], [])
+
+        self.assertEqual(config["command"], ".venv/bin/python")
+        self.assertEqual(config["args"], ["-m", "backend.mcp_server"])
+        self.assertIn("extract_metadata", READ_ONLY_MCP_TOOLS)
+        self.assertIn("read-side data retrieval", instructions)
+        self.assertIn("FastAPI permission layer", instructions)
 
 
 if __name__ == "__main__":

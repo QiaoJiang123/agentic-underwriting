@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "agentic-underwriting": {
+      "command": ".venv/bin/python",
+      "args": ["-m", "backend.mcp_server"],
+      "cwd": ".",
+      "transport": "stdio",
+      "enabled": true,
+      "trusted": true,
+      "description": "Approved local MCP server for underwriting metadata, document selection, document reading, notes, guides, and scheduled tasks."
+    }
+  }
+}

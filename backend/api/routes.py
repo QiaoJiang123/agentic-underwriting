@@ -85,6 +85,7 @@ async def health():
         "ok": True,
         "model": OPENAI_MODEL,
         "backend": "fastapi",
+        "openai_agents_sdk_available": is_openai_agents_sdk_available(),
         "langgraph_available": is_langgraph_available(),
     }
 
@@ -597,7 +598,8 @@ def build_chat_response(body, auth_context=None):
         "reply": graph_result.get("reply"),
         "model": OPENAI_MODEL,
         "id": graph_result.get("response_id"),
-        "framework": "python-langgraph" if is_langgraph_available() else "python-graph-fallback",
+        "framework": graph_result.get("framework")
+        or ("python-langgraph" if is_langgraph_available() else "python-graph-fallback"),
         "agent_trace": agent_trace or orchestration_result.get("trace"),
         "retrieval": {
             "plan": retrieval_result.get("plan", []),
@@ -609,6 +611,10 @@ def build_chat_response(body, auth_context=None):
 
 def is_langgraph_available():
     return find_spec("langgraph") is not None
+
+
+def is_openai_agents_sdk_available():
+    return find_spec("agents") is not None
 
 
 def append_context_to_latest_user_message(messages, context):
