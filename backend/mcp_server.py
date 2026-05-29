@@ -6,6 +6,9 @@ from backend.services.document_tools import (
     select_documents_for_prompt,
 )
 from backend.services.chat_action_service import add_guide, add_note, add_task
+from backend.services.agent_tool_registry import get_agent_tool, get_agent_tool_registry_record
+from backend.services.decision_package_service import get_decision_package as build_decision_package
+from backend.services.model_governance_service import get_model_governance as read_model_governance
 
 
 mcp = FastMCP("agentic-underwriting")
@@ -27,6 +30,55 @@ def select_documents(submission_id: str, prompt: str, max_documents: int = 6) ->
 def read_selected_documents(submission_id: str, file_names: list[str]) -> dict:
     """Read extracted text and metadata for selected documents."""
     return read_documents(submission_id, file_names)
+
+
+@mcp.tool
+def list_agent_tool_contracts(compact: bool = True) -> dict:
+    """Return the central agent tool registry with permissions, schemas, and MCP exposure."""
+    record = get_agent_tool_registry_record()
+    if not compact:
+        return record
+    return {
+        **record,
+        "tools": [
+            {
+                key: tool.get(key)
+                for key in [
+                    "skill",
+                    "label",
+                    "description",
+                    "required_permission",
+                    "access_scope",
+                    "tool_type",
+                    "mcp_exposed",
+                    "mcp_tool_name",
+                    "write_requires_confirmation",
+                ]
+            }
+            for tool in record.get("tools", [])
+        ],
+    }
+
+
+@mcp.tool
+def get_agent_tool_contract(skill: str, compact: bool = False) -> dict:
+    """Return one central agent tool contract by skill name."""
+    contract = get_agent_tool(skill, compact=compact)
+    if not contract:
+        return {"error": f"Unknown tool skill: {skill}", "skill": skill}
+    return {"tool": contract}
+
+
+@mcp.tool
+def get_decision_package(submission_id: str, package_type: str = "review") -> dict:
+    """Return a structured underwriting decision package for review, quote, referral, or bind."""
+    return build_decision_package(submission_id, package_type)
+
+
+@mcp.tool
+def get_model_governance(model_name: str = "") -> dict:
+    """Return model governance registry or a single model governance record."""
+    return read_model_governance(model_name or None)
 
 
 @mcp.tool

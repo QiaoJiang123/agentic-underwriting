@@ -36,12 +36,15 @@ from backend.services.decision_workflow_service import (
     get_decision_workflow_record,
     save_decision_workflow_record,
 )
+from backend.services.decision_package_service import get_decision_package
 from backend.services.dev_console_service import get_dev_console_catalog
 from backend.services.document_tools import select_documents_for_prompt, select_documents_with_llm
 from backend.services.guide_service import get_guide_record, save_guide_record
 from backend.services.insight_service import refresh_submission_insights
 from backend.services.intake_status_service import get_intake_status_record, save_intake_status_record
 from backend.services.model_service import get_model
+from backend.services.model_governance_service import get_model_governance
+from backend.services.maintenance_service import cleanup_intake_uploads
 from backend.services.note_service import get_note_record, save_note_record
 from backend.services.openai_service import call_openai_responses
 from backend.services.portfolio_workbench_service import (
@@ -230,6 +233,16 @@ async def dev_agent_traces(limit: int = 75):
     return {"agent_traces": list_all_agent_traces(limit)}
 
 
+@router.post("/api/dev/intake-uploads/cleanup")
+async def cleanup_dev_intake_uploads(body: dict = Body(default_factory=dict)):
+    return {
+        "cleanup": cleanup_intake_uploads(
+            max_age_hours=body.get("max_age_hours", 24),
+            dry_run=body.get("dry_run", True) is not False,
+        )
+    }
+
+
 @router.delete("/api/dev/submissions/{submission_id}")
 async def delete_dev_submission(submission_id: str):
     result = delete_submission_record(submission_id)
@@ -270,6 +283,16 @@ async def intake_status():
 @router.put("/api/intake-status")
 async def save_intake_status(body: dict = Body(default_factory=dict)):
     return {"intake_status": save_intake_status_record(body)}
+
+
+@router.get("/api/model-governance")
+async def model_governance_registry():
+    return {"model_governance": get_model_governance()}
+
+
+@router.get("/api/models/{model_name}/governance")
+async def model_governance(model_name: str):
+    return {"model_governance": get_model_governance(model_name)}
 
 
 @router.get("/api/models/{model_name}")
@@ -344,6 +367,11 @@ async def rating_quote(submission_id: str):
 @router.get("/api/submissions/{submission_id}/decision-workflow")
 async def decision_workflow(submission_id: str):
     return {"decision_workflow": get_decision_workflow_record(submission_id)}
+
+
+@router.get("/api/submissions/{submission_id}/decision-package")
+async def decision_package(submission_id: str, package_type: str = "review"):
+    return {"decision_package": get_decision_package(submission_id, package_type)}
 
 
 @router.put("/api/submissions/{submission_id}/decision-workflow")

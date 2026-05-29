@@ -1,15 +1,12 @@
 from contextlib import asynccontextmanager
 from typing import Any
 
+from backend.services.agent_tool_registry import list_mcp_tool_names
 from backend.services.mcp_client_service import load_mcp_config, run_async
 from backend.services.openai_service import build_model_instructions
 
 
-READ_ONLY_MCP_TOOLS = [
-    "extract_metadata",
-    "select_documents",
-    "read_selected_documents",
-]
+READ_ONLY_MCP_TOOLS = list_mcp_tool_names(read_only=True)
 
 
 def run_openai_agents_sdk(
@@ -77,7 +74,7 @@ def build_agent_instructions(guide_instructions, underwriter_notes):
             instructions,
             "",
             "You have native MCP access to the approved local underwriting server for read-side data retrieval.",
-            "Use MCP tools when the current prompt needs fresh submission metadata, document selection, or document text beyond the context already supplied.",
+            "Use MCP tools when the current prompt needs fresh submission metadata, document selection, document text, tool-contract details, model governance, or a decision package beyond the context already supplied.",
             "Do not use side-effecting tools for notes, guides, task creation, file changes, or stage changes; those actions are handled by the FastAPI permission layer before the model runs.",
             "When you rely on MCP or retrieved context, cite the source names already present in the context when practical.",
         ]

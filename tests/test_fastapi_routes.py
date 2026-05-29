@@ -300,11 +300,45 @@ class FastAPIRouteTests(unittest.TestCase):
         self.assertIn("/api/portfolio/queue", schema["paths"])
         self.assertIn("/api/analytics-db", schema["paths"])
         self.assertIn("/api/analytics-db/refresh", schema["paths"])
+        self.assertIn("/api/model-governance", schema["paths"])
+        self.assertIn("/api/models/{model_name}/governance", schema["paths"])
         self.assertIn("/api/submissions/{submission_id}/clearance", schema["paths"])
         self.assertIn("/api/submissions/{submission_id}/external-research", schema["paths"])
         self.assertIn("/api/submissions/{submission_id}/rating-quote", schema["paths"])
+        self.assertIn("/api/submissions/{submission_id}/decision-package", schema["paths"])
         self.assertIn("/api/submissions/{submission_id}/agent-traces", schema["paths"])
         self.assertIn("/api/submissions/{submission_id}/agent-traces/{trace_id}", schema["paths"])
+
+    def test_model_governance_routes_are_api_based(self):
+        registry_response = self.client.get("/api/model-governance")
+        model_response = self.client.get("/api/models/quote_prob/governance")
+
+        self.assertEqual(registry_response.status_code, 200)
+        self.assertIn("quote_prob", registry_response.json()["model_governance"]["models"])
+        self.assertEqual(model_response.status_code, 200)
+        self.assertEqual(
+            model_response.json()["model_governance"]["model"]["approval_status"],
+            "demo_only_not_approved",
+        )
+
+    def test_decision_package_route_returns_cited_package(self):
+        response = self.client.get("/api/submissions/001-acme-foods/decision-package?package_type=referral")
+        package = response.json()["decision_package"]
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(package["package_type"], "referral")
+        self.assertIn("underwriter_controls", package)
+        self.assertTrue(any(item["source"] == "model/governance.json" for item in package["citations"]))
+
+    def test_dev_intake_upload_cleanup_requires_delete_permission(self):
+        response = self.client.post(
+            "/api/dev/intake-uploads/cleanup",
+            headers={"x-au-user": "audit-demo"},
+            json={"dry_run": True},
+        )
+
+        self.assertEqual(response.status_code, 403)
+        self.assertIn("Missing permission dev:delete", response.json()["error"])
 
 
 if __name__ == "__main__":

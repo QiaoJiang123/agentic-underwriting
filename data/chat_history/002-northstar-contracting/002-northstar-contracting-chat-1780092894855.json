@@ -1,0 +1,16 @@
+{
+  "id": "002-northstar-contracting-chat-1780092894855",
+  "title": "Can you select cyber application for me?",
+  "created_at": "2026-05-29T22:14:54.855147Z",
+  "updated_at": "2026-05-29T22:14:54.855147Z",
+  "messages": [
+    {
+      "role": "user",
+      "content": "Can you select cyber application for me?"
+    },
+    {
+      "role": "assistant",
+      "content": "Yes\u2014based on the retrieved submission materials, the appropriate selection is:\n\n## Selected application package: **Cyber application (Type: `cyber_application`)**\n**Insured:** Northstar Contracting Group Inc.  \n**Submission ID:** 002-northstar-contracting  \n**Business:** Commercial roofing & construction (Columbus, OH)  \n**Requested effective date:** 2026-06-01  \n**Requested retention:** $10,000  \n\n### Why this is the correct application to start from\nIt contains the core cyber risk profile and the specific focus areas for underwriting the following exposures:\n- **Invoice manipulation** (high-volume subcontractor invoice processing)\n- **Funds transfer fraud** (wire verification process details)\n- **Subcontractor portal access** (document portal + MFA gap)\n- Core systems and baseline controls\n\n### Key control details that affect the cyber underwriting scope\n- **MFA:** Enabled for Microsoft 365 admins/employees; **not enforced for subcontractor portal users**\n- **EDR:** Microsoft Defender for Business\n- **Backups:** Daily cloud backups for accounting and project files\n- **Wire verification:** **Verbal callback required but not documented**\n- **Security awareness:** New-hire overview only; **no recurring phishing tests**\n- **Subcontractor portal:** Mentioned explicitly as part of the environment (and a stated MFA enforcement gap)\n\nIf you want, I can also select the related add-on package (**`ransomware_supplemental_application`**) since it\u2019s present for the same submission and is likely relevant to the ransomware/control review portion\u2014but the core \u201capplication for cyber underwriting\u201d is the `cyber_application` document above."
+    }
+  ]
+}

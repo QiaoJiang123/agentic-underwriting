@@ -116,8 +116,11 @@ TOOLS = [
         "Account Summary",
         "Read core submission metadata and key account facts.",
         "submission:read",
+        backend=MCP_READY_BACKEND,
         input_schema=submission_input_schema(),
         output_schema=context_output_schema("Account summary context."),
+        mcp_exposed=True,
+        mcp_tool_name="extract_metadata",
     ),
     AgentTool(
         "status",
@@ -175,6 +178,20 @@ TOOLS = [
         output_schema=context_output_schema("Decision workflow context."),
     ),
     AgentTool(
+        "decision_package",
+        "Decision Package",
+        "Assemble the account, evidence, claims, broker, rating, workflow, model governance, and source citations for quote, referral, or bind review.",
+        "submission:read",
+        backend=MCP_READY_BACKEND,
+        input_schema=submission_input_schema(
+            {"properties": {"package_type": {"type": "string", "enum": ["quote", "referral", "bind", "review"]}}}
+        ),
+        output_schema=context_output_schema("Underwriting decision package."),
+        citation_policy="Return package sections and source files used to support the decision view.",
+        mcp_exposed=True,
+        mcp_tool_name="get_decision_package",
+    ),
+    AgentTool(
         "claims",
         "Claim History",
         "Read linked claim-system rows for the selected company.",
@@ -209,6 +226,32 @@ TOOLS = [
         access_scope=GLOBAL_SCOPE,
         input_schema=submission_input_schema(),
         output_schema=context_output_schema("Analytics model context."),
+    ),
+    AgentTool(
+        "model_governance",
+        "Model Governance",
+        "Read model approval status, intended use, limitations, validation metadata, monitoring metrics, and override policy.",
+        "model:read",
+        access_scope=GLOBAL_SCOPE,
+        backend=MCP_READY_BACKEND,
+        input_schema=global_input_schema({"properties": {"model_name": {"type": "string"}}}),
+        output_schema=context_output_schema("Model governance context."),
+        citation_policy="Return governance registry path, model name, version, and approval status.",
+        mcp_exposed=True,
+        mcp_tool_name="get_model_governance",
+    ),
+    AgentTool(
+        "tool_registry",
+        "Agent Tool Registry",
+        "Read available agent tool contracts, permission requirements, schemas, MCP exposure, and citation policies.",
+        "agent:read",
+        access_scope=GLOBAL_SCOPE,
+        backend=MCP_READY_BACKEND,
+        input_schema=global_input_schema({"properties": {"skill": {"type": "string"}, "compact": {"type": "boolean"}}}),
+        output_schema=context_output_schema("Agent tool registry contracts."),
+        citation_policy="Return the registry version and selected tool contract fields.",
+        mcp_exposed=True,
+        mcp_tool_name="list_agent_tool_contracts/get_agent_tool_contract",
     ),
     AgentTool(
         "portfolio",
@@ -458,3 +501,17 @@ def summarize_tools(tools):
         "mcp_ready_count": sum(1 for tool in tools if tool.get("mcp_exposed")),
         "permission_count": len({tool.get("required_permission") for tool in tools}),
     }
+
+
+def list_mcp_tool_names(read_only=False):
+    tool_names = []
+    for tool in TOOLS:
+        if not tool.mcp_exposed or not tool.mcp_tool_name:
+            continue
+        if read_only and tool.tool_type != READ_TOOL:
+            continue
+        for name in str(tool.mcp_tool_name).split("/"):
+            name = name.strip()
+            if name and name not in tool_names:
+                tool_names.append(name)
+    return tool_names

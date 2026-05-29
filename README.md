@@ -57,6 +57,7 @@ The browser sends chat requests to `/api/chat`. The backend calls the OpenAI Res
 - Submission Update editor for selected metadata cells such as status, industry, revenue, records, employees, technology profile, risk flags, and open questions.
 - Clearance Review, Rating and Quote, and External Research surfaces inside the expanded underwriting system.
 - Underwriting decision workflow gates for quote readiness, referral, quote approval, and bind readiness.
+- Decision Package API for quote, referral, bind, and review packages that combine account, broker, evidence, claims, rating, workflow gates, model governance, underwriter controls, and citations.
 - Tasks tab with saved underwriting stages, scheduled tasks, a due-date calendar, red task markers, day filtering, due alert dots, and a permanent stage submit lock.
 - Expandable Analytics tab with Quote, Bind, What If, and Portfolio sub-tabs, including scenario controls for recalculating probability and portfolio-level dashboard metrics.
 - Demo logistic regression model artifacts for quote and bind probability.
@@ -71,6 +72,7 @@ The browser sends chat requests to `/api/chat`. The backend calls the OpenAI Res
 - Permission-aware agent skills. The information agent filters selected skills before retrieval if the current user lacks the required permission.
 - Business deck page at `/business.html` for the executive value story, architecture, local controls, readiness, and roadmap.
 - Source citations are returned with retrieved context and shown under chatbot answers.
+- Model governance registry with demo approval status, intended use, limitations, monitoring metrics, override policy, and required underwriter controls.
 - Lightweight schema validation covers the main JSON-backed records written by the demo.
 - Commercial cyber SOP guidance stored in JSON and used by underwriting-system recommendations and chat retrieval context.
 
@@ -168,6 +170,7 @@ Current demo limitations:
 - `model/cyber_attack_prob.json`, `model/ransomware_prob.json`, `model/data_breach_prob.json`, `model/business_interruption_prob.json`, and `model/claim_severity_prob.json` store supplemental demo GLMs.
 - `model/industry_propensity.json` documents the calculated industry benchmark formula. The backend calculates current industry propensity history from `data/submissions` and `data/claims`.
 - `model/feature_metadata.json` stores feature definitions, What If control types, and dataset min/max values.
+- `model/governance.json` stores model governance metadata such as approval status, intended use, limitations, monitoring metrics, and override policy.
 - `tests/sample_submission/` contains sample TXT/PDF upload files for smoke-testing intake and submission uploads.
 
 Each dummy cyber submission includes standardized underwriting documents such as cyber application, ransomware supplement, prior policy, loss runs, financials, IT/security controls, MFA/EDR/backups, incident response plan, vendor assessment, and compliance evidence.
@@ -289,7 +292,7 @@ The underwriting system sits in Details and can be expanded so the workbench use
 - `backend/api/routes.py` defines the FastAPI `APIRouter` for health, chat, intake, dev maintenance, submissions, documents, workflow, task, guide, note, model, SOP, broker, claim, and underwriting-system routes.
 - `backend/config.py` defines project paths and environment variables.
 - `backend/agents/underwriting_graph.py` is the central chat entrypoint. It now prefers the OpenAI Agents SDK runner and falls back to LangGraph or the local single-node Python graph if the SDK is unavailable.
-- `backend/agents/openai_agents_sdk.py` builds the OpenAI Agent, attaches the approved local MCP server, and exposes read-side underwriting MCP tools to the model turn.
+- `backend/agents/openai_agents_sdk.py` builds the OpenAI Agent, attaches the approved local MCP server, and exposes registry-approved read-side underwriting MCP tools to the model turn.
 - `backend/services/submission_service.py` handles submission metadata, documents, and simple generated-PDF text extraction.
 - `backend/services/chat_history_service.py` reads and writes chat history.
 - `backend/services/guide_service.py` reads and writes guide JSON.
@@ -302,9 +305,12 @@ The underwriting system sits in Details and can be expanded so the workbench use
 - `backend/services/agent_trace_service.py` persists and reads per-submission agent traces.
 - `backend/services/claim_service.py` reads dummy claim-system data.
 - `backend/services/underwriting_service.py` assembles appetite, broker context, evidence readiness, claim signals, and recommended actions.
+- `backend/services/decision_package_service.py` assembles quote/referral/bind/review decision packages with citations and model governance.
 - `backend/services/insight_service.py` refreshes structured submission summary and timeline JSON.
 - `backend/services/document_tools.py` contains reusable document metadata, selection, and reading tools.
 - `backend/services/model_service.py` reads stored analytics models.
+- `backend/services/model_governance_service.py` reads model governance records from `model/governance.json`.
+- `backend/services/maintenance_service.py` provides local demo cleanup utilities such as staged intake upload cleanup.
 - `backend/services/portfolio_workbench_service.py` computes the portfolio queue, clearance review, external research checklist, and rating/quote package.
 - `backend/services/openai_service.py` builds shared model instructions and remains the direct Responses API fallback path.
 
@@ -329,7 +335,7 @@ The central information agent now has an MCP client path for document retrieval.
 
 At runtime, MCP is used in two places:
 
-- `backend/agents/openai_agents_sdk.py` attaches the approved MCP server directly to the OpenAI Agent. The model can call read-side MCP tools natively during the chat turn.
+- `backend/agents/openai_agents_sdk.py` attaches the approved MCP server directly to the OpenAI Agent. The model can call registry-approved read-side MCP tools natively during the chat turn.
 - `backend/services/mcp_client_service.py` loads the same registry for deterministic backend actions and retrieval steps that run before the model call.
 
 The document retrieval path in `backend/services/data_retrieval_service.py` calls MCP tools first:
@@ -341,7 +347,7 @@ Auto document selection
 -> internal Python fallback if MCP is unavailable
 ```
 
-The OpenAI Agent exposes only read-side MCP tools: `extract_metadata`, `select_documents`, and `read_selected_documents`. Deterministic write actions for notes, guides, and scheduled tasks still go through FastAPI permission checks; those backend actions call their approved MCP tools first, then fall back to direct local Python writes if the MCP transport is unavailable.
+The OpenAI Agent exposes only read-side MCP tools generated from the central registry, including `extract_metadata`, `select_documents`, `read_selected_documents`, `list_agent_tool_contracts`, `get_agent_tool_contract`, `get_decision_package`, and `get_model_governance`. Deterministic write actions for notes, guides, and scheduled tasks still go through FastAPI permission checks; those backend actions call their approved MCP tools first, then fall back to direct local Python writes if the MCP transport is unavailable.
 
 Run the FastMCP server:
 
@@ -354,6 +360,10 @@ Available tools:
 - `extract_metadata(submission_id)`: returns submission and file metadata without file text.
 - `select_documents(submission_id, prompt, max_documents=6)`: selects relevant files from metadata.
 - `read_selected_documents(submission_id, file_names)`: returns metadata and extracted text for chosen files.
+- `list_agent_tool_contracts(compact=true)`: returns central tool contracts, permissions, schemas, and MCP exposure metadata.
+- `get_agent_tool_contract(skill, compact=false)`: returns one registry contract.
+- `get_decision_package(submission_id, package_type=review)`: returns a governed underwriting decision package.
+- `get_model_governance(model_name="")`: returns all model governance records or one selected record.
 - `add_underwriter_note(submission_id, text)`: adds a ground-truth underwriter note.
 - `add_guide_instruction(submission_id, text)`: adds a guide instruction.
 - `add_scheduled_task(submission_id, title, due_date)`: adds a scheduled task with a `YYYY-MM-DD` due date.
@@ -374,6 +384,7 @@ In the web app, turning on `Auto` uses the centralized agent's MCP-enabled docum
 - `GET /api/dev/catalog`
 - `GET /api/dev/agent-traces`
 - `GET /api/dev/submissions`
+- `POST /api/dev/intake-uploads/cleanup`
 - `DELETE /api/dev/submissions/<submission_id>`
 - `GET /api/submissions`
 - `GET /api/search-metadata`
@@ -397,6 +408,7 @@ In the web app, turning on `Auto` uses the centralized agent's MCP-enabled docum
 - `GET /api/submissions/<submission_id>/clearance`
 - `GET /api/submissions/<submission_id>/external-research`
 - `GET /api/submissions/<submission_id>/rating-quote`
+- `GET /api/submissions/<submission_id>/decision-package`
 - `GET /api/submissions/<submission_id>/tasks`
 - `PUT /api/submissions/<submission_id>/tasks`
 - `GET /api/submissions/<submission_id>/states`
@@ -412,3 +424,5 @@ In the web app, turning on `Auto` uses the centralized agent's MCP-enabled docum
 - `GET /api/models/claim_severity_prob`
 - `GET /api/models/industry_propensity`
 - `GET /api/models/feature_metadata`
+- `GET /api/model-governance`
+- `GET /api/models/<model_name>/governance`

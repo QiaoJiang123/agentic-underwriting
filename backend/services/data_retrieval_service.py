@@ -11,11 +11,13 @@ from backend.services.auth_service import require_permission
 from backend.services.broker_service import get_submission_broker, list_brokers
 from backend.services.claim_service import get_claim_record
 from backend.services.decision_workflow_service import get_decision_workflow_record
+from backend.services.decision_package_service import get_decision_package
 from backend.services.document_completeness_service import get_document_completeness_record
 from backend.services.document_tools import read_documents, select_documents_for_prompt
 from backend.services.guide_service import get_guide_record
 from backend.services.mcp_client_service import call_mcp_tool
 from backend.services.model_service import get_model
+from backend.services.model_governance_service import get_model_governance
 from backend.services.note_service import get_note_record
 from backend.services.portfolio_workbench_service import (
     get_clearance_review,
@@ -143,6 +145,15 @@ def build_data_retrieval_context(
         sources.append({"skill": "decision_workflow", "source": f"data/decision_workflow/{submission_id}.json"})
         sources.append({"skill": "decision_workflow", "source": f"/api/submissions/{submission_id}/decision-workflow"})
 
+    if "decision_package" in plan:
+        package = get_decision_package(submission_id, resolve_package_type(prompt_text))
+        sections.append(render_decision_package_context(package))
+        sources.extend(
+            {"skill": "decision_package", "source": item.get("source")}
+            for item in package.get("citations", [])
+            if item.get("source")
+        )
+
     if "claims" in plan:
         claims = get_claim_record(submission_id)
         sections.append(render_claim_context(claims))
@@ -161,6 +172,11 @@ def build_data_retrieval_context(
         analytics_context, analytics_sources = render_analytics_context(submission_id, submission)
         sections.append(analytics_context)
         sources.extend(analytics_sources)
+
+    if "model_governance" in plan:
+        governance = get_model_governance()
+        sections.append(render_model_governance_context(governance))
+        sources.append({"skill": "model_governance", "source": "model/governance.json"})
 
     if "portfolio" in plan:
         portfolio = get_portfolio_queue()
@@ -513,6 +529,12 @@ def plan_retrieval(prompt_text):
     if has_decision_workflow_intent(prompt_text):
         skills.append("decision_workflow")
 
+    if has_decision_package_intent(prompt_text):
+        skills.extend(["decision_package", "decision_workflow"])
+
+    if has_model_governance_intent(prompt_text):
+        skills.append("model_governance")
+
     if has_sop_intent(prompt_text):
         skills.append("sop")
         if sop_needs_submission_context(prompt_text):
@@ -609,6 +631,52 @@ def has_decision_workflow_intent(prompt_text):
             "workflow gate",
         ],
     )
+
+
+def has_decision_package_intent(prompt_text):
+    return has_any(
+        prompt_text,
+        [
+            "decision package",
+            "quote package",
+            "referral package",
+            "bind package",
+            "approval package",
+            "export package",
+            "underwriting package",
+            "package for review",
+        ],
+    )
+
+
+def has_model_governance_intent(prompt_text):
+    return has_any(
+        prompt_text,
+        [
+            "model governance",
+            "model approval",
+            "approved model",
+            "model validation",
+            "validation report",
+            "model limitation",
+            "model limitations",
+            "override reason",
+            "override policy",
+            "model monitoring",
+            "model owner",
+            "demo model",
+        ],
+    )
+
+
+def resolve_package_type(prompt_text):
+    if has_any(prompt_text, ["referral package", "refer", "referral"]):
+        return "referral"
+    if has_any(prompt_text, ["bind package", "bind readiness", "ready to bind"]):
+        return "bind"
+    if has_any(prompt_text, ["quote package", "quote readiness", "ready to quote"]):
+        return "quote"
+    return "review"
 
 
 def has_sop_intent(prompt_text):
@@ -995,6 +1063,64 @@ def render_decision_workflow_context(workflow):
                 f"  Rationale: {gate.get('rationale', '')}",
                 f"  Blockers: {blockers}",
                 f"  Required actions: {actions}",
+            ]
+        )
+    return "\n".join(lines)
+
+
+def render_decision_package_context(package):
+    account = package.get("account") or {}
+    evidence = package.get("evidence") or {}
+    claims = (package.get("claims") or {}).get("aggregate") or {}
+    rating = package.get("rating_quote") or {}
+    workflow = package.get("workflow") or {}
+    governance = package.get("model_governance") or {}
+    controls = package.get("underwriter_controls") or []
+    gate_lines = []
+    for gate in workflow.get("gates", []):
+        gate_lines.append(
+            f"- {gate.get('label', gate.get('key', 'Gate'))}: {gate.get('status', 'TBD')} | score {format_percent(gate.get('score'))}"
+        )
+    model_lines = []
+    for model in governance.get("models", [])[:8]:
+        model_lines.append(
+            f"- {model.get('display_name', model.get('model_name'))}: {model.get('approval_status', 'TBD')} | {model.get('version', 'TBD')} | use {model.get('allowed_use', 'decision support')}"
+        )
+    return "\n".join(
+        [
+            "Underwriting Decision Package:",
+            f"- Package type: {package.get('package_type', 'review')} | Generated: {package.get('generated_at', 'TBD')}",
+            f"- Account: {account.get('insured_name', 'TBD')} | {account.get('industry', 'TBD')} | Status: {account.get('status', 'TBD')}",
+            f"- Evidence readiness: {evidence.get('received_count', 0)}/{evidence.get('required_count', 0)} | Missing: {evidence.get('missing_count', 0)}",
+            f"- Claims: {claims.get('total_claims', 0)} total | {claims.get('open_claims', 0)} open | incurred {format_currency(claims.get('total_incurred'))}",
+            f"- Rating: {rating.get('status', 'TBD')} | Premium {format_currency(rating.get('indicated_premium'))} | Quote readiness {format_percent(make_number(rating.get('quote_readiness')) / 100)}",
+            "Workflow gates:",
+            *(gate_lines or ["- No workflow gates available."]),
+            "Model governance:",
+            *(model_lines or ["- No model governance records available."]),
+            "Underwriter controls:",
+            *[f"- {control}" for control in controls],
+        ]
+    )
+
+
+def render_model_governance_context(governance):
+    default_policy = governance.get("default_policy") or {}
+    models = governance.get("models") or {}
+    lines = [
+        "Model Governance:",
+        f"- Registry: {governance.get('source', 'model/governance.json')} | Version: {governance.get('registry_version', 'TBD')}",
+        f"- Default approval status: {default_policy.get('approval_status', 'TBD')}",
+        f"- Decision owner: {default_policy.get('decision_owner', 'human_underwriter')} | Allowed use: {default_policy.get('allowed_use', 'decision_support_only')}",
+        f"- Override reason required: {default_policy.get('override_required_reason', True)}",
+        "Model records:",
+    ]
+    for model in models.values():
+        lines.extend(
+            [
+                f"- {model.get('display_name', model.get('model_name'))}: {model.get('approval_status', 'TBD')} | {model.get('model_family', 'TBD')} | {model.get('version', 'TBD')}",
+                f"  Intended use: {model.get('intended_use', 'Decision support only.')}",
+                f"  Monitoring: {', '.join(model.get('monitoring_metrics') or []) or 'TBD'}",
             ]
         )
     return "\n".join(lines)

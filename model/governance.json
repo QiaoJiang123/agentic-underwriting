@@ -1,0 +1,121 @@
+{
+  "registry_version": "0.1.0",
+  "source": "model/governance.json",
+  "default_policy": {
+    "approval_status": "demo_only_not_approved",
+    "decision_owner": "human_underwriter",
+    "allowed_use": "decision_support_only",
+    "override_required_reason": true,
+    "limitations": [
+      "Uses synthetic demo data, not carrier-approved training data.",
+      "Should not be used to bind coverage, set final terms, or decline accounts without human review.",
+      "Feature values may be inferred from demo metadata and should be checked against source evidence."
+    ],
+    "required_controls": [
+      "Show model version and approval status near underwriting use.",
+      "Show feature drivers and source data used by the score.",
+      "Capture an underwriter reason when overriding model guidance.",
+      "Refresh model inputs after document upload, deletion, or submission metadata update."
+    ]
+  },
+  "models": {
+    "quote_prob": {
+      "model_name": "quote_prob",
+      "display_name": "Quote Probability",
+      "model_family": "logistic_regression",
+      "version": "0.3.0-demo",
+      "owner": "Cyber Analytics Demo",
+      "approval_status": "demo_only_not_approved",
+      "intended_use": "Estimate likelihood that an account can move to quote preparation after evidence and risk review.",
+      "last_validated_at": "2026-05-29",
+      "training_data": "Synthetic 50-account cyber underwriting demo portfolio.",
+      "monitoring_metrics": ["calibration", "feature drift", "quote conversion", "override rate"],
+      "override_policy": "Underwriter may override with a documented reason tied to evidence, broker clarification, or authority review."
+    },
+    "bind_prob": {
+      "model_name": "bind_prob",
+      "display_name": "Bind Probability",
+      "model_family": "logistic_regression",
+      "version": "0.3.0-demo",
+      "owner": "Cyber Analytics Demo",
+      "approval_status": "demo_only_not_approved",
+      "intended_use": "Estimate likelihood that a quoted account can move toward bind readiness after subjectivities and broker response.",
+      "last_validated_at": "2026-05-29",
+      "training_data": "Synthetic 50-account cyber underwriting demo portfolio.",
+      "monitoring_metrics": ["calibration", "bind conversion", "subjectivity completion", "override rate"],
+      "override_policy": "Underwriter may override with a documented reason tied to broker response, terms, or subjectivity completion."
+    },
+    "cyber_attack_prob": {
+      "model_name": "cyber_attack_prob",
+      "display_name": "Cyber Attack Probability",
+      "model_family": "demo_glm",
+      "version": "0.2.0-demo",
+      "owner": "Cyber Analytics Demo",
+      "approval_status": "demo_only_not_approved",
+      "intended_use": "Provide directional cyber event propensity for underwriting review.",
+      "last_validated_at": "2026-05-29",
+      "training_data": "Synthetic account metadata, controls, and linked dummy claims.",
+      "monitoring_metrics": ["event rate calibration", "industry drift", "control-feature drift"]
+    },
+    "ransomware_prob": {
+      "model_name": "ransomware_prob",
+      "display_name": "Ransomware Probability",
+      "model_family": "demo_glm",
+      "version": "0.2.0-demo",
+      "owner": "Cyber Analytics Demo",
+      "approval_status": "demo_only_not_approved",
+      "intended_use": "Highlight directional ransomware exposure and control drivers.",
+      "last_validated_at": "2026-05-29",
+      "training_data": "Synthetic account metadata, controls, and linked dummy claims.",
+      "monitoring_metrics": ["ransomware event calibration", "backup-control drift", "MFA-control drift"]
+    },
+    "data_breach_prob": {
+      "model_name": "data_breach_prob",
+      "display_name": "Data Breach Probability",
+      "model_family": "demo_glm",
+      "version": "0.2.0-demo",
+      "owner": "Cyber Analytics Demo",
+      "approval_status": "demo_only_not_approved",
+      "intended_use": "Provide directional privacy and data exposure signal for underwriting review.",
+      "last_validated_at": "2026-05-29",
+      "training_data": "Synthetic account metadata, record counts, controls, and linked dummy claims.",
+      "monitoring_metrics": ["breach event calibration", "record-count drift", "industry drift"]
+    },
+    "business_interruption_prob": {
+      "model_name": "business_interruption_prob",
+      "display_name": "Business Interruption Probability",
+      "model_family": "demo_glm",
+      "version": "0.2.0-demo",
+      "owner": "Cyber Analytics Demo",
+      "approval_status": "demo_only_not_approved",
+      "intended_use": "Provide directional operational disruption signal for cyber underwriting review.",
+      "last_validated_at": "2026-05-29",
+      "training_data": "Synthetic account metadata, operational dependency indicators, controls, and dummy claims.",
+      "monitoring_metrics": ["interruption event calibration", "vendor-dependency drift", "backup-control drift"]
+    },
+    "claim_severity_prob": {
+      "model_name": "claim_severity_prob",
+      "display_name": "Claim Severity Probability",
+      "model_family": "demo_glm",
+      "version": "0.2.0-demo",
+      "owner": "Cyber Analytics Demo",
+      "approval_status": "demo_only_not_approved",
+      "intended_use": "Estimate directional likelihood that a future cyber claim could land in a high severity band.",
+      "last_validated_at": "2026-05-29",
+      "training_data": "Synthetic account metadata and linked dummy claim amounts.",
+      "monitoring_metrics": ["severity calibration", "large-loss drift", "claim reserve development"]
+    },
+    "industry_propensity": {
+      "model_name": "industry_propensity",
+      "display_name": "Industry Propensity Benchmark",
+      "model_family": "calculated_benchmark",
+      "version": "0.2.0-demo",
+      "owner": "Cyber Analytics Demo",
+      "approval_status": "demo_only_not_approved",
+      "intended_use": "Benchmark cyber propensity by industry using the current demo portfolio and linked claims.",
+      "last_validated_at": "2026-05-29",
+      "training_data": "Calculated from data/submissions and data/claims at runtime.",
+      "monitoring_metrics": ["claim rate by industry", "average severity by industry", "portfolio mix drift"]
+    }
+  }
+}

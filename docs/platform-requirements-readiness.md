@@ -86,6 +86,7 @@ Current implementation:
 
 - The expanded Details panel functions as the underwriting workbench.
 - Decision workflow gates cover quote readiness, referral, quote approval, and bind readiness.
+- Decision packages assemble account, broker, evidence, claims, rating, workflow, model governance, controls, and citations for quote/referral/bind/review.
 - Tasks, notes, guides, submission updates, and stage locks are persisted locally.
 - SOP metadata supports procedural recommendations.
 
@@ -100,6 +101,7 @@ Current implementation:
 - What If controls.
 - Waterfall-style model explanations.
 - Portfolio dashboard.
+- Model governance registry for approval status, intended use, limitations, monitoring metrics, required controls, and override policy.
 - Two-table SQLite analytics mart:
   - `underwriting_submission_analytics`
   - `claim_analytics`
@@ -132,6 +134,7 @@ Current local stores:
 - `data/audit`
 - `data/analytics`
 - `model`
+- `model/governance.json`
 
 Production-ready local path without cloud:
 
@@ -152,8 +155,10 @@ Controls already present or added:
 - agent traces;
 - access audit;
 - workflow gates;
+- quote/referral/bind/review decision package assembly;
 - stage submit lock;
 - model explanations;
+- model governance registry;
 - local authorization;
 - human confirmation for intake finalization and stage submission.
 
@@ -196,6 +201,7 @@ These are integration and governance tasks, not blockers for a strong local demo
 1. Move notes, guides, tasks, stages, decisions, broker links, claims, and submissions into SQLite tables.
 2. Add database migrations and a local backup/restore command.
 3. Add model override workflow with required reason and manager approval.
-4. Add a decision package export for quote/referral/bind review.
+4. Add downloadable decision package export formats such as PDF, Markdown, and JSON.
 5. Add role switcher UI for demoing authorization.
-6. Add end-to-end browser tests for the main underwriting workflows.
+6. Split large frontend files into smaller modules by workbench surface.
+7. Add end-to-end browser tests for the main underwriting workflows.
